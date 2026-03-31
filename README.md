@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This is a [Next.js](https://nextjs.org) starter for the Small Town Theater site.
 
-## Getting Started
+## Quick start
 
-First, run the development server:
+Install dependencies and start the app:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Start building from [`app/(site)/page.tsx`](app/(site)/page.tsx) and the shared layout in [`app/layout.tsx`](app/layout.tsx).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Scripts
 
-## Learn More
+```bash
+npm run dev        # local development
+npm run lint       # eslint
+npm run test       # unit tests
+npm run test:unit  # vitest
+npm run test:e2e   # playwright with an auto-started dev server
+npm run build      # production build
+npm run check      # lint + unit tests + build
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Git workflow
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Create a branch for each change.
+- Open a pull request into `main`.
+- GitHub Actions runs lint, unit tests, build, and e2e checks on non-draft PRs.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Testing notes
 
-## Deploy on Vercel
+- Unit tests live in `tests/unit`.
+- End-to-end tests live in `tests/e2e`.
+- Playwright launches the app for you, so `npm run test:e2e` works without a separate terminal.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Next.js docs
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This repo uses Next.js 16, so check the local framework docs in `node_modules/next/dist/docs/` before relying on older examples or habits.
+
+Useful references:
+
+- [Next.js App Router docs](https://nextjs.org/docs/app)
+- [Playwright docs](https://playwright.dev/docs/intro)
+- [Vitest docs](https://vitest.dev/guide/)
