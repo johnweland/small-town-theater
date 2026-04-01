@@ -69,7 +69,7 @@ function createReadOnlyCookieStorageAdapter(
   };
 }
 
-async function runWithAuthServerContext<Result>(
+export async function runWithAuthServerContext<Result>(
   operation: Parameters<typeof runWithAmplifyServerContext<Result>>[2]
 ) {
   const cookieStore = await cookies();

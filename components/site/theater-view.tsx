@@ -1,29 +1,19 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { MembershipProgram, TheaterWithShowtimes } from "@/lib/data";
-
-const theaterLinks = {
-  jackson: {
-    current: "Jackson Theater",
-    otherHref: "/theaters/sherburn",
-    otherLabel: "Sherburn Theater",
-  },
-  sherburn: {
-    current: "Sherburn Theater",
-    otherHref: "/theaters/jackson",
-    otherLabel: "Jackson Theater",
-  },
-} as const;
+import type { MembershipProgram, Theater, TheaterWithShowtimes } from "@/lib/data";
 
 export function TheaterView({
   theater,
   membership,
+  theaters,
 }: {
   theater: TheaterWithShowtimes;
   membership: MembershipProgram | null;
+  theaters: Theater[];
 }) {
-  const linkSet =
-    theaterLinks[theater.id as keyof typeof theaterLinks] ?? theaterLinks.jackson;
+  const otherTheaters = theaters.filter(
+    (candidate) => candidate.slug !== theater.slug
+  );
   const featuredBooking = theater.currentBookings[0] ?? null;
 
   return (
@@ -62,14 +52,17 @@ export function TheaterView({
             </p>
             <div className="mt-4 flex flex-wrap gap-3 font-sans text-xs uppercase tracking-[0.2em]">
               <span className="border-b border-[#ffbf00] pb-1 text-[#ffbf00]">
-                {linkSet.current}
+                {theater.name}
               </span>
-              <Link
-                href={linkSet.otherHref}
-                className="text-[#d4c5ab] transition-colors hover:text-[#ffe2ab]"
-              >
-                {linkSet.otherLabel}
-              </Link>
+              {otherTheaters.map((otherTheater) => (
+                <Link
+                  key={otherTheater.slug}
+                  href={`/theaters/${otherTheater.slug}`}
+                  className="text-[#d4c5ab] transition-colors hover:text-[#ffe2ab]"
+                >
+                  {otherTheater.name}
+                </Link>
+              ))}
               <Link
                 href="/showtimes"
                 className="text-[#d4c5ab] transition-colors hover:text-[#ffe2ab]"
@@ -232,7 +225,7 @@ export function TheaterView({
                     <div className="mt-10 flex flex-wrap gap-4">
                       {booking.times.map((time, timeIndex) => (
                         <button
-                          key={time}
+                          key={`${booking.bookingId}-${time}-${timeIndex}`}
                           className={`px-6 py-3 font-sans text-sm font-semibold transition-colors ${
                             isFeatured && timeIndex === booking.times.length - 1
                               ? "bg-[#ffbf00] text-[#402d00] shadow-[0_20px_40px_rgba(251,188,0,0.15)]"

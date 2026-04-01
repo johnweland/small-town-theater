@@ -2,6 +2,7 @@ import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
 
 const schema = a.schema({
   TheaterStatus: a.enum(['active', 'inactive', 'seasonal']),
+  ScreenStatus: a.enum(['active', 'inactive']),
   MovieStatus: a.enum(['draft', 'comingSoon', 'nowPlaying', 'archived']),
   BookingStatus: a.enum(['draft', 'published', 'archived']),
   BookingDay: a.enum([
@@ -40,6 +41,7 @@ const schema = a.schema({
       notes: a.string().authorization((allow) => [allow.group('ADMINS')]),
       heroImage: a.url(),
       descriptionParagraphs: a.string().array(),
+      screens: a.hasMany('Screen', 'theaterId'),
       bookings: a.hasMany('Booking', 'theaterId'),
     })
     .secondaryIndexes((index) => [
@@ -49,6 +51,28 @@ const schema = a.schema({
     .authorization((allow) => [
       allow.group('ADMINS'),
       allow.publicApiKey().to(['read', 'create']),
+    ]),
+
+  Screen: a
+    .model({
+      theaterId: a.id().required(),
+      name: a.string().required(),
+      slug: a.string().required(),
+      capacity: a.integer().required(),
+      sortOrder: a.integer().required(),
+      projection: a.string().required(),
+      soundFormat: a.string().required(),
+      features: a.string().array().required(),
+      status: a.ref('ScreenStatus').required(),
+      theater: a.belongsTo('Theater', 'theaterId'),
+    })
+    .secondaryIndexes((index) => [
+      index('theaterId').sortKeys(['sortOrder']).queryField('listScreensByTheater'),
+      index('slug').queryField('listScreensBySlug'),
+    ])
+    .authorization((allow) => [
+      allow.group('ADMINS'),
+      allow.publicApiKey().to(['read']),
     ]),
 
   Movie: a

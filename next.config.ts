@@ -14,6 +14,11 @@ const nextConfig: NextConfig = {
         hostname: "image.tmdb.org",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "scontent-msp1-1.xx.fbcdn.net",
+        pathname: "/**",
+      },
     ],
   },
 };

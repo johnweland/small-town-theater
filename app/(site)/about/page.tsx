@@ -37,7 +37,7 @@ export default function AboutPage() {
         "Historic Concessions Stand",
         "Original Velvet Seating",
       ],
-      href: "/theaters/jackson",
+      href: "/theaters/jackson-theater",
     },
     {
       title: "Sherburn Theater",
@@ -49,7 +49,7 @@ export default function AboutPage() {
         "Artisan Coffee Bar",
         "Outdoor Courtyard",
       ],
-      href: "/theaters/sherburn",
+      href: "/theaters/sherburn-theater",
     },
   ];
 

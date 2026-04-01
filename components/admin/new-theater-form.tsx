@@ -70,7 +70,7 @@ export function NewTheaterForm() {
                   notes: getString(formData, "notes") || null,
                   heroImage: getString(formData, "heroImage") || null,
                 },
-                { authMode: "apiKey" }
+                { authMode: "userPool" }
               );
 
               if (response.errors?.length) {

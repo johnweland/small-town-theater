@@ -1,6 +1,10 @@
 import Link from "next/link";
 
-export function SiteFooter() {
+import { getTheaters } from "@/lib/data";
+
+export async function SiteFooter() {
+  const theaters = await getTheaters();
+
   return (
     <footer className="bg-[#0e0e0e] mt-auto">
       <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
@@ -11,7 +15,7 @@ export function SiteFooter() {
               Small Town Theater
             </p>
             <p className="mt-1 text-xs font-sans text-[#d4c5ab]">
-              Jackson Theater &amp; Sherburn Theater
+              {theaters.map((theater) => theater.name).join(" · ")}
             </p>
           </div>
 
@@ -20,12 +24,15 @@ export function SiteFooter() {
             <Link href="/about" className="hover:text-[#ffe2ab] transition-colors">
               About Us
             </Link>
-            <Link href="/theaters/jackson" className="hover:text-[#ffe2ab] transition-colors">
-              Jackson Theater
-            </Link>
-            <Link href="/theaters/sherburn" className="hover:text-[#ffe2ab] transition-colors">
-              Sherburn Theater
-            </Link>
+            {theaters.map((theater) => (
+              <Link
+                key={theater.slug}
+                href={`/theaters/${theater.slug}`}
+                className="hover:text-[#ffe2ab] transition-colors"
+              >
+                {theater.name}
+              </Link>
+            ))}
             <Link href="/showtimes" className="hover:text-[#ffe2ab] transition-colors">
               Showtimes
             </Link>

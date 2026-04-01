@@ -10,16 +10,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { AdminSectionCard } from "@/components/admin/section-card";
-import {
-  AdminConfirmDelete,
-  AdminField,
-  AdminFieldGrid,
-  AdminInput,
-  AdminMockForm,
-  AdminSelect,
-  AdminTextarea,
-} from "@/components/admin/admin-form";
 import { AdminStatusBadge } from "@/components/admin/status-badge";
+import {
+  AdminTheaterDeleteCard,
+  AdminTheaterEditor,
+} from "@/components/admin/theater-detail-actions";
 
 export default async function TheaterDetailPage({
   params,
@@ -54,90 +49,7 @@ export default async function TheaterDetailPage({
       />
 
       <div className="grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
-        <AdminMockForm submitLabel="Save Theater Changes">
-          <div className="flex flex-col gap-8">
-            <AdminSectionCard
-              title="Operational Details"
-              description="Venue-specific operational data and public theater storytelling live here. Organization-wide memberships are modeled separately."
-            >
-              <AdminFieldGrid>
-                <AdminField label="Name">
-                  <AdminInput defaultValue={theater.name} />
-                </AdminField>
-                <AdminField label="Slug">
-                  <AdminInput defaultValue={theater.slug} />
-                </AdminField>
-                <AdminField label="City">
-                  <AdminInput defaultValue={theater.city} />
-                </AdminField>
-                <AdminField label="State">
-                  <AdminInput defaultValue={theater.state} />
-                </AdminField>
-                <AdminField label="District">
-                  <AdminInput defaultValue={theater.district} />
-                </AdminField>
-                <AdminField label="Established">
-                  <AdminInput type="number" defaultValue={String(theater.established)} />
-                </AdminField>
-                <AdminField label="Status">
-                  <AdminSelect defaultValue={theater.status}>
-                    <option value="active">Active</option>
-                    <option value="seasonal">Seasonal</option>
-                    <option value="inactive">Inactive</option>
-                  </AdminSelect>
-                </AdminField>
-                <AdminField label="Phone">
-                  <AdminInput defaultValue={theater.phone} />
-                </AdminField>
-                <AdminField label="Contact Email">
-                  <AdminInput defaultValue={theater.contactEmail} />
-                </AdminField>
-                <AdminField label="Manager">
-                  <AdminInput defaultValue={theater.manager} />
-                </AdminField>
-                <AdminField label="Address">
-                  <AdminInput defaultValue={theater.address} />
-                </AdminField>
-                <AdminField label="Hero Image">
-                  <AdminInput defaultValue={theater.heroImage} />
-                </AdminField>
-              </AdminFieldGrid>
-              <div className="mt-5">
-                <AdminField label="Operational Notes">
-                  <AdminTextarea defaultValue={theater.notes} />
-                </AdminField>
-              </div>
-            </AdminSectionCard>
-
-            <AdminSectionCard
-              title="Public Story & Experience"
-              description="These venue-specific fields drive the public theater pages."
-            >
-              <div className="grid gap-5">
-                <AdminField label="Intro Paragraph">
-                  <AdminTextarea defaultValue={theater.descriptionParagraphs[0] ?? ""} />
-                </AdminField>
-                <AdminField label="Secondary Paragraph">
-                  <AdminTextarea defaultValue={theater.descriptionParagraphs[1] ?? ""} />
-                </AdminField>
-                <AdminField label="Venue Specs">
-                  <AdminTextarea
-                    defaultValue={theater.specs
-                      .map((spec) => `${spec.label}: ${spec.value}`)
-                      .join("\n")}
-                  />
-                </AdminField>
-                <AdminField label="Concessions">
-                  <AdminTextarea
-                    defaultValue={theater.concessions
-                      .map((item) => `${item.name} — ${item.price} — ${item.note}`)
-                      .join("\n")}
-                  />
-                </AdminField>
-              </div>
-            </AdminSectionCard>
-          </div>
-        </AdminMockForm>
+        <AdminTheaterEditor theater={theater} />
 
         <div className="flex flex-col gap-8">
           <AdminSectionCard title="Venue Snapshot" description="Design-led summary card mirroring the Stitch reference mood.">
@@ -225,10 +137,7 @@ export default async function TheaterDetailPage({
             </div>
           </AdminSectionCard>
 
-          <AdminConfirmDelete
-            title="Archive this theater"
-            description="This is a local UI-only safeguard for the future destructive workflow."
-          />
+          <AdminTheaterDeleteCard theaterId={theater.id} />
         </div>
       </div>
     </div>

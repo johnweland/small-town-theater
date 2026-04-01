@@ -3,11 +3,16 @@ import {
   adminEvents,
   adminMovies,
   adminRecentActivity,
-  adminScreens,
   importCandidates,
 } from "./mock-data";
 import { theaters as siteTheaters } from "@/lib/data/theaters";
-import { listTheatersFromAmplify, getTheaterFromAmplify } from "@/lib/amplify/server";
+import { screens as siteScreens } from "@/lib/data/screens";
+import {
+  listTheatersFromAmplify,
+  getTheaterFromAmplify,
+  listScreensFromAmplify,
+  getScreenFromAmplify,
+} from "@/lib/amplify/server";
 import {
   getTmdbCredits,
   getTmdbMovieDetails,
@@ -31,6 +36,9 @@ export type {
 
 type AmplifyTheaterRecord = NonNullable<
   Awaited<ReturnType<typeof getTheaterFromAmplify>>["data"]
+>;
+type AmplifyScreenRecord = NonNullable<
+  Awaited<ReturnType<typeof getScreenFromAmplify>>["data"]
 >;
 
 function toAdminTheater(
@@ -69,6 +77,28 @@ function toAdminTheater(
   };
 }
 
+function toAdminScreen(screen: AmplifyScreenRecord) {
+  const fallback = siteScreens.find(
+    (siteScreen) =>
+      siteScreen.slug === screen.slug || siteScreen.name === screen.name
+  );
+
+  return {
+    id: screen.id,
+    theaterId: screen.theaterId,
+    name: screen.name,
+    slug: screen.slug,
+    capacity: screen.capacity,
+    sortOrder: screen.sortOrder,
+    projection: screen.projection,
+    soundFormat: screen.soundFormat,
+    features: (screen.features ?? fallback?.features ?? []).filter(
+      (feature): feature is string => Boolean(feature)
+    ),
+    status: screen.status,
+  };
+}
+
 export async function getAdminTheaters() {
   const result = await listTheatersFromAmplify();
 
@@ -98,17 +128,45 @@ export async function getAdminTheater(theaterId: string) {
 }
 
 export async function getAdminScreens() {
-  return adminScreens;
+  const result = await listScreensFromAmplify();
+
+  if (result.errors?.length) {
+    throw new Error(
+      `Unable to load screens from Amplify: ${result.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  return result.data.map(toAdminScreen);
 }
 
 export async function getAdminScreen(screenId: string) {
-  return adminScreens.find((screen) => screen.id === screenId) ?? null;
+  const result = await getScreenFromAmplify(screenId);
+
+  if (result.errors?.length) {
+    throw new Error(
+      `Unable to load screen from Amplify: ${result.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  return result.data ? toAdminScreen(result.data) : null;
 }
 
 export async function getAdminScreensForTheater(theaterId: string) {
-  return adminScreens
-    .filter((screen) => screen.theaterId === theaterId)
-    .sort((left, right) => left.sortOrder - right.sortOrder);
+  const result = await listScreensFromAmplify(theaterId);
+
+  if (result.errors?.length) {
+    throw new Error(
+      `Unable to load theater screens from Amplify: ${result.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  return result.data.map(toAdminScreen);
 }
 
 export async function getAdminMovies() {

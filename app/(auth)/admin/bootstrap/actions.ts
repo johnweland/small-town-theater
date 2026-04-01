@@ -1,5 +1,7 @@
 "use server";
 
+import { createHmac } from "node:crypto";
+
 import { headers } from "next/headers";
 
 import { createStaffInviteUrl } from "@/lib/auth/staff-invite";
@@ -87,6 +89,10 @@ export async function createBootstrapInviteAction(
     Date.now() + expiresInHours * 60 * 60 * 1000
   ).toISOString();
 
+  const signupSecret = process.env.STAFF_SIGNUP_SECRET;
+  const fp = createHmac("sha256", signupSecret).update("fingerprint").digest("hex").slice(0, 8);
+  console.log(`[Bootstrap] STAFF_SIGNUP_SECRET fingerprint: ${fp}`);
+
   return {
     email,
     expiresInHours,
@@ -96,7 +102,7 @@ export async function createBootstrapInviteAction(
         email,
         expiresAt,
       },
-      secret: process.env.STAFF_SIGNUP_SECRET,
+      secret: signupSecret,
     }),
   };
 }

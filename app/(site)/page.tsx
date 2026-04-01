@@ -208,7 +208,7 @@ export default async function HomePage() {
                     ))}
                   </ul>
                   <Link
-                    href={`/theaters/${theater.id}`}
+                    href={`/theaters/${theater.slug}`}
                     className="mt-6 inline-flex items-center gap-1 font-sans text-xs font-semibold uppercase tracking-wider text-[#ffe2ab] hover:text-[#ffbf00] transition-colors"
                   >
                     Explore →
