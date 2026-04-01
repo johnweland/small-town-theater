@@ -1,6 +1,8 @@
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 
+export const dynamic = "force-dynamic";
+
 export default function SiteLayout({
   children,
 }: {

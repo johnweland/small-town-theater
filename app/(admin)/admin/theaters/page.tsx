@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { getAdminScreens, getAdminTheaters } from "@/lib/admin";
+import { getAdminTheaters } from "@/lib/admin";
 import { Button } from "@/components/ui/button";
 import {
   TableBody,
@@ -14,10 +14,7 @@ import { AdminPageHeader } from "@/components/admin/page-header";
 import { AdminStatusBadge } from "@/components/admin/status-badge";
 
 export default async function AdminTheatersPage() {
-  const [theaters, screens] = await Promise.all([
-    getAdminTheaters(),
-    getAdminScreens(),
-  ]);
+  const theaters = await getAdminTheaters();
 
   return (
     <div className="flex flex-col gap-8">
@@ -39,38 +36,44 @@ export default async function AdminTheatersPage() {
             <TableHead>Slug</TableHead>
             <TableHead>City</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Screens</TableHead>
+            <TableHead>Established</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {theaters.map((theater) => (
-            <TableRow key={theater.id}>
-              <TableCell>
-                <div>
-                  <p className="font-serif text-2xl italic text-foreground">
-                    {theater.name}
-                  </p>
-                  <p className="text-sm text-muted-foreground">{theater.address}</p>
-                </div>
-              </TableCell>
-              <TableCell className="text-muted-foreground">{theater.slug}</TableCell>
-              <TableCell>{theater.city}</TableCell>
-              <TableCell>
-                <AdminStatusBadge status={theater.status} />
-              </TableCell>
-              <TableCell>
-                {
-                  screens.filter((screen) => screen.theaterId === theater.id).length
-                }
-              </TableCell>
-              <TableCell className="text-right">
-                <Button asChild variant="outline">
-                  <Link href={`/admin/theaters/${theater.id}`}>Open</Link>
-                </Button>
+          {theaters.length ? (
+            theaters.map((theater) => (
+              <TableRow key={theater.id}>
+                <TableCell>
+                  <div>
+                    <p className="font-serif text-2xl italic text-foreground">
+                      {theater.name}
+                    </p>
+                    <p className="text-sm text-muted-foreground">{theater.address}</p>
+                  </div>
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {theater.slug}
+                </TableCell>
+                <TableCell>{theater.city}</TableCell>
+                <TableCell>
+                  <AdminStatusBadge status={theater.status} />
+                </TableCell>
+                <TableCell>{theater.established || "—"}</TableCell>
+                <TableCell className="text-right">
+                  <Button asChild variant="outline">
+                    <Link href={`/admin/theaters/${theater.id}`}>Open</Link>
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                No theaters found in Amplify yet.
               </TableCell>
             </TableRow>
-          ))}
+          )}
         </TableBody>
       </AdminDataTable>
     </div>

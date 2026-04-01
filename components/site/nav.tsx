@@ -1,6 +1,10 @@
 import Link from "next/link";
 
-export function SiteNav() {
+import { getTheaters } from "@/lib/data";
+
+export async function SiteNav() {
+  const theaters = await getTheaters();
+
   return (
     <header className="sticky top-0 z-50 backdrop-blur-md bg-[#131313]/80 border-b border-[#504532]/30">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -15,18 +19,15 @@ export function SiteNav() {
 
           {/* Primary links */}
           <div className="hidden md:flex items-center gap-8 text-sm font-sans text-[#d4c5ab]">
-            <Link
-              href="/theaters/jackson"
-              className="hover:text-[#ffe2ab] transition-colors"
-            >
-              Jackson Theater
-            </Link>
-            <Link
-              href="/theaters/sherburn"
-              className="hover:text-[#ffe2ab] transition-colors"
-            >
-              Sherburn Theater
-            </Link>
+            {theaters.map((theater) => (
+              <Link
+                key={theater.slug}
+                href={`/theaters/${theater.slug}`}
+                className="hover:text-[#ffe2ab] transition-colors"
+              >
+                {theater.name}
+              </Link>
+            ))}
             <Link
               href="/showtimes"
               className="hover:text-[#ffe2ab] transition-colors"

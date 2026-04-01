@@ -11,6 +11,10 @@ import { memberships } from "./memberships";
 import { screens } from "./screens";
 import { theaters } from "./theaters";
 import {
+  listPublicScreensFromAmplify,
+  listPublicTheatersFromAmplify,
+} from "@/lib/amplify/public-server";
+import {
   getTmdbCredits,
   getTmdbMovieDetails,
   getTmdbTrailerYouTubeId,
@@ -26,6 +30,7 @@ import type {
   Screen,
   ScreenStatus,
   Theater,
+  TheaterSpec,
   TheaterStatus,
   MovieShowtime,
   TheaterWithBookings,
@@ -48,6 +53,126 @@ export type {
   TheaterWithBookings,
   TheaterWithShowtimes,
 };
+
+type PublicAmplifyTheater = Awaited<
+  ReturnType<typeof listPublicTheatersFromAmplify>
+>["data"][number];
+type PublicAmplifyScreen = Awaited<
+  ReturnType<typeof listPublicScreensFromAmplify>
+>["data"][number];
+
+function buildTheaterSpecs(
+  theater: PublicAmplifyTheater,
+  associatedScreens: PublicAmplifyScreen[]
+): TheaterSpec[] {
+  const sortedScreens = associatedScreens
+    .sort((left, right) => left.sortOrder - right.sortOrder);
+
+  const featuredScreens = sortedScreens.filter((screen) => screen.status === "active");
+  const screensForSummary = featuredScreens.length ? featuredScreens : sortedScreens;
+  const leadScreen = screensForSummary[0] ?? null;
+  const screenCount = sortedScreens.length;
+  const totalSeats = sortedScreens.reduce(
+    (seatTotal, screen) => seatTotal + screen.capacity,
+    0
+  );
+  const projectionSummary = Array.from(
+    new Set(screensForSummary.map((screen) => screen.projection))
+  )
+    .slice(0, 2)
+    .join(" / ");
+  const featureSummary = leadScreen
+    ? leadScreen.features.slice(0, 2).join(" · ")
+    : "Feature details coming soon";
+
+  return [
+    {
+      label: "Screens",
+      value:
+        screenCount > 0
+          ? `${screenCount} ${screenCount === 1 ? "Screen" : "Screens"}${projectionSummary ? ` · ${projectionSummary}` : ""}`
+          : "Screen details coming soon",
+    },
+    {
+      label: "Seating",
+      value:
+        totalSeats > 0
+          ? `${totalSeats} Seats Total${leadScreen ? ` · ${leadScreen.name}` : ""}`
+          : "Capacity details coming soon",
+    },
+    {
+      label: "Sound",
+      value: leadScreen
+        ? `${leadScreen.soundFormat}${screenCount > 1 ? ` · ${leadScreen.name}` : ""}`
+        : "Audio details coming soon",
+    },
+    {
+      label: "Features",
+      value: featureSummary,
+    },
+    {
+      label: "Phone",
+      value: theater.phone ?? "Contact details coming soon",
+    },
+  ];
+}
+
+async function toSiteTheater(theater: PublicAmplifyTheater): Promise<Theater> {
+  const fallback = theaters.find(
+    (siteTheater) =>
+      siteTheater.slug === theater.slug || siteTheater.name === theater.name
+  );
+  const routeKey = fallback?.id ?? theater.slug;
+  const screensResult = await listPublicScreensFromAmplify(theater.id);
+  const associatedScreens = screensResult.errors?.length ? [] : screensResult.data;
+
+  return {
+    id: routeKey,
+    slug: theater.slug,
+    name: theater.name,
+    city: theater.city,
+    state: theater.state,
+    district: theater.district,
+    established: theater.established ?? fallback?.established ?? 0,
+    status: theater.status,
+    address: theater.address,
+    phone: theater.phone ?? fallback?.phone ?? "",
+    contactEmail: theater.contactEmail ?? fallback?.contactEmail ?? "",
+    manager: theater.manager ?? fallback?.manager ?? "",
+    notes: fallback?.notes ?? "",
+    heroImage: theater.heroImage ?? fallback?.heroImage ?? "/next.svg",
+    descriptionParagraphs: (
+      theater.descriptionParagraphs ?? fallback?.descriptionParagraphs ?? []
+    ).filter((paragraph): paragraph is string => Boolean(paragraph)),
+    specs: buildTheaterSpecs(theater, associatedScreens),
+    concessions: fallback?.concessions ?? [],
+  };
+}
+
+async function getPublicTheatersFromAmplify(): Promise<Theater[]> {
+  const result = await listPublicTheatersFromAmplify();
+
+  if (result.errors?.length) {
+    throw new Error(
+      `Unable to load public theaters from Amplify: ${result.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  return Promise.all(result.data.map(toSiteTheater));
+}
+
+async function getPublicTheaterByRouteKey(routeKey: string): Promise<Theater | null> {
+  const publicTheaters = await getPublicTheatersFromAmplify();
+
+  return (
+    publicTheaters.find(
+      (theater) =>
+        theater.id === routeKey || theater.slug === routeKey || theater.name === routeKey
+    ) ?? null
+  );
+}
 
 // ── Movies ────────────────────────────────────────────────────────────────────
 
@@ -105,7 +230,10 @@ export async function getMovieDetail(slug: string): Promise<Movie | null> {
 }
 
 export async function getMovieShowtimes(slug: string): Promise<MovieShowtime[]> {
-  const theaterById = Object.fromEntries(theaters.map((theater) => [theater.id, theater]));
+  const publicTheaters = await getPublicTheatersFromAmplify();
+  const theaterById = Object.fromEntries(
+    publicTheaters.map((theater) => [theater.id, theater])
+  );
   const screenById = Object.fromEntries(screens.map((screen) => [screen.id, screen]));
 
   return bookings
@@ -128,11 +256,11 @@ export async function getMovieShowtimes(slug: string): Promise<MovieShowtime[]> 
 // ── Theaters ──────────────────────────────────────────────────────────────────
 
 export async function getTheaters(): Promise<Theater[]> {
-  return theaters;
+  return getPublicTheatersFromAmplify();
 }
 
 export async function getTheater(id: string): Promise<Theater | null> {
-  return theaters.find((t) => t.id === id) ?? null;
+  return getPublicTheaterByRouteKey(id);
 }
 
 export async function getMembershipPrograms(): Promise<MembershipProgram[]> {
@@ -169,7 +297,7 @@ export async function getBooking(bookingId: string): Promise<Booking | null> {
 export async function getTheaterWithShowtimes(
   id: string
 ): Promise<TheaterWithShowtimes | null> {
-  const theater = theaters.find((t) => t.id === id);
+  const theater = await getPublicTheaterByRouteKey(id);
   if (!theater) return null;
 
   const movieMap = Object.fromEntries(movies.map((movie) => [movie.slug, movie]));
@@ -204,12 +332,19 @@ export async function getTheaterWithShowtimes(
   return { ...theater, currentBookings };
 }
 
+export async function getTheaterSlugs(): Promise<string[]> {
+  const publicTheaters = await getPublicTheatersFromAmplify();
+
+  return publicTheaters.map((theater) => theater.slug);
+}
+
 /** All theaters with their bookings joined in — for the showtimes page. */
 export async function getTheatersWithBookings(): Promise<TheaterWithBookings[]> {
+  const publicTheaters = await getPublicTheatersFromAmplify();
   const movieMap = Object.fromEntries(movies.map((movie) => [movie.slug, movie]));
   const screenMap = Object.fromEntries(screens.map((screen) => [screen.id, screen]));
 
-  return theaters.map((theater) => {
+  return publicTheaters.map((theater) => {
     const theaterBookings = bookings
       .filter(
         (booking) =>

@@ -1,11 +1,21 @@
-import { defineAuth } from '@aws-amplify/backend';
+import { defineAuth } from "@aws-amplify/backend";
 
-/**
- * Define and configure your auth resource
- * @see https://docs.amplify.aws/gen2/build-a-backend/auth
- */
+import { staffSignupPreSignUp } from "../functions/staff-signup-pre-sign-up/resource";
+import { staffSignupPreTokenGeneration } from "../functions/staff-signup-pre-token-generation/resource";
+
 export const auth = defineAuth({
   loginWith: {
     email: true,
+  },
+  groups: ["ADMINS"],
+  userAttributes: {
+    "custom:isAdminStaff": {
+      dataType: "String",
+      mutable: false,
+    },
+  },
+  triggers: {
+    preSignUp: staffSignupPreSignUp,
+    preTokenGeneration: staffSignupPreTokenGeneration,
   },
 });
