@@ -4,9 +4,10 @@ import {
   adminMovies,
   adminRecentActivity,
   adminScreens,
-  adminTheaters,
   importCandidates,
 } from "./mock-data";
+import { theaters as siteTheaters } from "@/lib/data/theaters";
+import { listTheatersFromAmplify, getTheaterFromAmplify } from "@/lib/amplify/server";
 import {
   getTmdbCredits,
   getTmdbMovieDetails,
@@ -28,12 +29,72 @@ export type {
   RecurringShowtime,
 } from "./types";
 
+type AmplifyTheaterRecord = NonNullable<
+  Awaited<ReturnType<typeof getTheaterFromAmplify>>["data"]
+>;
+
+function toAdminTheater(
+  theater: AmplifyTheaterRecord
+) {
+  const fallback = siteTheaters.find(
+    (siteTheater) =>
+      siteTheater.slug === theater.slug || siteTheater.name === theater.name
+  );
+
+  return {
+    id: theater.id,
+    slug: theater.slug,
+    name: theater.name,
+    city: theater.city,
+    state: theater.state,
+    district: theater.district,
+    established: theater.established ?? fallback?.established ?? 0,
+    status: theater.status,
+    address: theater.address,
+    phone: theater.phone ?? fallback?.phone ?? "",
+    contactEmail: theater.contactEmail ?? fallback?.contactEmail ?? "",
+    manager: theater.manager ?? fallback?.manager ?? "",
+    notes: theater.notes ?? fallback?.notes ?? "",
+    heroImage: theater.heroImage ?? fallback?.heroImage ?? "/next.svg",
+    descriptionParagraphs: (
+      theater.descriptionParagraphs ?? fallback?.descriptionParagraphs ?? []
+    ).filter((paragraph): paragraph is string => Boolean(paragraph)),
+    specs:
+      fallback?.specs ?? [
+        { label: "Location", value: theater.address },
+        { label: "Phone", value: theater.phone ?? "Not provided" },
+        { label: "Status", value: theater.status },
+      ],
+    concessions: fallback?.concessions ?? [],
+  };
+}
+
 export async function getAdminTheaters() {
-  return adminTheaters;
+  const result = await listTheatersFromAmplify();
+
+  if (result.errors?.length) {
+    throw new Error(
+      `Unable to load theaters from Amplify: ${result.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  return result.data.map(toAdminTheater);
 }
 
 export async function getAdminTheater(theaterId: string) {
-  return adminTheaters.find((theater) => theater.id === theaterId) ?? null;
+  const result = await getTheaterFromAmplify(theaterId);
+
+  if (result.errors?.length) {
+    throw new Error(
+      `Unable to load theater from Amplify: ${result.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  return result.data ? toAdminTheater(result.data) : null;
 }
 
 export async function getAdminScreens() {

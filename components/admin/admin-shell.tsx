@@ -18,6 +18,7 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { SignOutButton } from "@/components/auth/sign-out-button";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -29,7 +30,13 @@ const navItems = [
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
-export function AdminShell({ children }: { children: ReactNode }) {
+export function AdminShell({
+  children,
+  userEmail,
+}: {
+  children: ReactNode;
+  userEmail?: string | null;
+}) {
   const pathname = usePathname();
 
   return (
@@ -82,12 +89,18 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                {userEmail ? (
+                  <span className="hidden text-xs text-muted-foreground lg:inline">
+                    {userEmail}
+                  </span>
+                ) : null}
                 <Button variant="outline" size="icon-sm" type="button">
                   <Bell />
                 </Button>
                 <Button variant="outline" size="icon-sm" type="button">
                   <HelpCircle />
                 </Button>
+                <SignOutButton />
               </div>
             </div>
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
