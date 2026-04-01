@@ -1,144 +1,120 @@
 import type { Movie } from "./types";
+import { tmdbMovieFixtures, type TmdbFixtureKey } from "./tmdb-fixtures";
 
-export const movies: Movie[] = [
-  {
-    slug: "midnight-over-main",
-    title: "Midnight Over Main",
-    tagline: "Some secrets are buried for a reason.",
-    rating: "R",
-    runtime: "2h 24m",
-    genre: "Noir",
+const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/original";
+
+const movieConfigs: Record<
+  TmdbFixtureKey,
+  { slug: string; rating: string; status: Movie["status"] }
+> = {
+  superMarioBros: {
+    slug: "the-super-mario-bros-movie",
+    rating: "PG",
     status: "now-playing",
-    director: "Julian Vane",
-    cast: ["Elena Rossi", "Marcus Thorne", "Delia Park", "Roy Cabel"],
-    synopsis:
-      "An atmospheric noir that challenges the boundaries of memory and justice. Set in a small coastal town, a midnight power outage triggers a cascade of revelations—buried secrets resurface, old loyalties fracture, and one investigator must decide how much truth the community can bear. Shot on location with a score inspired by 1940s jazz, this is cinema at its most immersive.",
-    production: "Silver Screen Labs",
-    score: "Theo Haze",
-    cinematography: "Sarah Light",
-    backdrop:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuAy7wTTRWdKX06azNrcRWSZJAl0hRMQ7Pv-KWraTaW3rvxcUm2QXaH51yz6usWAgoPAXx_cFhTU-3fTUB5KA9PQkIygxdYLsD2V6JfYkyXSWDt2Nq5fGzO4g6iZCc4ZwN8VdvD6y7Cs2qpZDYiwnRqhx0Vnk3kM3ygXNjo2GwrOZnNH6sIip3aFAMmMZJ8dwHNcqjITtIlqYayWcU9TZWCeB04ynKOmCxuoKffXkL-si_EIzswTaqmjHBn8WzTNByDRa3SqeFN8FUw",
-    poster:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuAy7wTTRWdKX06azNrcRWSZJAl0hRMQ7Pv-KWraTaW3rvxcUm2QXaH51yz6usWAgoPAXx_cFhTU-3fTUB5KA9PQkIygxdYLsD2V6JfYkyXSWDt2Nq5fGzO4g6iZCc4ZwN8VdvD6y7Cs2qpZDYiwnRqhx0Vnk3kM3ygXNjo2GwrOZnNH6sIip3aFAMmMZJ8dwHNcqjITtIlqYayWcU9TZWCeB04ynKOmCxuoKffXkL-si_EIzswTaqmjHBn8WzTNByDRa3SqeFN8FUw",
   },
-  {
-    slug: "the-alchemists-daughter",
-    title: "The Alchemist's Daughter",
-    tagline: "Every formula has a cost.",
+  superMarioGalaxy: {
+    slug: "the-super-mario-galaxy-movie",
+    rating: "PG",
+    status: "now-playing",
+  },
+  theMartian: {
+    slug: "the-martian",
     rating: "PG-13",
-    runtime: "2h 18m",
-    genre: "Drama",
     status: "now-playing",
-    director: "Mara Voss",
-    cast: ["Simone Allard", "Edward Crane", "Nadia Petrov"],
-    synopsis:
-      "A sweeping period drama following a young woman who inherits her father's alchemy workshop and uncovers secrets that could change the world. Presented in 70mm.",
-    production: "Amber Light Films",
-    score: "Clara Holt",
-    cinematography: "Dev Rajan",
-    backdrop:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBp-EfHKS9-Tn7LHido1UogKKPJcqtktWL9jD8unMjgpZ1tQ5UK70njf1IM8TwMce7lpX6CG7gHHUz30o2CcC3zDwVpyWNbKP2KLtZAzWHy3uh1RN3YBfBqvYl7gF_wmrq2Uve4KI48LbY5MhOekFvoP8-E9wkAn2V8zPDmGtoN8eu3zPxEPJ1-Q1qubF3GFI1kKSmPLMKgsOcslrewzRkn3tOy7n9Ar5HsT3AobscK5pfmMJCvLm-XOPr7RTrrbuN82IvBJJbzD5A",
-    poster:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBp-EfHKS9-Tn7LHido1UogKKPJcqtktWL9jD8unMjgpZ1tQ5UK70njf1IM8TwMce7lpX6CG7gHHUz30o2CcC3zDwVpyWNbKP2KLtZAzWHy3uh1RN3YBfBqvYl7gF_wmrq2Uve4KI48LbY5MhOekFvoP8-E9wkAn2V8zPDmGtoN8eu3zPxEPJ1-Q1qubF3GFI1kKSmPLMKgsOcslrewzRkn3tOy7n9Ar5HsT3AobscK5pfmMJCvLm-XOPr7RTrrbuN82IvBJJbzD5A",
   },
-  {
-    slug: "static-horizon",
-    title: "Static Horizon",
-    tagline: "The signal knows your name.",
-    rating: "R",
-    runtime: "1h 52m",
-    genre: "Thriller",
-    status: "now-playing",
-    director: "Pete Garland",
-    cast: ["James Okoro", "Celeste Farrow", "Sam Kessler"],
-    synopsis:
-      "A broadcast journalist discovers a frequency that may contain messages from the future—and the truth behind it could end everything she knows.",
-    production: "Phantom Wave Studios",
-    score: "Niko Adler",
-    cinematography: "Rosa Vidal",
-    backdrop:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCWRw2nFRh2CZZO-9s8oY3mtwtj7gmRXO9b5X-mF9EWLsyYXavTMdhlkIDIPv72EtFq9T5DSrFetSSejfLbdA2RAt2DVlCPgLtPVufe3IhfIOoF9aZpsRUydVAeJAuQeCr2hx26Opuv98CYlr9k5YxGsACwsxIho_D2Z1PAVGymhD7PB5X-rz2PdR4dp1eYweZhECIcirq4CyWb_b7iN_H1XoMkFncRZ8QS6BdA1dv0Myxm94xz87L5PICI3Ld9h2Ig_RhEul8Wl9U",
-    poster:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCWRw2nFRh2CZZO-9s8oY3mtwtj7gmRXO9b5X-mF9EWLsyYXavTMdhlkIDIPv72EtFq9T5DSrFetSSejfLbdA2RAt2DVlCPgLtPVufe3IhfIOoF9aZpsRUydVAeJAuQeCr2hx26Opuv98CYlr9k5YxGsACwsxIho_D2Z1PAVGymhD7PB5X-rz2PdR4dp1eYweZhECIcirq4CyWb_b7iN_H1XoMkFncRZ8QS6BdA1dv0Myxm94xz87L5PICI3Ld9h2Ig_RhEul8Wl9U",
-  },
-  {
-    slug: "the-last-midnight",
-    title: "The Last Midnight",
-    tagline: "Justice sleeps. Someone has to wake it.",
-    rating: "R",
-    runtime: "2h 4m",
-    genre: "Thriller",
-    status: "now-playing",
-    director: "Cora Blaine",
-    cast: ["Theo Marsh", "Ana Ruiz", "Felix Drummond", "Lila Stone"],
-    synopsis:
-      "A neo-noir thriller set in a decaying metropolis where a private investigator uncovers a conspiracy reaching the highest levels of city hall.",
-    production: "Grey Shutter Productions",
-    score: "Alec Dunn",
-    cinematography: "Jonas Fell",
-    backdrop:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBp-EfHKS9-Tn7LHido1UogKKPJcqtktWL9jD8unMjgpZ1tQ5UK70njf1IM8TwMce7lpX6CG7gHHUz30o2CcC3zDwVpyWNbKP2KLtZAzWHy3uh1RN3YBfBqvYl7gF_wmrq2Uve4KI48LbY5MhOekFvoP8-E9wkAn2V8zPDmGtoN8eu3zPxEPJ1-Q1qubF3GFI1kKSmPLMKgsOcslrewzRkn3tOy7n9Ar5HsT3AobscK5pfmMJCvLm-XOPr7RTrrbuN82IvBJJbzD5A",
-    poster:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBp-EfHKS9-Tn7LHido1UogKKPJcqtktWL9jD8unMjgpZ1tQ5UK70njf1IM8TwMce7lpX6CG7gHHUz30o2CcC3zDwVpyWNbKP2KLtZAzWHy3uh1RN3YBfBqvYl7gF_wmrq2Uve4KI48LbY5MhOekFvoP8-E9wkAn2V8zPDmGtoN8eu3zPxEPJ1-Q1qubF3GFI1kKSmPLMKgsOcslrewzRkn3tOy7n9Ar5HsT3AobscK5pfmMJCvLm-XOPr7RTrrbuN82IvBJJbzD5A",
-  },
-  {
-    slug: "echoes-of-gold",
-    title: "Echoes of Gold",
-    tagline: "The music never really stopped.",
+  projectHailMary: {
+    slug: "project-hail-mary",
     rating: "PG-13",
-    runtime: "1h 38m",
-    genre: "Drama",
     status: "now-playing",
-    director: "Ida Bloom",
-    cast: ["Marcus Cole", "Yvette Renaud", "Harold Pierce"],
-    synopsis:
-      "A visual journey through the forgotten jazz clubs of the 1950s, following a young saxophonist's rise to fame and subsequent disappearance. Classic revival—restored 35mm print.",
-    production: "Riverside Pictures",
-    score: "Original 1958 recordings",
-    cinematography: "Ida Bloom",
-    backdrop:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCWRw2nFRh2CZZO-9s8oY3mtwtj7gmRXO9b5X-mF9EWLsyYXavTMdhlkIDIPv72EtFq9T5DSrFetSSejfLbdA2RAt2DVlCPgLtPVufe3IhfIOoF9aZpsRUydVAeJAuQeCr2hx26Opuv98CYlr9k5YxGsACwsxIho_D2Z1PAVGymhD7PB5X-rz2PdR4dp1eYweZhECIcirq4CyWb_b7iN_H1XoMkFncRZ8QS6BdA1dv0Myxm94xz87L5PICI3Ld9h2Ig_RhEul8Wl9U",
-    poster:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCWRw2nFRh2CZZO-9s8oY3mtwtj7gmRXO9b5X-mF9EWLsyYXavTMdhlkIDIPv72EtFq9T5DSrFetSSejfLbdA2RAt2DVlCPgLtPVufe3IhfIOoF9aZpsRUydVAeJAuQeCr2hx26Opuv98CYlr9k5YxGsACwsxIho_D2Z1PAVGymhD7PB5X-rz2PdR4dp1eYweZhECIcirq4CyWb_b7iN_H1XoMkFncRZ8QS6BdA1dv0Myxm94xz87L5PICI3Ld9h2Ig_RhEul8Wl9U",
   },
-  {
-    slug: "starlight-express",
-    title: "Starlight Express",
-    tagline: "All aboard for the edge of the universe.",
-    rating: "G",
-    runtime: "1h 55m",
-    genre: "Family",
-    status: "now-playing",
-    director: "Anya Solís",
-    cast: ["Voice cast: Kira Moon", "Eli Stone", "Bea Park"],
-    synopsis:
-      "A whimsical animated odyssey that takes audiences on a celestial train ride across the constellations to the edge of the universe. Presented in 70mm.",
-    production: "Stardust Animation",
-    score: "Mila Farber",
-    cinematography: "Anya Solís",
-    backdrop:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCR7mLbmGmeApMRG3YmFtvqPO1dNSUqLwhPpJOWr6fR1LICWgb5abORrMnXwbjXg-5yv3IKDarrrpJ0LAuYyOQzK4b9mYnVR4zKg74OrASSah2OVkw-f-oG5TsKVxLLVrBJ7yAWB8E20nokjxfvNFmvTP8C-MBxn1xNuPj3osJQDxj_4YhKJqXEnrDw_iRYQ_ZUWdTuEjm5s08EYO6CKRx25Y983Cg-ylu5_L7RoI5pGNyotKh4JjrkfShqOARGZVEs9ORqTJ8AygA",
-    poster:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCR7mLbmGmeApMRG3YmFtvqPO1dNSUqLwhPpJOWr6fR1LICWgb5abORrMnXwbjXg-5yv3IKDarrrpJ0LAuYyOQzK4b9mYnVR4zKg74OrASSah2OVkw-f-oG5TsKVxLLVrBJ7yAWB8E20nokjxfvNFmvTP8C-MBxn1xNuPj3osJQDxj_4YhKJqXEnrDw_iRYQ_ZUWdTuEjm5s08EYO6CKRx25Y983Cg-ylu5_L7RoI5pGNyotKh4JjrkfShqOARGZVEs9ORqTJ8AygA",
-  },
-  {
-    slug: "the-last-projectionist",
-    title: "The Last Projectionist",
-    tagline: "When the reel stops, so does the dream.",
+  hackers: {
+    slug: "hackers",
     rating: "PG-13",
-    runtime: "1h 56m",
-    genre: "Drama",
-    status: "coming-soon",
-    director: "Sven Hoar",
-    cast: ["Oliver Reed Jr.", "Frances Dahl", "Tom Gast"],
-    synopsis:
-      "A deeply personal drama about the final projectionist at a rural movie house, told through 35mm memories across three decades.",
-    production: "Analog Films",
-    score: "Paul Krenn",
-    cinematography: "Sven Hoar",
-    backdrop:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCR7mLbmGmeApMRG3YmFtvqPO1dNSUqLwhPpJOWr6fR1LICWgb5abORrMnXwbjXg-5yv3IKDarrrpJ0LAuYyOQzK4b9mYnVR4zKg74OrASSah2OVkw-f-oG5TsKVxLLVrBJ7yAWB8E20nokjxfvNFmvTP8C-MBxn1xNuPj3osJQDxj_4YhKJqXEnrDw_iRYQ_ZUWdTuEjm5s08EYO6CKRx25Y983Cg-ylu5_L7RoI5pGNyotKh4JjrkfShqOARGZVEs9ORqTJ8AygA",
-    poster:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCR7mLbmGmeApMRG3YmFtvqPO1dNSUqLwhPpJOWr6fR1LICWgb5abORrMnXwbjXg-5yv3IKDarrrpJ0LAuYyOQzK4b9mYnVR4zKg74OrASSah2OVkw-f-oG5TsKVxLLVrBJ7yAWB8E20nokjxfvNFmvTP8C-MBxn1xNuPj3osJQDxj_4YhKJqXEnrDw_iRYQ_ZUWdTuEjm5s08EYO6CKRx25Y983Cg-ylu5_L7RoI5pGNyotKh4JjrkfShqOARGZVEs9ORqTJ8AygA",
+    status: "now-playing",
   },
-];
+  predatorBadlands: {
+    slug: "predator-badlands",
+    rating: "R",
+    status: "now-playing",
+  },
+};
+
+function toImageUrl(path: string | null | undefined) {
+  return path ? `${TMDB_IMAGE_BASE_URL}${path}` : "/next.svg";
+}
+
+function formatRuntime(minutes: number) {
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+
+  if (hours === 0) {
+    return `${remainder}m`;
+  }
+
+  if (remainder === 0) {
+    return `${hours}h`;
+  }
+
+  return `${hours}h ${remainder}m`;
+}
+
+function formatReleaseDate(releaseDate: string) {
+  const parsed = new Date(releaseDate);
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(parsed);
+}
+
+function formatLanguage(languageCode: string) {
+  return (
+    new Intl.DisplayNames(["en"], { type: "language" }).of(languageCode) ??
+    languageCode.toUpperCase()
+  );
+}
+
+function toMovie(key: TmdbFixtureKey): Movie {
+  const fixture = tmdbMovieFixtures[key];
+  const config = movieConfigs[key];
+  const directors = fixture.credits.crew
+    .filter((member) => member.job === "Director")
+    .map((member) => member.name);
+  const trailer =
+    fixture.videos.find((video) => video.type === "Trailer") ??
+    fixture.videos.find((video) => video.type === "Teaser") ??
+    fixture.videos[0];
+
+  return {
+    tmdbId: fixture.details.id,
+    slug: config.slug,
+    title: fixture.details.title,
+    tagline: fixture.details.tagline,
+    rating: config.rating,
+    runtime: formatRuntime(fixture.details.runtime),
+    genre: fixture.details.genres.slice(0, 2).map((genre) => genre.name).join(" / "),
+    status: config.status,
+    director: directors.join(" & ") || "Director unavailable",
+    cast: fixture.credits.cast.slice(0, 5).map((member) => member.name),
+    synopsis: fixture.details.overview,
+    production:
+      fixture.details.production_companies[0]?.name ?? "Production unavailable",
+    score: `TMDB ${fixture.details.vote_average.toFixed(1)}/10`,
+    cinematography: "Cinematography unavailable in TMDB fixture data",
+    backdrop: toImageUrl(fixture.details.backdrop_path),
+    poster: toImageUrl(fixture.details.poster_path),
+    releaseDate: formatReleaseDate(fixture.details.release_date),
+    audienceScore: `${fixture.details.vote_average.toFixed(1)} / 10`,
+    originalLanguage: formatLanguage(fixture.details.original_language),
+    productionCompanies: fixture.details.production_companies.map(
+      (company) => company.name
+    ),
+    trailerYouTubeId: trailer?.key,
+  };
+}
+
+export const movies: Movie[] = (
+  Object.keys(tmdbMovieFixtures) as TmdbFixtureKey[]
+).map(toMovie);

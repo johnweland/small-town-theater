@@ -151,20 +151,22 @@ export default async function HomePage() {
             <div className="mt-10 grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
               {comingSoon.map((film) => (
                 <article key={film.slug} className="group">
-                  <div className="aspect-[2/3] overflow-hidden rounded-[0.125rem] bg-[#201f1f]">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={film.poster}
-                      alt={film.title}
-                      className="h-full w-full object-cover opacity-70 transition-opacity group-hover:opacity-90"
-                    />
-                  </div>
-                  <h3 className="mt-3 font-serif text-base text-[#e5e2e1]">
-                    {film.title}
-                  </h3>
-                  <p className="mt-0.5 font-sans text-xs text-[#9c8f78]">
-                    {film.genre} · {film.rating}
-                  </p>
+                  <Link href={`/movie/${film.slug}`} className="block">
+                    <div className="aspect-[2/3] overflow-hidden rounded-[0.125rem] bg-[#201f1f]">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={film.poster}
+                        alt={film.title}
+                        className="h-full w-full object-cover opacity-70 transition-opacity group-hover:opacity-90"
+                      />
+                    </div>
+                    <h3 className="mt-3 font-serif text-base text-[#e5e2e1] transition-colors group-hover:text-[#ffe2ab]">
+                      {film.title}
+                    </h3>
+                    <p className="mt-0.5 font-sans text-xs text-[#9c8f78]">
+                      {film.genre} · {film.rating}
+                    </p>
+                  </Link>
                 </article>
               ))}
             </div>

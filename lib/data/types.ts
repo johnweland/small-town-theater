@@ -1,3 +1,15 @@
+export type TheaterStatus = "active" | "inactive" | "seasonal";
+export type ScreenStatus = "active" | "inactive";
+export type BookingStatus = "draft" | "published" | "archived";
+export type BookingDay =
+  | "Monday"
+  | "Tuesday"
+  | "Wednesday"
+  | "Thursday"
+  | "Friday"
+  | "Saturday"
+  | "Sunday";
+
 export interface Movie {
   slug: string;
   title: string;
@@ -14,14 +26,38 @@ export interface Movie {
   cinematography: string;
   backdrop: string;
   poster: string;
+  releaseDate?: string;
+  audienceScore?: string;
+  originalLanguage?: string;
+  productionCompanies?: string[];
+  tmdbId?: number;
+  trailerYouTubeId?: string;
 }
 
-export interface Showtime {
-  movieSlug: string;
-  theaterId: string;
-  badge: string | null;
+export interface BookingShowtime {
+  day: BookingDay;
   times: string[];
-  price: string;
+}
+
+export interface BookingException {
+  date: string;
+  label: string;
+}
+
+export interface Booking {
+  id: string;
+  slug: string;
+  theaterId: string;
+  screenId: string;
+  movieSlug: string;
+  status: BookingStatus;
+  runStartsOn: string;
+  runEndsOn: string;
+  ticketPrice: string;
+  badge: string | null;
+  showtimes: BookingShowtime[];
+  exceptions: BookingException[];
+  note: string;
 }
 
 export interface TheaterSpec {
@@ -37,25 +73,57 @@ export interface ConcessionItem {
 
 export interface Theater {
   id: string;
+  slug: string;
   name: string;
+  city: string;
+  state: string;
   district: string;
   established: number;
+  status: TheaterStatus;
   address: string;
+  phone: string;
+  contactEmail: string;
+  manager: string;
+  notes: string;
   heroImage: string;
   descriptionParagraphs: string[];
   specs: TheaterSpec[];
   concessions: ConcessionItem[];
-  memberBenefits: string[];
-  memberBlurb: string;
+}
+
+export interface Screen {
+  id: string;
+  theaterId: string;
+  name: string;
+  slug: string;
+  capacity: number;
+  sortOrder: number;
+  projection: string;
+  soundFormat: string;
+  features: string[];
+  status: ScreenStatus;
+}
+
+export interface MembershipProgram {
+  id: string;
+  name: string;
+  blurb: string;
+  benefits: string[];
+  ctaLabel: string;
+  ctaHref: string;
 }
 
 /** Joined shape used by the showtimes UI */
-export interface TheaterWithFilms {
+export interface TheaterWithBookings {
   id: string;
   name: string;
   district: string;
-  films: {
+  bookings: {
+    bookingId: string;
     slug: string;
+    screenName: string;
+    runStartsOn: string;
+    runEndsOn: string;
     title: string;
     rating: string;
     runtime: string;
@@ -67,21 +135,28 @@ export interface TheaterWithFilms {
   }[];
 }
 
-/** Joined shape used by the movie detail page */
-export interface MovieWithShowtimes extends Movie {
-  showtimes: {
-    theaterId: string;
-    theaterName: string;
-    badge: string | null;
-    times: string[];
-    price: string;
-  }[];
+export interface MovieShowtime {
+  bookingId: string;
+  theaterId: string;
+  theaterName: string;
+  screenId: string;
+  screenName: string;
+  runStartsOn: string;
+  runEndsOn: string;
+  status: BookingStatus;
+  badge: string | null;
+  times: string[];
+  price: string;
 }
 
 /** Joined shape used by a theater detail page */
 export interface TheaterWithShowtimes extends Theater {
-  currentFilms: {
+  currentBookings: {
+    bookingId: string;
     slug: string;
+    screenName: string;
+    runStartsOn: string;
+    runEndsOn: string;
     title: string;
     rating: string;
     runtime: string;

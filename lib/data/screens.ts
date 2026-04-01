@@ -1,0 +1,40 @@
+import type { Screen } from "./types";
+
+export const screens: Screen[] = [
+  {
+    id: "jackson-main",
+    theaterId: "jackson",
+    name: "Main Auditorium",
+    slug: "main-auditorium",
+    capacity: 224,
+    sortOrder: 1,
+    projection: "4K Laser + 35mm",
+    soundFormat: "7.1 Surround",
+    features: ["Historic proscenium", "Wheelchair row", "Assisted listening"],
+    status: "active",
+  },
+  {
+    id: "jackson-loft",
+    theaterId: "jackson",
+    name: "Loft Screening Room",
+    slug: "loft-screening-room",
+    capacity: 62,
+    sortOrder: 2,
+    projection: "Digital DCP",
+    soundFormat: "5.1 Surround",
+    features: ["Private rentals", "Panel setup", "Blu-ray fallback"],
+    status: "inactive",
+  },
+  {
+    id: "sherburn-grand",
+    theaterId: "sherburn",
+    name: "Grand Screen",
+    slug: "grand-screen",
+    capacity: 156,
+    sortOrder: 1,
+    projection: "4K Laser + 70mm",
+    soundFormat: "Dolby 7.1",
+    features: ["70mm capable", "Courtyard access", "Stage mics"],
+    status: "active",
+  },
+];

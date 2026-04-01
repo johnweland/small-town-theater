@@ -13,6 +13,16 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 Start building from [`app/(site)/page.tsx`](app/(site)/page.tsx) and the shared layout in [`app/layout.tsx`](app/layout.tsx).
 
+## TMDB setup
+
+To let movie pages fetch trailer IDs from TMDB automatically, add a read access token in `.env.local`:
+
+```bash
+TMDB_API_READ_ACCESS_TOKEN=your_tmdb_bearer_token
+```
+
+Without that token, the app falls back to local fixture data and trailer playback stays unavailable for movies that do not already have a trailer ID.
+
 ## Scripts
 
 ```bash

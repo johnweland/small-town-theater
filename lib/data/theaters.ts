@@ -3,10 +3,19 @@ import type { Theater } from "./types";
 export const theaters: Theater[] = [
   {
     id: "jackson",
+    slug: "jackson-theater",
     name: "Jackson Theater",
+    city: "Jackson",
+    state: "MN",
     district: "Downtown",
     established: 1928,
+    status: "active",
     address: "1248 North Main Street · Downtown Historic District",
+    phone: "(555) 010-1928",
+    contactEmail: "jackson@smalltowntheater.org",
+    manager: "Evelyn Hart",
+    notes:
+      "Historic flagship house. Weekend repertory programming and member previews happen here first.",
     heroImage:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuBoDKlDYpeVPNziGWRArXpb91dpx9319A84alSsuRftSjoR5aA7fi27ZKs6ockIvmyL6G1XbyB84C8DSh0CTLjbP6Fgo1dHcmy4tWpXZPeZtv2bFkYIOJPUCxpW2xhl3Gz211IKxZiFHNAK3lYjJaw3vOi4AgvE0rcvYP-Q9JEpRy2gut3AGohOZ7SSeFm8rLzBKCJSp2QfJo6xx_gPHRZm33uP13JvsOVFv16QPGf5ln350DX-aREK0SZfh9ogPet_sZCd_v9_ZtU",
     descriptionParagraphs: [
@@ -25,21 +34,22 @@ export const theaters: Theater[] = [
       { name: "Small Batch Sodas", price: "$6", note: "Cherry, vanilla, & seasonal" },
       { name: "Local Truffles", price: "$12", note: "From Main Street Sweets" },
     ],
-    memberBenefits: [
-      "Early ticket access",
-      "Free concession refills",
-      "Private screening invitations",
-      "Discounted tickets",
-    ],
-    memberBlurb:
-      "Members enjoy early access to screenings, complimentary concessions refills, and invitations to private events. Help preserve small-town cinema for the next generation.",
   },
   {
     id: "sherburn",
+    slug: "sherburn-theater",
     name: "Sherburn Theater",
+    city: "Sherburn",
+    state: "MN",
     district: "Heritage Row",
     established: 1948,
+    status: "seasonal",
     address: "412 Heritage Row · Eastside Arts Village",
+    phone: "(555) 010-1948",
+    contactEmail: "sherburn@smalltowntheater.org",
+    manager: "Miles Avery",
+    notes:
+      "Boutique house focused on specialty bookings, 70mm programs, and courtyard events.",
     heroImage:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuA1MXrFdHN_TIqWls3zgPPjs_y9M8RjFN5N1yedYoabe3kdq8hrIC8ttzRjJ32cPm86CPXQMLYyZ8-Q6Ub4qVw83XLJacWH-FH4mdu26x0EjZhDxfpPiobDltNnneWq0siDmUx7aq43IjktLI_PjKsEEOhKlT9kW7M9AzGkn4sg0ozvOzgPxPSqTutn9EzWY1e3a8Ua5GncbVKvLNfUwmIP2tuha-LTfQKZDHOWbtJeNs7960MapSYARdNW-FZ8VnlUHoARwBamXM",
     descriptionParagraphs: [
@@ -70,13 +80,5 @@ export const theaters: Theater[] = [
         note: "Open before & after evening shows",
       },
     ],
-    memberBenefits: [
-      "Priority 70mm access",
-      "Coffee bar discounts",
-      "Courtyard event invites",
-      "Discounted tickets",
-    ],
-    memberBlurb:
-      "Members enjoy priority access to specialty 70mm screenings, courtyard events, and discounts at the coffee bar. Help preserve independent cinema for generations to come.",
   },
 ];
