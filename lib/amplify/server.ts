@@ -43,3 +43,18 @@ export async function getScreenFromAmplify(screenId: string) {
     client.models.Screen.get(contextSpec, { id: screenId }, { authMode: "userPool" })
   );
 }
+
+export async function listMoviesFromAmplify() {
+  return runWithAuthServerContext((contextSpec) =>
+    client.models.Movie.list(contextSpec, {
+      authMode: "userPool",
+      sortDirection: "DESC",
+    })
+  );
+}
+
+export async function getMovieFromAmplify(movieId: string) {
+  return runWithAuthServerContext((contextSpec) =>
+    client.models.Movie.get(contextSpec, { id: movieId }, { authMode: "userPool" })
+  );
+}

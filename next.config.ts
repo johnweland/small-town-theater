@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "scontent-msp1-1.xx.fbcdn.net",
+        hostname: "**.fbcdn.net",
         pathname: "/**",
       },
     ],

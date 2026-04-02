@@ -1,9 +1,6 @@
 import {
-  adminBookings,
   adminEvents,
-  adminMovies,
   adminRecentActivity,
-  importCandidates,
 } from "./mock-data";
 import { theaters as siteTheaters } from "@/lib/data/theaters";
 import { screens as siteScreens } from "@/lib/data/screens";
@@ -12,6 +9,8 @@ import {
   getTheaterFromAmplify,
   listScreensFromAmplify,
   getScreenFromAmplify,
+  getMovieFromAmplify,
+  listMoviesFromAmplify,
 } from "@/lib/amplify/server";
 import {
   getTmdbCredits,
@@ -20,7 +19,9 @@ import {
   getTmdbTrailerYouTubeId,
   searchTmdbMovies,
 } from "@/lib/data/tmdb";
-import { getMovieDetail, getMovieShowtimes } from "@/lib/data";
+import { bookings as siteBookings } from "@/lib/data/bookings";
+
+type AdminMovieStatus = "now-playing" | "coming-soon" | "draft" | "archived";
 
 export type {
   AdminActivityItem,
@@ -40,6 +41,113 @@ type AmplifyTheaterRecord = NonNullable<
 type AmplifyScreenRecord = NonNullable<
   Awaited<ReturnType<typeof getScreenFromAmplify>>["data"]
 >;
+type AmplifyMovieRecord = NonNullable<
+  Awaited<ReturnType<typeof getMovieFromAmplify>>["data"]
+>;
+
+function toAdminMovieStatus(
+  status: AmplifyMovieRecord["status"]
+): AdminMovieStatus {
+  switch (status) {
+    case "nowPlaying":
+      return "now-playing";
+    case "comingSoon":
+      return "coming-soon";
+    case "draft":
+      return "draft";
+    case "archived":
+      return "archived";
+  }
+}
+
+function getMovieYear(movie: AmplifyMovieRecord) {
+  if (!movie.releaseDate) {
+    return new Date().getUTCFullYear();
+  }
+
+  const parsed = new Date(movie.releaseDate);
+  return Number.isNaN(parsed.getTime())
+    ? new Date().getUTCFullYear()
+    : parsed.getUTCFullYear();
+}
+
+function getRuntimeMinutes(runtime?: string | null) {
+  if (!runtime) {
+    return 0;
+  }
+
+  const hoursMatch = runtime.match(/(\d+)\s*h/);
+  const minutesMatch = runtime.match(/(\d+)\s*m/);
+  const hours = hoursMatch ? Number.parseInt(hoursMatch[1], 10) : 0;
+  const minutes = minutesMatch ? Number.parseInt(minutesMatch[1], 10) : 0;
+  const total = hours * 60 + minutes;
+
+  return Number.isNaN(total) ? 0 : total;
+}
+
+function toAmplifyDate(value?: string) {
+  if (!value) {
+    return undefined;
+  }
+
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : undefined;
+}
+
+function toAdminMovie(movie: AmplifyMovieRecord) {
+  return {
+    id: movie.id,
+    slug: movie.slug,
+    title: movie.title,
+    year: getMovieYear(movie),
+    runtimeMinutes: getRuntimeMinutes(movie.runtime),
+    rating: movie.rating ?? "NR",
+    genres:
+      movie.genre
+        ?.split("/")
+        .map((genre) => genre.trim())
+        .filter(Boolean) ?? [],
+    status: toAdminMovieStatus(movie.status),
+    tagline: movie.tagline ?? "Tagline unavailable.",
+    overview: movie.synopsis ?? "Synopsis unavailable.",
+    poster: movie.poster ?? "/next.svg",
+    backdrop: movie.backdrop ?? "/next.svg",
+    castHighlights:
+      movie.cast?.filter((credit): credit is string => Boolean(credit)) ?? [],
+    trailerLabel: movie.trailerYouTubeId
+      ? "Trailer available"
+      : "Trailer not available yet",
+  };
+}
+
+function toAdminMovieDetail(movie: AmplifyMovieRecord) {
+  return {
+    id: movie.id,
+    slug: movie.slug,
+    title: movie.title,
+    tagline: movie.tagline ?? "Tagline unavailable.",
+    rating: movie.rating ?? "NR",
+    runtime: movie.runtime ?? "Runtime TBD",
+    genre: movie.genre ?? "Genre unavailable",
+    status: toAdminMovieStatus(movie.status),
+    director: movie.director ?? "Director unavailable",
+    cast: movie.cast?.filter((credit): credit is string => Boolean(credit)) ?? [],
+    synopsis: movie.synopsis ?? "Synopsis unavailable.",
+    production: movie.production ?? "Production unavailable",
+    score: movie.score ?? "Score unavailable",
+    cinematography: movie.cinematography ?? "Cinematography unavailable",
+    backdrop: movie.backdrop ?? "/next.svg",
+    poster: movie.poster ?? "/next.svg",
+    releaseDate: movie.releaseDate ?? undefined,
+    audienceScore: movie.audienceScore ?? undefined,
+    originalLanguage: movie.originalLanguage ?? undefined,
+    productionCompanies:
+      movie.productionCompanies?.filter(
+        (company): company is string => Boolean(company)
+      ) ?? [],
+    tmdbId: movie.tmdbId ?? undefined,
+    trailerYouTubeId: movie.trailerYouTubeId ?? undefined,
+  };
+}
 
 function toAdminTheater(
   theater: AmplifyTheaterRecord
@@ -170,37 +278,87 @@ export async function getAdminScreensForTheater(theaterId: string) {
 }
 
 export async function getAdminMovies() {
-  return adminMovies;
+  const result = await listMoviesFromAmplify();
+
+  if (result.errors?.length) {
+    throw new Error(
+      `Unable to load movies from Amplify: ${result.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  return result.data.map(toAdminMovie);
 }
 
 export async function getAdminMovie(movieId: string) {
-  return adminMovies.find((movie) => movie.id === movieId) ?? null;
+  const result = await getMovieFromAmplify(movieId);
+
+  if (result.errors?.length) {
+    throw new Error(
+      `Unable to load movie from Amplify: ${result.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  return result.data ? toAdminMovie(result.data) : null;
 }
 
 export async function getAdminMovieDetail(movieId: string) {
-  const adminMovie = await getAdminMovie(movieId);
-  if (!adminMovie) {
+  const result = await getMovieFromAmplify(movieId);
+
+  if (result.errors?.length) {
+    throw new Error(
+      `Unable to load movie detail from Amplify: ${result.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  const movie = result.data;
+  if (!movie) {
     return null;
   }
 
-  const [movie, showtimes] = await Promise.all([
-    getMovieDetail(adminMovie.slug),
-    getMovieShowtimes(adminMovie.slug),
+  const [adminMovie, bookings, theaters, screens] = await Promise.all([
+    Promise.resolve(toAdminMovie(movie)),
+    getAdminBookings(),
+    getAdminTheaters(),
+    getAdminScreens(),
   ]);
+  const theaterById = Object.fromEntries(theaters.map((theater) => [theater.id, theater]));
+  const screenById = Object.fromEntries(screens.map((screen) => [screen.id, screen]));
+
+  const showtimes = bookings
+    .filter((booking) => booking.movieSlug === movie.slug && booking.status === "published")
+    .map((booking) => ({
+      bookingId: booking.id,
+      theaterId: booking.theaterId,
+      theaterName: theaterById[booking.theaterId]?.name ?? booking.theaterId,
+      screenId: booking.screenId,
+      screenName: screenById[booking.screenId]?.name ?? booking.screenId,
+      runStartsOn: booking.runStartsOn,
+      runEndsOn: booking.runEndsOn,
+      status: booking.status,
+      badge: booking.badge,
+      times: booking.showtimes.flatMap((showtime) => showtime.times),
+      price: booking.ticketPrice,
+    }));
 
   return {
     adminMovie,
-    movie,
+    movie: toAdminMovieDetail(movie),
     showtimes,
   };
 }
 
 export async function getAdminBookings() {
-  return adminBookings;
+  return siteBookings;
 }
 
 export async function getAdminBooking(bookingId: string) {
-  return adminBookings.find((booking) => booking.id === bookingId) ?? null;
+  return siteBookings.find((booking) => booking.id === bookingId) ?? null;
 }
 
 export async function getAdminEvents() {
@@ -216,7 +374,7 @@ export async function getAdminRecentActivity() {
 }
 
 export async function getImportCandidates() {
-  return importCandidates;
+  return [];
 }
 
 export async function searchTmdbImportCandidates(query: string) {
@@ -259,6 +417,20 @@ export async function searchTmdbImportCandidates(query: string) {
           ? "Trailer available"
           : "Trailer not available yet",
         trailerYouTubeId,
+        tmdbId: result.id,
+        tagline: details?.tagline ?? "Imported from TMDB movie details.",
+        rating: "NR",
+        runtime: details?.runtime ?? "Runtime TBD",
+        status: (result.release_date
+          ? Date.parse(result.release_date) > Date.now()
+            ? "coming-soon"
+            : "now-playing"
+          : "now-playing") as AdminMovieStatus,
+        director: credits?.director ?? "Director unavailable",
+        releaseDate: toAmplifyDate(result.release_date),
+        audienceScore: details?.audienceScore ?? `${result.vote_average.toFixed(1)} / 10`,
+        originalLanguage: details?.originalLanguage,
+        productionCompanies: details?.productionCompanies ?? [],
       };
     })
   );

@@ -73,4 +73,14 @@ export interface ImportCandidate {
   castHighlights: string[];
   trailerLabel: string;
   trailerYouTubeId?: string;
+  tmdbId?: number;
+  tagline?: string;
+  rating?: string;
+  runtime?: string;
+  status?: "now-playing" | "coming-soon" | "draft" | "archived";
+  director?: string;
+  releaseDate?: string;
+  audienceScore?: string;
+  originalLanguage?: string;
+  productionCompanies?: string[];
 }
