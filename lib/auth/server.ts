@@ -111,7 +111,7 @@ function readGroupsFromSession(session: Awaited<ReturnType<typeof fetchAuthSessi
 
 export async function getStaffSession(): Promise<StaffSession> {
   try {
-    return runWithAuthServerContext(async (contextSpec) => {
+    return await runWithAuthServerContext(async (contextSpec) => {
       const session = await fetchAuthSession(contextSpec);
       const groups = readGroupsFromSession(session);
       const email = session.tokens?.idToken?.payload.email;

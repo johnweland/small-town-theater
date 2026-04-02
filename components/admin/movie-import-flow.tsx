@@ -3,14 +3,24 @@
 import { startTransition, useDeferredValue, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ExternalLink, LoaderCircle, Search, Sparkles } from "lucide-react";
 
 import type { ImportCandidate } from "@/lib/admin";
+import { getAmplifyClient } from "@/lib/amplify/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AdminEmptyState } from "@/components/admin/empty-state";
 import { AdminSectionCard } from "@/components/admin/section-card";
 import { AdminStatusBadge } from "@/components/admin/status-badge";
+
+function toAmplifyDate(value?: string) {
+  if (!value) {
+    return null;
+  }
+
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
+}
 
 export function AdminMovieImportFlow({
   candidates,
@@ -19,13 +29,15 @@ export function AdminMovieImportFlow({
   candidates: ImportCandidate[];
   initialQuery: string;
 }) {
+  const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
   const deferredQuery = useDeferredValue(query.trim());
   const [results, setResults] = useState(candidates);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedId, setSelectedId] = useState(candidates[0]?.id ?? "");
   const [hasSearched, setHasSearched] = useState(initialQuery.trim().length > 0);
-  const [saved, setSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     setResults(candidates);
@@ -67,7 +79,7 @@ export function AdminMovieImportFlow({
           setResults(payload.candidates);
           setHasSearched(true);
           setSelectedId(payload.candidates[0]?.id ?? "");
-          setSaved(false);
+          setSaveError(null);
         });
       } catch (error) {
         if ((error as Error).name !== "AbortError") {
@@ -132,7 +144,7 @@ export function AdminMovieImportFlow({
                   type="button"
                   onClick={() => {
                     setSelectedId(candidate.id);
-                    setSaved(false);
+                    setSaveError(null);
                   }}
                   className={`grid grid-cols-[64px_1fr_auto] items-center gap-4 rounded-lg p-3 text-left transition-colors ${
                     candidate.id === selected?.id
@@ -287,15 +299,89 @@ export function AdminMovieImportFlow({
               <div className="flex items-center gap-3">
                 <Sparkles className="size-4 text-primary" />
                 <p className="text-sm text-muted-foreground">
-                  Ready to create a local movie record with imported artwork and metadata.
+                  Ready to create an Amplify-backed movie record with imported artwork and metadata.
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                {saved ? (
-                  <span className="text-sm text-primary">Imported locally</span>
+                {saveError ? (
+                  <span className="text-sm text-destructive">{saveError}</span>
                 ) : null}
-                <Button type="button" onClick={() => setSaved(true)}>
-                  Save Import
+                <Button
+                  type="button"
+                  disabled={isSaving}
+                  onClick={() => {
+                    setSaveError(null);
+                    setIsSaving(true);
+
+                    void (async () => {
+                      const client = getAmplifyClient();
+                      if (!client.models.Movie) {
+                        setSaveError(
+                          "The Movie model is not available in the local Amplify client yet. Deploy or sandbox-sync the backend, then reload this page."
+                        );
+                        setIsSaving(false);
+                        return;
+                      }
+
+                      const response = await client.models.Movie.create(
+                        {
+                          slug: `${selected.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")}-${selected.tmdbId ?? selected.year}`,
+                          title: selected.title,
+                          tagline: selected.tagline ?? null,
+                          rating: selected.rating ?? "NR",
+                          runtime: selected.runtime ?? null,
+                          genre: selected.genres.join(" / "),
+                          status:
+                            selected.status === "coming-soon"
+                              ? "comingSoon"
+                              : selected.status === "archived"
+                                ? "archived"
+                                : selected.status === "draft"
+                                  ? "draft"
+                                  : "nowPlaying",
+                          director: selected.director ?? null,
+                          cast: selected.castHighlights,
+                          synopsis: selected.overview,
+                          production:
+                            selected.productionCompanies?.[0] ??
+                            "Production unavailable",
+                          score:
+                            selected.audienceScore
+                              ? `TMDB ${selected.audienceScore}`
+                              : null,
+                          cinematography: null,
+                          backdrop: selected.backdrop,
+                          poster: selected.poster,
+                          releaseDate: toAmplifyDate(selected.releaseDate),
+                          audienceScore: selected.audienceScore ?? null,
+                          originalLanguage: selected.originalLanguage ?? null,
+                          productionCompanies: selected.productionCompanies ?? [],
+                          tmdbId: selected.tmdbId ?? null,
+                          trailerYouTubeId: selected.trailerYouTubeId ?? null,
+                        },
+                        { authMode: "userPool" }
+                      );
+
+                      if (response.errors?.length) {
+                        setSaveError(
+                          response.errors.map((item) => item.message).join("; ")
+                        );
+                        setIsSaving(false);
+                        return;
+                      }
+
+                      router.push(
+                        response.data?.id
+                          ? `/admin/movies/${response.data.id}`
+                          : "/admin/movies"
+                      );
+                      router.refresh();
+                    })().finally(() => {
+                      setIsSaving(false);
+                    });
+                  }}
+                >
+                  {isSaving ? "Importing..." : "Import Movie"}
                 </Button>
               </div>
             </div>
