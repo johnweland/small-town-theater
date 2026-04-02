@@ -1,9 +1,9 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useState } from "react";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { signIn } from "aws-amplify/auth";
 
 import { ensureAmplifyConfigured } from "@/lib/amplify/client";
@@ -30,19 +30,18 @@ function getErrorMessage(error: unknown) {
   return "We could not sign you in. Please try again.";
 }
 
-export function SignInForm() {
+export function SignInForm({
+  initialEmail,
+  created,
+}: {
+  initialEmail: string;
+  created: boolean;
+}) {
   ensureAmplifyConfigured();
 
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const initialEmail = useMemo(
-    () => searchParams.get("email") ?? "",
-    [searchParams]
-  );
-  const created = searchParams.get("created") === "1";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
