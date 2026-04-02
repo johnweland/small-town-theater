@@ -39,6 +39,51 @@ const publicScreenSelection = [
   "createdAt",
   "updatedAt",
 ] as const;
+const publicMovieSelection = [
+  "id",
+  "slug",
+  "title",
+  "tagline",
+  "rating",
+  "runtime",
+  "genre",
+  "status",
+  "director",
+  "cast",
+  "synopsis",
+  "production",
+  "score",
+  "cinematography",
+  "backdrop",
+  "poster",
+  "releaseDate",
+  "audienceScore",
+  "originalLanguage",
+  "productionCompanies",
+  "tmdbId",
+  "trailerYouTubeId",
+  "createdAt",
+  "updatedAt",
+] as const;
+const publicBookingSelection = [
+  "id",
+  "slug",
+  "theaterId",
+  "movieId",
+  "screenId",
+  "screenName",
+  "status",
+  "runStartsOn",
+  "runEndsOn",
+  "ticketPrice",
+  "badge",
+  "showtimes.day",
+  "showtimes.times",
+  "exceptions.date",
+  "exceptions.label",
+  "createdAt",
+  "updatedAt",
+] as const;
 
 export async function listPublicTheatersFromAmplify() {
   return runWithAmplifyServerContext(config, {}, (contextSpec) =>
@@ -60,5 +105,25 @@ export async function listPublicScreensFromAmplify(theaterId: string) {
         selectionSet: publicScreenSelection,
       }
     )
+  );
+}
+
+export async function listPublicMoviesFromAmplify() {
+  return runWithAmplifyServerContext(config, {}, (contextSpec) =>
+    client.models.Movie.list(contextSpec, {
+      authMode: "apiKey",
+      sortDirection: "DESC",
+      selectionSet: publicMovieSelection,
+    })
+  );
+}
+
+export async function listPublicBookingsFromAmplify() {
+  return runWithAmplifyServerContext(config, {}, (contextSpec) =>
+    client.models.Booking.list(contextSpec, {
+      authMode: "apiKey",
+      sortDirection: "ASC",
+      selectionSet: publicBookingSelection,
+    })
   );
 }

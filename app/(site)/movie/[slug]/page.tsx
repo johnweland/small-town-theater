@@ -1,15 +1,10 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link";
-import { getMovieDetail, getMovieShowtimes, getMovieSlugs } from "@/lib/data";
+import { getMovieDetail, getMovieShowtimes } from "@/lib/data";
+import { MovieShowtimesPanel } from "@/components/site/movie-showtimes-panel";
 import { TrailerPlayer } from "@/components/site/trailer-player";
 
-export const revalidate = 3600;
-
-export async function generateStaticParams() {
-  const slugs = await getMovieSlugs();
-  return slugs.map((slug) => ({ slug }));
-}
+export const dynamic = "force-dynamic";
 
 export default async function MoviePage({
   params,
@@ -153,78 +148,9 @@ export default async function MoviePage({
         </div>
       </section>
 
-      {showtimes.length > 0 && (
-        <section className="mx-auto mt-32 max-w-7xl space-y-16 px-6 pb-20 lg:px-8">
-          <div className="flex flex-col gap-6 border-b border-[#504532]/20 pb-8 md:flex-row md:items-end md:justify-between">
-            <div>
-              <h2 className="font-serif text-5xl text-[#e5e2e1]">
-                Book Your Seat
-              </h2>
-              <p className="mt-3 font-sans text-sm uppercase tracking-[0.2em] text-[#9c8f78]">
-                Choose a theater and time
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-4">
-              <button className="bg-[#ffbf00] px-6 py-3 font-sans text-sm font-semibold text-[#402d00]">
-                Today
-              </button>
-              <button className="bg-[#2a2a2a] px-6 py-3 font-sans text-sm font-semibold text-[#9c8f78] transition-colors hover:text-[#e5e2e1]">
-                Tomorrow
-              </button>
-              <button className="bg-[#2a2a2a] px-6 py-3 font-sans text-sm font-semibold text-[#9c8f78] transition-colors hover:text-[#e5e2e1]">
-                Weekend
-              </button>
-            </div>
-          </div>
-
-          <div className="grid gap-12 xl:grid-cols-2">
-            {showtimes.map((showtime) => (
-              <div key={showtime.bookingId} className="space-y-8">
-                <div className="flex items-center gap-4">
-                  <span className="font-sans text-xl text-[#ffbf00]">
-                    {showtime.badge ? "◉" : "◌"}
-                  </span>
-                  <div>
-                    <Link href={`/theaters/${showtime.theaterId}`}>
-                      <h3 className="font-serif text-3xl italic text-[#e5e2e1] transition-colors hover:text-[#ffe2ab]">
-                        {showtime.theaterName}
-                      </h3>
-                    </Link>
-                    <p className="mt-2 font-sans text-xs uppercase tracking-[0.2em] text-[#9c8f78]">
-                      {showtime.screenName} • {showtime.runStartsOn} to {showtime.runEndsOn}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {showtime.times.map((time) => (
-                    <div
-                      key={time}
-                      className="flex min-h-[160px] flex-col justify-between bg-[#1c1b1b] p-8 transition-colors hover:bg-[#2a2a2a]"
-                    >
-                      <div>
-                        <p className="font-sans text-3xl font-bold text-[#ffe2ab]">
-                          {time}
-                        </p>
-                        <p
-                          className={`mt-1 font-sans text-xs font-bold uppercase tracking-[0.2em] ${
-                            showtime.badge ? "text-[#ffb4ab]" : "text-[#9c8f78]"
-                          }`}
-                        >
-                          {showtime.badge ?? "Standard Cinema"}
-                        </p>
-                      </div>
-                      <button className="mt-6 w-full bg-[#ffbf00] py-4 font-sans text-sm font-bold uppercase tracking-[0.15em] text-[#402d00] transition-colors hover:bg-[#fbbc00]">
-                        Buy Tickets — {showtime.price}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+      {(showtimes.length > 0 || movie.status === "coming-soon") ? (
+        <MovieShowtimesPanel movie={movie} showtimes={showtimes} />
+      ) : null}
     </div>
   );
 }

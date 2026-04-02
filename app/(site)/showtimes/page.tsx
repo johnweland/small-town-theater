@@ -1,8 +1,11 @@
-import { getTheatersWithBookings } from "@/lib/data";
+import { getComingSoonMovies, getTheatersWithBookings } from "@/lib/data";
 import { ShowtimeFilters } from "@/components/site/showtime-filters";
 
 export default async function ShowtimesPage() {
-  const theaters = await getTheatersWithBookings();
+  const [theaters, comingSoonMovies] = await Promise.all([
+    getTheatersWithBookings(),
+    getComingSoonMovies(),
+  ]);
 
   return (
     <div className="bg-[#131313] text-[#e5e2e1]">
@@ -25,7 +28,7 @@ export default async function ShowtimesPage() {
 
       <section className="pb-20 pt-6">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <ShowtimeFilters theaters={theaters} />
+          <ShowtimeFilters theaters={theaters} comingSoonMovies={comingSoonMovies} />
         </div>
       </section>
     </div>

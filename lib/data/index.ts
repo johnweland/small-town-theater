@@ -5,12 +5,12 @@
  * replaced with GraphQL queries or REST fetch calls.
  */
 
-import { bookings } from "./bookings";
 import { movies } from "./movies";
 import { memberships } from "./memberships";
-import { screens } from "./screens";
 import { theaters } from "./theaters";
 import {
+  listPublicBookingsFromAmplify,
+  listPublicMoviesFromAmplify,
   listPublicScreensFromAmplify,
   listPublicTheatersFromAmplify,
 } from "@/lib/amplify/public-server";
@@ -35,6 +35,7 @@ import type {
   MovieShowtime,
   TheaterWithBookings,
   TheaterWithShowtimes,
+  BookingTimeSlot,
 } from "./types";
 
 export type {
@@ -52,6 +53,7 @@ export type {
   MovieShowtime,
   TheaterWithBookings,
   TheaterWithShowtimes,
+  BookingTimeSlot,
 };
 
 type PublicAmplifyTheater = Awaited<
@@ -59,6 +61,12 @@ type PublicAmplifyTheater = Awaited<
 >["data"][number];
 type PublicAmplifyScreen = Awaited<
   ReturnType<typeof listPublicScreensFromAmplify>
+>["data"][number];
+type PublicAmplifyMovie = Awaited<
+  ReturnType<typeof listPublicMoviesFromAmplify>
+>["data"][number];
+type PublicAmplifyBooking = Awaited<
+  ReturnType<typeof listPublicBookingsFromAmplify>
 >["data"][number];
 
 function buildTheaterSpecs(
@@ -122,12 +130,11 @@ async function toSiteTheater(theater: PublicAmplifyTheater): Promise<Theater> {
     (siteTheater) =>
       siteTheater.slug === theater.slug || siteTheater.name === theater.name
   );
-  const routeKey = fallback?.id ?? theater.slug;
   const screensResult = await listPublicScreensFromAmplify(theater.id);
   const associatedScreens = screensResult.errors?.length ? [] : screensResult.data;
 
   return {
-    id: routeKey,
+    id: theater.id,
     slug: theater.slug,
     name: theater.name,
     city: theater.city,
@@ -174,26 +181,184 @@ async function getPublicTheaterByRouteKey(routeKey: string): Promise<Theater | n
   );
 }
 
+function toMovieStatus(
+  status: PublicAmplifyMovie["status"]
+): Movie["status"] | "draft" | "archived" {
+  switch (status) {
+    case "nowPlaying":
+      return "now-playing";
+    case "comingSoon":
+      return "coming-soon";
+    case "draft":
+      return "draft";
+    case "archived":
+      return "archived";
+  }
+}
+
+function toSiteMovie(movie: PublicAmplifyMovie): Movie {
+  const fallback = movies.find(
+    (siteMovie) => siteMovie.slug === movie.slug || siteMovie.tmdbId === movie.tmdbId
+  );
+  const mappedStatus = toMovieStatus(movie.status);
+
+  return {
+    slug: movie.slug,
+    title: movie.title,
+    tagline: movie.tagline ?? fallback?.tagline ?? "Tagline unavailable.",
+    rating: movie.rating ?? fallback?.rating ?? "NR",
+    runtime: movie.runtime ?? fallback?.runtime ?? "Runtime TBD",
+    genre: movie.genre ?? fallback?.genre ?? "Genre unavailable",
+    status:
+      mappedStatus === "draft" || mappedStatus === "archived"
+        ? fallback?.status ?? "coming-soon"
+        : mappedStatus,
+    director: movie.director ?? fallback?.director ?? "Director unavailable",
+    cast:
+      movie.cast?.filter((credit): credit is string => Boolean(credit)) ??
+      fallback?.cast ??
+      [],
+    synopsis: movie.synopsis ?? fallback?.synopsis ?? "Synopsis unavailable.",
+    production: movie.production ?? fallback?.production ?? "Production unavailable",
+    score: movie.score ?? fallback?.score ?? "Score unavailable",
+    cinematography:
+      movie.cinematography ??
+      fallback?.cinematography ??
+      "Cinematography unavailable",
+    backdrop: movie.backdrop ?? fallback?.backdrop ?? "/next.svg",
+    poster: movie.poster ?? fallback?.poster ?? "/next.svg",
+    releaseDate: movie.releaseDate ?? fallback?.releaseDate,
+    audienceScore: movie.audienceScore ?? fallback?.audienceScore,
+    originalLanguage: movie.originalLanguage ?? fallback?.originalLanguage,
+    productionCompanies:
+      movie.productionCompanies?.filter(
+        (company): company is string => Boolean(company)
+      ) ?? fallback?.productionCompanies,
+    tmdbId: movie.tmdbId ?? fallback?.tmdbId,
+    trailerYouTubeId: movie.trailerYouTubeId ?? fallback?.trailerYouTubeId,
+  };
+}
+
+async function getPublicMoviesFromAmplify(): Promise<Movie[]> {
+  const result = await listPublicMoviesFromAmplify();
+
+  if (result.errors?.length) {
+    throw new Error(
+      `Unable to load public movies from Amplify: ${result.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  return result.data.map(toSiteMovie);
+}
+
+function toSiteBooking(booking: PublicAmplifyBooking, movieSlug: string): Booking {
+  return {
+    id: booking.id,
+    slug: booking.slug,
+    theaterId: booking.theaterId,
+    screenId: booking.screenId,
+    movieSlug,
+    status: booking.status,
+    runStartsOn: booking.runStartsOn,
+    runEndsOn: booking.runEndsOn,
+    ticketPrice: booking.ticketPrice ?? "",
+    badge: booking.badge ?? null,
+    showtimes:
+      booking.showtimes
+        ?.filter((showtime): showtime is NonNullable<typeof showtime> => Boolean(showtime))
+        .map((showtime) => ({
+          day: showtime.day,
+          times: showtime.times.filter((time): time is string => Boolean(time)),
+        })) ?? [],
+    exceptions:
+      booking.exceptions
+        ?.filter(
+          (exception): exception is NonNullable<typeof exception> => Boolean(exception)
+        )
+        .map((exception) => ({
+          date: exception.date,
+          label: exception.label,
+        })) ?? [],
+    note: "",
+  };
+}
+
+async function getPublicBookingsFromAmplify(): Promise<Booking[]> {
+  const [bookingsResult, moviesResult] = await Promise.all([
+    listPublicBookingsFromAmplify(),
+    listPublicMoviesFromAmplify(),
+  ]);
+
+  if (bookingsResult.errors?.length) {
+    throw new Error(
+      `Unable to load public bookings from Amplify: ${bookingsResult.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  if (moviesResult.errors?.length) {
+    throw new Error(
+      `Unable to load public movies for bookings from Amplify: ${moviesResult.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  const movieSlugById = Object.fromEntries(
+    moviesResult.data.map((movie) => [movie.id, movie.slug])
+  );
+
+  return bookingsResult.data.flatMap((booking) => {
+    const movieSlug = movieSlugById[booking.movieId];
+    if (!movieSlug) {
+      return [];
+    }
+
+    return [toSiteBooking(booking, movieSlug)];
+  });
+}
+
+function toDayShort(day: BookingDay): string {
+  return day.slice(0, 3);
+}
+
+function flattenBookingTimes(showtimes: BookingShowtime[]): BookingTimeSlot[] {
+  return showtimes.flatMap((showtime) =>
+    showtime.times.map((time) => ({
+      day: showtime.day,
+      dayShort: toDayShort(showtime.day),
+      time,
+    }))
+  );
+}
+
 // ── Movies ────────────────────────────────────────────────────────────────────
 
 export async function getMovies(): Promise<Movie[]> {
-  return movies;
+  return getPublicMoviesFromAmplify();
 }
 
 export async function getMovie(slug: string): Promise<Movie | null> {
-  return movies.find((m) => m.slug === slug) ?? null;
+  const publicMovies = await getPublicMoviesFromAmplify();
+  return publicMovies.find((movie) => movie.slug === slug) ?? null;
 }
 
 export async function getNowPlayingMovies(): Promise<Movie[]> {
-  return movies.filter((m) => m.status === "now-playing");
+  const publicMovies = await getPublicMoviesFromAmplify();
+  return publicMovies.filter((movie) => movie.status === "now-playing");
 }
 
 export async function getComingSoonMovies(): Promise<Movie[]> {
-  return movies.filter((m) => m.status === "coming-soon");
+  const publicMovies = await getPublicMoviesFromAmplify();
+  return publicMovies.filter((movie) => movie.status === "coming-soon");
 }
 
 export async function getMovieDetail(slug: string): Promise<Movie | null> {
-  const movie = movies.find((m) => m.slug === slug);
+  const publicMovies = await getPublicMoviesFromAmplify();
+  const movie = publicMovies.find((item) => item.slug === slug);
   if (!movie) return null;
 
   const [trailerYouTubeId, credits, details] = movie.tmdbId
@@ -230,17 +395,22 @@ export async function getMovieDetail(slug: string): Promise<Movie | null> {
 }
 
 export async function getMovieShowtimes(slug: string): Promise<MovieShowtime[]> {
-  const publicTheaters = await getPublicTheatersFromAmplify();
+  const [publicTheaters, publicBookings, publicScreens] = await Promise.all([
+    getPublicTheatersFromAmplify(),
+    getPublicBookingsFromAmplify(),
+    getScreens(),
+  ]);
   const theaterById = Object.fromEntries(
     publicTheaters.map((theater) => [theater.id, theater])
   );
-  const screenById = Object.fromEntries(screens.map((screen) => [screen.id, screen]));
+  const screenById = Object.fromEntries(publicScreens.map((screen) => [screen.id, screen]));
 
-  return bookings
+  return publicBookings
     .filter((booking) => booking.movieSlug === slug && booking.status === "published")
     .map((booking) => ({
       bookingId: booking.id,
       theaterId: booking.theaterId,
+      theaterSlug: theaterById[booking.theaterId]?.slug ?? booking.theaterId,
       theaterName: theaterById[booking.theaterId]?.name ?? booking.theaterId,
       screenId: booking.screenId,
       screenName: screenById[booking.screenId]?.name ?? booking.screenId,
@@ -248,7 +418,7 @@ export async function getMovieShowtimes(slug: string): Promise<MovieShowtime[]> 
       runEndsOn: booking.runEndsOn,
       status: booking.status,
       badge: booking.badge,
-      times: booking.showtimes.flatMap((showtime) => showtime.times),
+      times: flattenBookingTimes(booking.showtimes),
       price: booking.ticketPrice,
     }));
 }
@@ -272,25 +442,60 @@ export async function getPrimaryMembershipProgram(): Promise<MembershipProgram |
 }
 
 export async function getScreens(): Promise<Screen[]> {
-  return screens;
+  const publicTheaters = await getPublicTheatersFromAmplify();
+  const screenCollections = await Promise.all(
+    publicTheaters.map((theater) => listPublicScreensFromAmplify(theater.id))
+  );
+
+  const screensWithErrors = screenCollections.find((result) => result.errors?.length);
+  if (screensWithErrors?.errors?.length) {
+    throw new Error(
+      `Unable to load public screens from Amplify: ${screensWithErrors.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  return screenCollections
+    .flatMap((result) => result.data)
+    .map((screen) => ({
+      id: screen.id,
+      theaterId: screen.theaterId,
+      name: screen.name,
+      slug: screen.slug,
+      capacity: screen.capacity,
+      sortOrder: screen.sortOrder,
+      projection: screen.projection,
+      soundFormat: screen.soundFormat,
+      features: screen.features.filter((feature): feature is string => Boolean(feature)),
+      status: screen.status,
+    }))
+    .sort((left, right) =>
+      left.theaterId === right.theaterId
+        ? left.sortOrder - right.sortOrder
+        : left.theaterId.localeCompare(right.theaterId)
+    );
 }
 
 export async function getScreen(screenId: string): Promise<Screen | null> {
-  return screens.find((screen) => screen.id === screenId) ?? null;
+  const publicScreens = await getScreens();
+  return publicScreens.find((screen) => screen.id === screenId) ?? null;
 }
 
 export async function getScreensForTheater(theaterId: string): Promise<Screen[]> {
-  return screens
+  const publicScreens = await getScreens();
+  return publicScreens
     .filter((screen) => screen.theaterId === theaterId)
     .sort((left, right) => left.sortOrder - right.sortOrder);
 }
 
 export async function getBookings(): Promise<Booking[]> {
-  return bookings;
+  return getPublicBookingsFromAmplify();
 }
 
 export async function getBooking(bookingId: string): Promise<Booking | null> {
-  return bookings.find((booking) => booking.id === bookingId) ?? null;
+  const publicBookings = await getPublicBookingsFromAmplify();
+  return publicBookings.find((booking) => booking.id === bookingId) ?? null;
 }
 
 /** Theater with its currently-showing films joined in — for the theater detail page. */
@@ -300,11 +505,18 @@ export async function getTheaterWithShowtimes(
   const theater = await getPublicTheaterByRouteKey(id);
   if (!theater) return null;
 
-  const movieMap = Object.fromEntries(movies.map((movie) => [movie.slug, movie]));
-  const screenMap = Object.fromEntries(screens.map((screen) => [screen.id, screen]));
+  const [publicMovies, publicScreens, publicBookings] = await Promise.all([
+    getPublicMoviesFromAmplify(),
+    getScreens(),
+    getPublicBookingsFromAmplify(),
+  ]);
+  const movieMap = Object.fromEntries(publicMovies.map((movie) => [movie.slug, movie]));
+  const screenMap = Object.fromEntries(publicScreens.map((screen) => [screen.id, screen]));
 
-  const currentBookings = bookings
-    .filter((booking) => booking.theaterId === id && booking.status === "published")
+  const currentBookings = publicBookings
+    .filter(
+      (booking) => booking.theaterId === theater.id && booking.status === "published"
+    )
     .map((booking) => {
       const movie = movieMap[booking.movieSlug];
       const screen = screenMap[booking.screenId];
@@ -322,7 +534,7 @@ export async function getTheaterWithShowtimes(
         synopsis: movie.synopsis,
         poster: movie.poster,
         badge: booking.badge,
-        times: booking.showtimes.flatMap((showtime) => showtime.times),
+        times: flattenBookingTimes(booking.showtimes),
         price: booking.ticketPrice,
         isNew: movie.status === "coming-soon",
       };
@@ -340,12 +552,18 @@ export async function getTheaterSlugs(): Promise<string[]> {
 
 /** All theaters with their bookings joined in — for the showtimes page. */
 export async function getTheatersWithBookings(): Promise<TheaterWithBookings[]> {
-  const publicTheaters = await getPublicTheatersFromAmplify();
-  const movieMap = Object.fromEntries(movies.map((movie) => [movie.slug, movie]));
-  const screenMap = Object.fromEntries(screens.map((screen) => [screen.id, screen]));
+  const [publicTheaters, publicMovies, publicScreens, publicBookings] =
+    await Promise.all([
+      getPublicTheatersFromAmplify(),
+      getPublicMoviesFromAmplify(),
+      getScreens(),
+      getPublicBookingsFromAmplify(),
+    ]);
+  const movieMap = Object.fromEntries(publicMovies.map((movie) => [movie.slug, movie]));
+  const screenMap = Object.fromEntries(publicScreens.map((screen) => [screen.id, screen]));
 
   return publicTheaters.map((theater) => {
-    const theaterBookings = bookings
+    const theaterBookings = publicBookings
       .filter(
         (booking) =>
           booking.theaterId === theater.id && booking.status === "published"
@@ -367,7 +585,7 @@ export async function getTheatersWithBookings(): Promise<TheaterWithBookings[]> 
           synopsis: movie.synopsis,
           poster: movie.poster,
           badge: booking.badge,
-          times: booking.showtimes.flatMap((showtime) => showtime.times),
+          times: flattenBookingTimes(booking.showtimes),
           price: booking.ticketPrice,
         };
       })
@@ -384,5 +602,6 @@ export async function getTheatersWithBookings(): Promise<TheaterWithBookings[]> 
 
 /** slugs for generateStaticParams */
 export async function getMovieSlugs(): Promise<string[]> {
-  return movies.map((m) => m.slug);
+  const publicMovies = await getPublicMoviesFromAmplify();
+  return publicMovies.map((movie) => movie.slug);
 }

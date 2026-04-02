@@ -39,6 +39,12 @@ export interface BookingShowtime {
   times: string[];
 }
 
+export interface BookingTimeSlot {
+  day: BookingDay;
+  dayShort: string;
+  time: string;
+}
+
 export interface BookingException {
   date: string;
   label: string;
@@ -130,7 +136,7 @@ export interface TheaterWithBookings {
     synopsis: string;
     poster: string;
     badge: string | null;
-    times: string[];
+    times: BookingTimeSlot[];
     price: string;
   }[];
 }
@@ -138,6 +144,7 @@ export interface TheaterWithBookings {
 export interface MovieShowtime {
   bookingId: string;
   theaterId: string;
+  theaterSlug: string;
   theaterName: string;
   screenId: string;
   screenName: string;
@@ -145,7 +152,7 @@ export interface MovieShowtime {
   runEndsOn: string;
   status: BookingStatus;
   badge: string | null;
-  times: string[];
+  times: BookingTimeSlot[];
   price: string;
 }
 
@@ -163,7 +170,7 @@ export interface TheaterWithShowtimes extends Theater {
     synopsis: string;
     poster: string;
     badge: string | null;
-    times: string[];
+    times: BookingTimeSlot[];
     price: string;
     isNew: boolean;
   }[];

@@ -1,7 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 
-export default function AboutPage() {
+import { getTheaters } from "@/lib/data";
+
+export default async function AboutPage() {
   const events = [
     {
       title: "Director's Roundtables",
@@ -26,32 +28,7 @@ export default function AboutPage() {
     },
   ];
 
-  const theaters = [
-    {
-      title: "Jackson Theater",
-      district: "Downtown Historic District",
-      image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuBoDKlDYpeVPNziGWRArXpb91dpx9319A84alSsuRftSjoR5aA7fi27ZKs6ockIvmyL6G1XbyB84C8DSh0CTLjbP6Fgo1dHcmy4tWpXZPeZtv2bFkYIOJPUCxpW2xhl3Gz211IKxZiFHNAK3lYjJaw3vOi4AgvE0rcvYP-Q9JEpRy2gut3AGohOZ7SSeFm8rLzBKCJSp2QfJo6xx_gPHRZm33uP13JvsOVFv16QPGf5ln350DX-aREK0SZfh9ogPet_sZCd_v9_ZtU",
-      highlights: [
-        "1 Screen | Classic Projection",
-        "Historic Concessions Stand",
-        "Original Velvet Seating",
-      ],
-      href: "/theaters/jackson-theater",
-    },
-    {
-      title: "Sherburn Theater",
-      district: "Eastside Arts Village",
-      image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuA1MXrFdHN_TIqWls3zgPPjs_y9M8RjFN5N1yedYoabe3kdq8hrIC8ttzRjJ32cPm86CPXQMLYyZ8-Q6Ub4qVw83XLJacWH-FH4mdu26x0EjZhDxfpPiobDltNnneWq0siDmUx7aq43IjktLI_PjKsEEOhKlT9kW7M9AzGkn4sg0ozvOzgPxPSqTutn9EzWY1e3a8Ua5GncbVKvLNfUwmIP2tuha-LTfQKZDHOWbtJeNs7960MapSYARdNW-FZ8VnlUHoARwBamXM",
-      highlights: [
-        "1 Screen | 70mm Capable",
-        "Artisan Coffee Bar",
-        "Outdoor Courtyard",
-      ],
-      href: "/theaters/sherburn-theater",
-    },
-  ];
+  const theaters = await getTheaters();
 
   return (
     <div className="bg-[#131313] text-[#e5e2e1]">
@@ -199,13 +176,13 @@ export default function AboutPage() {
         <div className="mt-16 grid gap-px bg-[#504532]/20 lg:grid-cols-2">
           {theaters.map((theater) => (
             <article
-              key={theater.title}
+              key={theater.id}
               className="flex flex-col gap-8 bg-[#131313] p-8 md:flex-row md:items-start lg:p-12"
             >
               <div className="relative aspect-square w-full overflow-hidden md:w-1/2">
                 <Image
-                  src={theater.image}
-                  alt={theater.title}
+                  src={theater.heroImage}
+                  alt={theater.name}
                   fill
                   sizes="(max-width: 768px) 100vw, 25vw"
                   className="object-cover grayscale"
@@ -213,21 +190,21 @@ export default function AboutPage() {
               </div>
               <div className="w-full md:w-1/2">
                 <h3 className="font-serif text-3xl text-[#e5e2e1]">
-                  {theater.title}
+                  {theater.name}
                 </h3>
                 <p className="mt-4 font-sans text-xs font-semibold uppercase tracking-[0.2em] text-[#ffbf00]">
                   {theater.district}
                 </p>
                 <ul className="mt-6 space-y-2 font-sans text-sm text-[#d4c5ab]">
-                  {theater.highlights.map((item) => (
-                    <li key={item}>{item}</li>
+                  {theater.specs.slice(0, 3).map((spec) => (
+                    <li key={spec.label}>{spec.value}</li>
                   ))}
                 </ul>
                 <Link
-                  href={theater.href}
+                  href={`/theaters/${theater.slug}`}
                   className="mt-8 inline-flex items-center gap-2 font-sans text-sm font-semibold uppercase tracking-[0.2em] text-[#ffe2ab] transition-colors hover:text-[#ffbf00]"
                 >
-                  Directions
+                  Explore
                   <span aria-hidden="true">→</span>
                 </Link>
               </div>
