@@ -11,6 +11,8 @@ import {
   getScreenFromAmplify,
   getMovieFromAmplify,
   listMoviesFromAmplify,
+  getBookingFromAmplify,
+  listBookingsFromAmplify,
 } from "@/lib/amplify/server";
 import {
   getTmdbCredits,
@@ -19,7 +21,6 @@ import {
   getTmdbTrailerYouTubeId,
   searchTmdbMovies,
 } from "@/lib/data/tmdb";
-import { bookings as siteBookings } from "@/lib/data/bookings";
 
 type AdminMovieStatus = "now-playing" | "coming-soon" | "draft" | "archived";
 
@@ -43,6 +44,9 @@ type AmplifyScreenRecord = NonNullable<
 >;
 type AmplifyMovieRecord = NonNullable<
   Awaited<ReturnType<typeof getMovieFromAmplify>>["data"]
+>;
+type AmplifyBookingRecord = NonNullable<
+  Awaited<ReturnType<typeof getBookingFromAmplify>>["data"]
 >;
 
 function toAdminMovieStatus(
@@ -207,6 +211,41 @@ function toAdminScreen(screen: AmplifyScreenRecord) {
   };
 }
 
+function toAdminBooking(
+  booking: AmplifyBookingRecord,
+  movieSlugById: Record<string, string>
+) {
+  return {
+    id: booking.id,
+    slug: booking.slug,
+    theaterId: booking.theaterId,
+    screenId: booking.screenId,
+    movieSlug: movieSlugById[booking.movieId] ?? booking.movieId,
+    status: booking.status,
+    runStartsOn: booking.runStartsOn,
+    runEndsOn: booking.runEndsOn,
+    ticketPrice: booking.ticketPrice ?? "",
+    badge: booking.badge ?? null,
+    showtimes:
+      booking.showtimes
+        ?.filter((showtime): showtime is NonNullable<typeof showtime> => Boolean(showtime))
+        .map((showtime) => ({
+          day: showtime.day,
+          times: showtime.times.filter((time): time is string => Boolean(time)),
+        })) ?? [],
+    exceptions:
+      booking.exceptions
+        ?.filter(
+          (exception): exception is NonNullable<typeof exception> => Boolean(exception)
+        )
+        .map((exception) => ({
+          date: exception.date,
+          label: exception.label,
+        })) ?? [],
+    note: booking.note ?? "",
+  };
+}
+
 export async function getAdminTheaters() {
   const result = await listTheatersFromAmplify();
 
@@ -354,11 +393,65 @@ export async function getAdminMovieDetail(movieId: string) {
 }
 
 export async function getAdminBookings() {
-  return siteBookings;
+  const [bookingsResult, movies] = await Promise.all([
+    listBookingsFromAmplify(),
+    listMoviesFromAmplify(),
+  ]);
+
+  if (bookingsResult.errors?.length) {
+    throw new Error(
+      `Unable to load bookings from Amplify: ${bookingsResult.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  if (movies.errors?.length) {
+    throw new Error(
+      `Unable to load movies for bookings from Amplify: ${movies.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  const movieSlugById = Object.fromEntries(
+    movies.data.map((movie) => [movie.id, movie.slug])
+  );
+
+  return bookingsResult.data.map((booking) => toAdminBooking(booking, movieSlugById));
 }
 
 export async function getAdminBooking(bookingId: string) {
-  return siteBookings.find((booking) => booking.id === bookingId) ?? null;
+  const [bookingResult, movies] = await Promise.all([
+    getBookingFromAmplify(bookingId),
+    listMoviesFromAmplify(),
+  ]);
+
+  if (bookingResult.errors?.length) {
+    throw new Error(
+      `Unable to load booking from Amplify: ${bookingResult.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  if (movies.errors?.length) {
+    throw new Error(
+      `Unable to load movies for booking from Amplify: ${movies.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  if (!bookingResult.data) {
+    return null;
+  }
+
+  const movieSlugById = Object.fromEntries(
+    movies.data.map((movie) => [movie.id, movie.slug])
+  );
+
+  return toAdminBooking(bookingResult.data, movieSlugById);
 }
 
 export async function getAdminEvents() {

@@ -58,3 +58,26 @@ export async function getMovieFromAmplify(movieId: string) {
     client.models.Movie.get(contextSpec, { id: movieId }, { authMode: "userPool" })
   );
 }
+
+export async function listBookingsFromAmplify() {
+  return runWithAuthServerContext((contextSpec) =>
+    client.models.Booking.list(contextSpec, {
+      authMode: "userPool",
+      sortDirection: "ASC",
+    })
+  );
+}
+
+export async function getBookingFromAmplify(bookingId: string) {
+  return runWithAuthServerContext((contextSpec) =>
+    client.models.Booking.get(contextSpec, { id: bookingId }, { authMode: "userPool" })
+  );
+}
+
+export async function createBookingInAmplify(
+  input: Schema["Booking"]["createType"]
+) {
+  return runWithAuthServerContext((contextSpec) =>
+    client.models.Booking.create(contextSpec, input, { authMode: "userPool" })
+  );
+}

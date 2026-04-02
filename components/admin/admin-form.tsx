@@ -78,14 +78,17 @@ export function AdminTextarea(props: React.ComponentProps<typeof Textarea>) {
 export function AdminCheckbox({
   label,
   defaultChecked,
+  name,
 }: {
   label: string;
   defaultChecked?: boolean;
+  name?: string;
 }) {
   return (
     <label className="flex items-center gap-3 rounded-md bg-surface-container-high px-3 py-2 text-sm">
       <input
         type="checkbox"
+        name={name}
         defaultChecked={defaultChecked}
         className="size-4 accent-[var(--primary)]"
       />
