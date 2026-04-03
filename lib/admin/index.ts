@@ -69,6 +69,73 @@ function toAdminMovieStatus(
   }
 }
 
+function isFutureReleaseDate(releaseDate?: string | null) {
+  if (!releaseDate) {
+    return false;
+  }
+
+  const parsedReleaseDate = new Date(`${releaseDate}T00:00:00Z`);
+
+  if (Number.isNaN(parsedReleaseDate.getTime())) {
+    return false;
+  }
+
+  const today = new Date();
+  const todayUtc = Date.UTC(
+    today.getUTCFullYear(),
+    today.getUTCMonth(),
+    today.getUTCDate()
+  );
+
+  return parsedReleaseDate.getTime() > todayUtc;
+}
+
+function hasActiveBooking(
+  movieId: string,
+  bookings: AmplifyBookingRecord[]
+) {
+  const today = new Date();
+  const todayUtc = Date.UTC(
+    today.getUTCFullYear(),
+    today.getUTCMonth(),
+    today.getUTCDate()
+  );
+
+  return bookings.some((booking) => {
+    if (booking.movieId !== movieId || booking.status !== "published") {
+      return false;
+    }
+
+    const runStartsOn = new Date(`${booking.runStartsOn}T00:00:00Z`);
+    const runEndsOn = new Date(`${booking.runEndsOn}T00:00:00Z`);
+
+    if (Number.isNaN(runStartsOn.getTime()) || Number.isNaN(runEndsOn.getTime())) {
+      return false;
+    }
+
+    return runStartsOn.getTime() <= todayUtc && runEndsOn.getTime() >= todayUtc;
+  });
+}
+
+function getDerivedAdminMovieStatus(
+  movie: AmplifyMovieRecord,
+  bookings: AmplifyBookingRecord[]
+): AdminMovieStatus | null {
+  if (hasActiveBooking(movie.id, bookings)) {
+    return "now-playing";
+  }
+
+  if (isFutureReleaseDate(movie.releaseDate)) {
+    return "coming-soon";
+  }
+
+  if (movie.status === "draft" || movie.status === "archived") {
+    return toAdminMovieStatus(movie.status);
+  }
+
+  return null;
+}
+
 function getMovieYear(movie: AmplifyMovieRecord) {
   if (!movie.releaseDate) {
     return new Date().getUTCFullYear();
@@ -122,7 +189,10 @@ function toEventImage(image?: string | null) {
   return image?.trim() || "/next.svg";
 }
 
-function toAdminMovie(movie: AmplifyMovieRecord) {
+function toAdminMovie(
+  movie: AmplifyMovieRecord,
+  bookings: AmplifyBookingRecord[] = []
+) {
   return {
     id: movie.id,
     slug: movie.slug,
@@ -135,7 +205,7 @@ function toAdminMovie(movie: AmplifyMovieRecord) {
         ?.split("/")
         .map((genre) => genre.trim())
         .filter(Boolean) ?? [],
-    status: toAdminMovieStatus(movie.status),
+    status: getDerivedAdminMovieStatus(movie, bookings),
     tagline: movie.tagline ?? "Tagline unavailable.",
     overview: movie.synopsis ?? "Synopsis unavailable.",
     poster: movie.poster ?? "/next.svg",
@@ -148,7 +218,10 @@ function toAdminMovie(movie: AmplifyMovieRecord) {
   };
 }
 
-function toAdminMovieDetail(movie: AmplifyMovieRecord) {
+function toAdminMovieDetail(
+  movie: AmplifyMovieRecord,
+  bookings: AmplifyBookingRecord[] = []
+) {
   return {
     id: movie.id,
     slug: movie.slug,
@@ -157,7 +230,7 @@ function toAdminMovieDetail(movie: AmplifyMovieRecord) {
     rating: movie.rating ?? "NR",
     runtime: movie.runtime ?? "Runtime TBD",
     genre: movie.genre ?? "Genre unavailable",
-    status: toAdminMovieStatus(movie.status),
+    status: getDerivedAdminMovieStatus(movie, bookings),
     director: movie.director ?? "Director unavailable",
     cast: movie.cast?.filter((credit): credit is string => Boolean(credit)) ?? [],
     synopsis: movie.synopsis ?? "Synopsis unavailable.",
@@ -371,7 +444,10 @@ export async function getAdminScreensForTheater(theaterId: string) {
 }
 
 export async function getAdminMovies() {
-  const result = await listMoviesFromAmplify();
+  const [result, bookingsResult] = await Promise.all([
+    listMoviesFromAmplify(),
+    listBookingsFromAmplify(),
+  ]);
 
   if (result.errors?.length) {
     throw new Error(
@@ -381,11 +457,22 @@ export async function getAdminMovies() {
     );
   }
 
-  return result.data.map(toAdminMovie);
+  if (bookingsResult.errors?.length) {
+    throw new Error(
+      `Unable to load bookings for movies: ${bookingsResult.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  return result.data.map((movie) => toAdminMovie(movie, bookingsResult.data));
 }
 
 export async function getAdminMovie(movieId: string) {
-  const result = await getMovieFromAmplify(movieId);
+  const [result, bookingsResult] = await Promise.all([
+    getMovieFromAmplify(movieId),
+    listBookingsFromAmplify(),
+  ]);
 
   if (result.errors?.length) {
     throw new Error(
@@ -395,7 +482,15 @@ export async function getAdminMovie(movieId: string) {
     );
   }
 
-  return result.data ? toAdminMovie(result.data) : null;
+  if (bookingsResult.errors?.length) {
+    throw new Error(
+      `Unable to load bookings for movie: ${bookingsResult.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  return result.data ? toAdminMovie(result.data, bookingsResult.data) : null;
 }
 
 export async function getAdminMovieDetail(movieId: string) {
@@ -414,17 +509,29 @@ export async function getAdminMovieDetail(movieId: string) {
     return null;
   }
 
-  const [adminMovie, bookings, theaters, screens] = await Promise.all([
-    Promise.resolve(toAdminMovie(movie)),
-    getAdminBookings(),
+  const [bookingsResult, theaters, screens] = await Promise.all([
+    listBookingsFromAmplify(),
     getAdminTheaters(),
     getAdminScreens(),
   ]);
+
+  if (bookingsResult.errors?.length) {
+    throw new Error(
+      `Unable to load bookings for movie detail: ${bookingsResult.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  const bookings = bookingsResult.data;
+  const movieBookings = bookings
+    .filter((booking) => booking.movieId === movie.id);
+  const adminMovie = toAdminMovie(movie, movieBookings);
   const theaterById = Object.fromEntries(theaters.map((theater) => [theater.id, theater]));
   const screenById = Object.fromEntries(screens.map((screen) => [screen.id, screen]));
 
   const showtimes = bookings
-    .filter((booking) => booking.movieSlug === movie.slug && booking.status === "published")
+    .filter((booking) => booking.movieId === movie.id && booking.status === "published")
     .map((booking) => ({
       bookingId: booking.id,
       theaterId: booking.theaterId,
@@ -435,13 +542,16 @@ export async function getAdminMovieDetail(movieId: string) {
       runEndsOn: booking.runEndsOn,
       status: booking.status,
       badge: booking.badge,
-      times: booking.showtimes.flatMap((showtime) => showtime.times),
+      times:
+        booking.showtimes
+          ?.filter((showtime): showtime is NonNullable<typeof showtime> => Boolean(showtime))
+          .flatMap((showtime) => showtime.times.filter((time): time is string => Boolean(time))) ?? [],
       price: booking.ticketPrice,
     }));
 
   return {
     adminMovie,
-    movie: toAdminMovieDetail(movie),
+    movie: toAdminMovieDetail(movie, movieBookings),
     showtimes,
   };
 }
@@ -608,11 +718,9 @@ export async function searchTmdbImportCandidates(query: string) {
         tagline: details?.tagline ?? "Imported from TMDB movie details.",
         rating: "NR",
         runtime: details?.runtime ?? "Runtime TBD",
-        status: (result.release_date
-          ? Date.parse(result.release_date) > Date.now()
-            ? "coming-soon"
-            : "now-playing"
-          : "now-playing") as AdminMovieStatus,
+        status: (isFutureReleaseDate(toAmplifyDate(result.release_date) ?? null)
+          ? "coming-soon"
+          : null) as "coming-soon" | null,
         director: credits?.director ?? "Director unavailable",
         releaseDate: toAmplifyDate(result.release_date),
         audienceScore: details?.audienceScore ?? `${result.vote_average.toFixed(1)} / 10`,

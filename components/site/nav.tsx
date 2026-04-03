@@ -35,6 +35,12 @@ export async function SiteNav() {
               Now Playing
             </Link>
             <Link
+              href="/events"
+              className="hover:text-[#ffe2ab] transition-colors"
+            >
+              Events
+            </Link>
+            <Link
               href="/about"
               className="hover:text-[#ffe2ab] transition-colors"
             >

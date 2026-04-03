@@ -27,7 +27,7 @@ export default async function NewBookingPage({
       <AdminPageHeader
         eyebrow="New Booking"
         title="Create a booking"
-        description="The scheduling form is already structured around future persisted relationships and recurring showtime rules."
+        description="Set the theater, screen, movie, and recurring showtimes for a new booking."
         action={
           <Button asChild variant="outline">
             <Link href="/admin/schedule">Back to Schedule</Link>

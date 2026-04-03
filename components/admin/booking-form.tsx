@@ -146,8 +146,8 @@ export function AdminBookingForm({
           <AdminField label="Ticket Price">
             <AdminInput
               name="ticketPrice"
-              defaultValue={booking?.ticketPrice ?? "$12"}
-              placeholder="$12"
+              defaultValue={booking?.ticketPrice ?? "$8"}
+              placeholder="$8"
             />
           </AdminField>
           <AdminField label="Public Badge">

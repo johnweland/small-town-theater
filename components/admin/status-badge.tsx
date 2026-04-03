@@ -5,9 +5,13 @@ export function AdminStatusBadge({
   status,
   className,
 }: {
-  status: string;
+  status: string | null | undefined;
   className?: string;
 }) {
+  if (!status) {
+    return null;
+  }
+
   const normalized = status.toLowerCase();
 
   const palette =

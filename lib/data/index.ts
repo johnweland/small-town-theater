@@ -247,6 +247,26 @@ function toMovieStatus(
   }
 }
 
+function getTodayIsoDate() {
+  return new Date().toISOString().split("T")[0];
+}
+
+function isFutureMovieReleaseDate(releaseDate?: string) {
+  if (!releaseDate) {
+    return false;
+  }
+
+  return releaseDate > getTodayIsoDate();
+}
+
+function isActivePublishedBooking(booking: Booking, todayIso = getTodayIsoDate()) {
+  return (
+    booking.status === "published" &&
+    booking.runStartsOn <= todayIso &&
+    booking.runEndsOn >= todayIso
+  );
+}
+
 function toSiteMovie(movie: PublicAmplifyMovie): Movie {
   const fallback = movies.find(
     (siteMovie) => siteMovie.slug === movie.slug || siteMovie.tmdbId === movie.tmdbId
@@ -562,13 +582,20 @@ export async function getMovie(slug: string): Promise<Movie | null> {
 }
 
 export async function getNowPlayingMovies(): Promise<Movie[]> {
-  const publicMovies = await getPublicMoviesFromAmplify();
-  return publicMovies.filter((movie) => movie.status === "now-playing");
+  const [publicMovies, publicBookings] = await Promise.all([
+    getPublicMoviesFromAmplify(),
+    getPublicBookingsFromAmplify(),
+  ]);
+  const activeMovieSlugs = new Set(
+    publicBookings.filter((booking) => isActivePublishedBooking(booking)).map((booking) => booking.movieSlug)
+  );
+
+  return publicMovies.filter((movie) => activeMovieSlugs.has(movie.slug));
 }
 
 export async function getComingSoonMovies(): Promise<Movie[]> {
   const publicMovies = await getPublicMoviesFromAmplify();
-  return publicMovies.filter((movie) => movie.status === "coming-soon");
+  return publicMovies.filter((movie) => isFutureMovieReleaseDate(movie.releaseDate));
 }
 
 export async function getMovieDetail(slug: string): Promise<Movie | null> {

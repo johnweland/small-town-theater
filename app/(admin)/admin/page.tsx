@@ -97,7 +97,7 @@ export default async function AdminDashboardPage() {
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <AdminStatusBadge status={movie.status} />
+                        {movie.status ? <AdminStatusBadge status={movie.status} /> : null}
                         <Button asChild variant="outline">
                           <Link href={`/admin/movies/${movie.id}`}>View</Link>
                         </Button>
@@ -120,7 +120,7 @@ export default async function AdminDashboardPage() {
                       <p className="font-serif text-xl italic">{movie.title}</p>
                       <p className="text-sm text-muted-foreground">{movie.genres.join(" / ")}</p>
                     </div>
-                    <AdminStatusBadge status={movie.status} />
+                    {movie.status ? <AdminStatusBadge status={movie.status} /> : null}
                   </div>
                 ))}
             </div>

@@ -72,7 +72,7 @@ export function AdminMoviesLibraryView({
               description={`${movie.year} • ${movie.runtimeMinutes} min • ${movie.genres.join(" / ")}`}
               className="flex h-full flex-col overflow-hidden"
               contentClassName="flex flex-1 flex-col gap-5"
-              action={<AdminStatusBadge status={movie.status} />}
+              action={movie.status ? <AdminStatusBadge status={movie.status} /> : undefined}
             >
               <div className="relative aspect-[16/9] overflow-hidden rounded-lg">
                 <Image

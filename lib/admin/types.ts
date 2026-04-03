@@ -32,7 +32,7 @@ export interface AdminMovie {
   runtimeMinutes: number;
   rating: string;
   genres: string[];
-  status: "now-playing" | "coming-soon" | "draft" | "archived";
+  status: "now-playing" | "coming-soon" | "draft" | "archived" | null;
   tagline: string;
   overview: string;
   poster: string;
@@ -82,7 +82,7 @@ export interface ImportCandidate {
   tagline?: string;
   rating?: string;
   runtime?: string;
-  status?: "now-playing" | "coming-soon" | "draft" | "archived";
+  status?: "now-playing" | "coming-soon" | "draft" | "archived" | null;
   director?: string;
   releaseDate?: string;
   audienceScore?: string;

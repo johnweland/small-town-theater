@@ -156,7 +156,7 @@ export function AdminEventForm({
       <div className="flex flex-col gap-8">
         <AdminSectionCard
           title="Promotional Art"
-          description="Mirror the Stitch layout with a dedicated poster preview instead of burying the image as a plain text field."
+          description="Preview the event artwork alongside the rest of the event details."
         >
           <div className="space-y-4">
             <div className="relative aspect-[2/3] overflow-hidden rounded-md bg-surface-container-highest">

@@ -170,7 +170,7 @@ export function AdminMovieImportFlow({
                       {candidate.year} • {candidate.genres.join(" / ")}
                     </p>
                   </div>
-                  <AdminStatusBadge status="coming-soon" />
+                  {candidate.status ? <AdminStatusBadge status={candidate.status} /> : null}
                 </button>
               ))}
             </div>
