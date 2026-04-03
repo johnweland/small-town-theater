@@ -143,12 +143,40 @@ export function AdminMockForm({
 export function AdminConfirmDelete({
   title,
   description,
+  action,
+  itemId,
+  confirmLabel = "Confirm Delete",
 }: {
   title: string;
   description: string;
+  action?: (formData: FormData) => void | Promise<void>;
+  itemId?: string;
+  confirmLabel?: string;
 }) {
   const [confirming, setConfirming] = useState(false);
   const [done, setDone] = useState(false);
+
+  const confirmButton = action ? (
+    <form action={action}>
+      {itemId ? <input type="hidden" name="id" value={itemId} /> : null}
+      <Button type="submit" variant="destructive">
+        <Trash2 data-icon="inline-start" />
+        {confirmLabel}
+      </Button>
+    </form>
+  ) : (
+    <Button
+      type="button"
+      variant="destructive"
+      onClick={() => {
+        setDone(true);
+        setConfirming(false);
+      }}
+    >
+      <Trash2 data-icon="inline-start" />
+      {confirmLabel}
+    </Button>
+  );
 
   return (
     <div className="rounded-lg bg-secondary/10 p-5">
@@ -175,17 +203,7 @@ export function AdminConfirmDelete({
               >
                 Cancel
               </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={() => {
-                  setDone(true);
-                  setConfirming(false);
-                }}
-              >
-                <Trash2 data-icon="inline-start" />
-                Confirm Delete
-              </Button>
+              {confirmButton}
             </>
           ) : (
             <Button

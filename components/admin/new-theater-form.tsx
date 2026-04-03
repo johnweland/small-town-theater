@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { createAdminNoticeHref } from "@/lib/admin/notice";
 import { getAmplifyClient } from "@/lib/amplify/client";
+import { AdminImageUploadField } from "@/components/admin/admin-image-upload-field";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { AdminSectionCard } from "@/components/admin/section-card";
 import {
@@ -25,6 +27,7 @@ export function NewTheaterForm() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [heroImage, setHeroImage] = useState("");
 
   return (
     <div className="flex flex-col gap-8">
@@ -78,7 +81,12 @@ export function NewTheaterForm() {
                 return;
               }
 
-              router.push("/admin/theaters");
+              router.push(
+                createAdminNoticeHref("/admin/theaters", {
+                  type: "success",
+                  message: "Theater created successfully.",
+                })
+              );
               router.refresh();
             })();
           });
@@ -140,9 +148,19 @@ export function NewTheaterForm() {
             <AdminField label="Hero Image">
               <AdminInput
                 name="heroImage"
+                value={heroImage}
+                onChange={(event) => setHeroImage(event.target.value)}
                 placeholder="https://example.com/theater-hero.jpg"
               />
             </AdminField>
+            <AdminImageUploadField
+              label="Upload Hero Image"
+              description="Upload a theater hero image directly to Amplify Storage."
+              uploadPathPrefix="theaters"
+              value={heroImage}
+              onChange={setHeroImage}
+              previewLabel="This writes the resulting public S3 URL into the hero image field before the theater record is created."
+            />
           </AdminFieldGrid>
         </AdminSectionCard>
 

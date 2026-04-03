@@ -1,12 +1,28 @@
 import { generateClient } from "aws-amplify/data/server";
+import { getUrl } from "aws-amplify/storage/server";
 import { runWithAmplifyServerContext } from "aws-amplify/adapter-core";
 import { parseAmplifyConfig } from "aws-amplify/utils";
 
 import outputs from "@/amplify_outputs.json";
 import type { Schema } from "@/amplify/data/resource";
+import { runWithGuestServerContext } from "@/lib/auth/server";
+import { getAmplifyStoragePathFromUrl } from "@/lib/amplify/storage";
 
 const config = parseAmplifyConfig(outputs);
 const client = generateClient<Schema>({ config });
+function getPublicEventModel() {
+  const eventModel = (client.models as Record<string, unknown>).Event;
+
+  if (!eventModel) {
+    throw new Error(
+      "Amplify Event model is unavailable in the current deployment. Deploy the updated Amplify schema before using public events."
+    );
+  }
+
+  return eventModel as {
+    list: (...args: unknown[]) => unknown;
+  };
+}
 const publicTheaterSelection = [
   "id",
   "slug",
@@ -84,6 +100,20 @@ const publicBookingSelection = [
   "createdAt",
   "updatedAt",
 ] as const;
+const publicEventSelection = [
+  "id",
+  "slug",
+  "theaterId",
+  "title",
+  "summary",
+  "description",
+  "image",
+  "status",
+  "startsAt",
+  "endsAt",
+  "createdAt",
+  "updatedAt",
+] as const;
 
 export async function listPublicTheatersFromAmplify() {
   return runWithAmplifyServerContext(config, {}, (contextSpec) =>
@@ -126,4 +156,38 @@ export async function listPublicBookingsFromAmplify() {
       selectionSet: publicBookingSelection,
     })
   );
+}
+
+export async function listPublicEventsFromAmplify() {
+  const eventModel = getPublicEventModel();
+
+  return runWithAmplifyServerContext(config, {}, (contextSpec) =>
+    eventModel.list(contextSpec, {
+      authMode: "apiKey",
+      sortDirection: "ASC",
+      selectionSet: publicEventSelection,
+    })
+  ) as Promise<{
+    data: Schema["Event"]["type"][];
+    errors?: { message: string }[];
+  }>;
+}
+
+export async function resolvePublicStorageUrl(url?: string | null) {
+  const path = getAmplifyStoragePathFromUrl(url);
+
+  if (!url || !path) {
+    return url ?? null;
+  }
+
+  return runWithGuestServerContext(async (contextSpec) => {
+    const result = await getUrl(contextSpec, {
+      path,
+      options: {
+        validateObjectExistence: true,
+      },
+    });
+
+    return result.url.toString();
+  });
 }

@@ -16,7 +16,9 @@ export type AdminStatus =
   | "now-playing"
   | "coming-soon";
 
-export type AdminTheater = SharedTheater;
+export interface AdminTheater extends SharedTheater {
+  heroImagePreview?: string;
+}
 
 export type AdminScreen = SharedScreen;
 
@@ -51,7 +53,10 @@ export interface AdminEvent {
   image: string;
   startsAt: string;
   endsAt: string;
-  status: "draft" | "published";
+  startsAtLabel: string;
+  endsAtLabel: string;
+  status: "draft" | "published" | "archived";
+  imagePreview?: string;
 }
 
 export interface AdminActivityItem {

@@ -28,7 +28,13 @@ backend.addOutput({
       },
       mediaStorage: {
         defaultBucket: 'theaterMedia',
-        publicPrefixes: ['posters/*', 'backdrops/*', 'trailers/*'],
+        publicPrefixes: [
+          'posters/*',
+          'backdrops/*',
+          'trailers/*',
+          'theaters/*',
+          'events/*',
+        ],
       },
     },
   },

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { ExternalLink, LoaderCircle, Search, Sparkles } from "lucide-react";
 
 import type { ImportCandidate } from "@/lib/admin";
+import { createAdminNoticeHref } from "@/lib/admin/notice";
 import { getAmplifyClient } from "@/lib/amplify/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -371,9 +372,15 @@ export function AdminMovieImportFlow({
                       }
 
                       router.push(
-                        response.data?.id
-                          ? `/admin/movies/${response.data.id}`
-                          : "/admin/movies"
+                        createAdminNoticeHref(
+                          response.data?.id
+                            ? `/admin/movies/${response.data.id}`
+                            : "/admin/movies",
+                          {
+                            type: "success",
+                            message: "Movie imported successfully.",
+                          }
+                        )
                       );
                       router.refresh();
                     })().finally(() => {

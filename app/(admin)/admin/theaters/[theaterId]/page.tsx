@@ -56,7 +56,7 @@ export default async function TheaterDetailPage({
             <div className="flex flex-col gap-5">
               <div className="relative aspect-[4/3] overflow-hidden rounded-lg">
                 <Image
-                  src={theater.heroImage}
+                  src={theater.heroImagePreview ?? theater.heroImage}
                   alt={theater.name}
                   fill
                   sizes="(max-width: 1280px) 100vw, 40vw"

@@ -110,6 +110,23 @@ export interface Screen {
   status: ScreenStatus;
 }
 
+export interface Event {
+  id: string;
+  slug: string;
+  theaterId: string;
+  theaterName: string;
+  theaterSlug: string;
+  title: string;
+  summary: string;
+  description: string;
+  image: string;
+  startsAt: string;
+  endsAt: string;
+  startsAtLabel: string;
+  endsAtLabel: string;
+  status: "draft" | "published" | "archived";
+}
+
 export interface MembershipProgram {
   id: string;
   name: string;

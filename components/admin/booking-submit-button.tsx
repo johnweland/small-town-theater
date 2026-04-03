@@ -1,19 +1,11 @@
 "use client";
 
-import { useFormStatus } from "react-dom";
-
-import { Button } from "@/components/ui/button";
+import { AdminSubmitButton } from "@/components/admin/admin-submit-button";
 
 export function BookingSubmitButton({
   idleLabel,
 }: {
   idleLabel: string;
 }) {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button type="submit" disabled={pending}>
-      {pending ? "Saving..." : idleLabel}
-    </Button>
-  );
+  return <AdminSubmitButton idleLabel={idleLabel} />;
 }

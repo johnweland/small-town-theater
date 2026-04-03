@@ -69,6 +69,19 @@ function createReadOnlyCookieStorageAdapter(
   };
 }
 
+function createEmptyCookieStorageAdapter(): CookieStorage.Adapter {
+  return {
+    getAll() {
+      return [];
+    },
+    get() {
+      return undefined;
+    },
+    set() {},
+    delete() {},
+  };
+}
+
 export async function runWithAuthServerContext<Result>(
   operation: Parameters<typeof runWithAmplifyServerContext<Result>>[2]
 ) {
@@ -80,6 +93,32 @@ export async function runWithAuthServerContext<Result>(
 
   const keyValueStorage = createKeyValueStorageFromCookieStorageAdapter(
     createReadOnlyCookieStorageAdapter(cookieStore)
+  );
+
+  return runWithAmplifyServerContext(
+    config,
+    {
+      Auth: {
+        tokenProvider: createUserPoolsTokenProvider(config.Auth, keyValueStorage),
+        credentialsProvider: createAWSCredentialsAndIdentityIdProvider(
+          config.Auth,
+          keyValueStorage
+        ),
+      },
+    },
+    operation
+  );
+}
+
+export async function runWithGuestServerContext<Result>(
+  operation: Parameters<typeof runWithAmplifyServerContext<Result>>[2]
+) {
+  if (!config.Auth) {
+    throw new Error("Amplify Auth is not configured.");
+  }
+
+  const keyValueStorage = createKeyValueStorageFromCookieStorageAdapter(
+    createEmptyCookieStorageAdapter()
   );
 
   return runWithAmplifyServerContext(

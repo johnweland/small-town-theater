@@ -1,34 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { getTheaters } from "@/lib/data";
+import { getEvents, getTheaters } from "@/lib/data";
 
 export default async function AboutPage() {
-  const events = [
-    {
-      title: "Director's Roundtables",
-      description:
-        "Monthly Q&A sessions with regional independent filmmakers and student creators.",
-      image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuCHNtHueLQZkvBm1fEr6-ZJsAHTqwDsbweFEoO84E73iRI5F6sUGK4C4oJO5RyH83-pK9h2gIkhaOk9Aeu52FH8dry8K6DRfR5aAv9Fs01341h74U2nczrpb7WZGvKeWBU9LTevhJ6TXrgbnwhKiznrlvvVpn4bFiC6ETmS_Wk_4AWBwaIyCGkJZR4FRkhZsodRhtYxBeR7NHEhg66JXsq3SJCBMlzkByrlPrFnTcqXykrwpczzBhlbJFFqcHYL7_mA9jEDtqKA",
-    },
-    {
-      title: "Moonlight Screenings",
-      description:
-        "Free community screenings in the park during the summer months.",
-      image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuB62nmJ5V8m4M-0jNafFcMq1UhtCD0tbZZPtyc3IBBpfCLnEYqM5dt7duvMMZ6ce0AwcIFRwG1Mmx6AcHQ_AQrXO_5-XD8AP_WIBFpxTjXvQ3DKj6m4Om9rrcAFmRxpd7peeUZWl3J09kTI0X_MyogP9tjt0GZICqCIffSgwkXHc4mXMR5lq6lM-cNu1--uUk0CsdpHsfZ421kE2APpNZKwpbY2PbwYgNsNsq4U92a56Sj572CtwT8ifKTC-uOQFJSXv2FwqXLZ4DM",
-    },
-    {
-      title: "The Archive Series",
-      description:
-        "Restored 35mm prints of historical masterpieces shown as they were meant to be seen.",
-      image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuDYOioEUq9e_ATSef9lQkHHot1hv6ky1Bo0tIK9GtlfPwHLXyKAzYPEGsKeOJ6pUdqxxm_20CR0aWu4ZaDbK2Rdi-X6sManLKz42VUaNdNqJB-B9vZDugGm4mp-VGhA34_VYuk2GoKi79N94McadRIefMUNF5VPcuncs0v9MUYptzIULLXTHj8h6NsaTO7L2dDbmazdeMkgy6y4AIp9GM9LfxRUKchyu3jhh9pLCnk__9bFiliRHLuDdvpcmF4IvxjwlVSPGEAXB1U",
-    },
-  ];
-
-  const theaters = await getTheaters();
+  const [theaters, events] = await Promise.all([getTheaters(), getEvents()]);
 
   return (
     <div className="bg-[#131313] text-[#e5e2e1]">
@@ -132,7 +108,7 @@ export default async function AboutPage() {
               </p>
             </div>
             <Link
-              href="/showtimes"
+              href="/events"
               className="inline-flex border-b border-[#ffbf00] pb-1 font-sans text-sm font-semibold uppercase tracking-[0.2em] text-[#ffbf00] transition-colors hover:border-[#ffe2ab] hover:text-[#ffe2ab]"
             >
               View Calendar
@@ -140,7 +116,7 @@ export default async function AboutPage() {
           </div>
 
           <div className="mt-16 grid gap-12 md:grid-cols-3">
-            {events.map((event) => (
+            {events.slice(0, 3).map((event) => (
               <article key={event.title} className="group">
                 <div className="relative mb-6 aspect-[3/4] overflow-hidden">
                   <Image
@@ -155,7 +131,7 @@ export default async function AboutPage() {
                   {event.title}
                 </h3>
                 <p className="mt-3 font-sans text-sm leading-7 text-[#d4c5ab]">
-                  {event.description}
+                  {event.description || event.summary}
                 </p>
               </article>
             ))}
