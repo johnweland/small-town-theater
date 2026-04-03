@@ -9,6 +9,7 @@ import {
   Building2,
   CalendarDays,
   Film,
+  Popcorn,
   HelpCircle,
   LayoutDashboard,
   Search,
@@ -28,6 +29,7 @@ const navItems = [
   { href: "/admin/movies", label: "Movies", icon: Film },
   { href: "/admin/schedule", label: "Schedule", icon: CalendarDays },
   { href: "/admin/events", label: "Events", icon: Ticket },
+  { href: "/concessions", label: "Concessions", icon: Popcorn },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
