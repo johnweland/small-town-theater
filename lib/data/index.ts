@@ -337,21 +337,39 @@ function toSiteBooking(booking: PublicAmplifyBooking, movieSlug: string): Bookin
     ticketPrice: booking.ticketPrice ?? "",
     badge: booking.badge ?? null,
     showtimes:
-      booking.showtimes
-        ?.filter((showtime): showtime is NonNullable<typeof showtime> => Boolean(showtime))
+      ((booking.showtimes ?? []) as Array<
+        | {
+            day: BookingDay;
+            times: Array<string | null> | null;
+          }
+        | null
+        | undefined
+      >)
+        .filter(
+          (showtime): showtime is NonNullable<typeof showtime> => showtime != null
+        )
         .map((showtime) => ({
           day: showtime.day,
-          times: showtime.times.filter((time): time is string => Boolean(time)),
-        })) ?? [],
+          times: (showtime.times ?? []).filter(
+            (time): time is string => typeof time === "string" && time.length > 0
+          ),
+        })),
     exceptions:
-      booking.exceptions
-        ?.filter(
-          (exception): exception is NonNullable<typeof exception> => Boolean(exception)
+      ((booking.exceptions ?? []) as Array<
+        | {
+            date: string;
+            label: string;
+          }
+        | null
+        | undefined
+      >)
+        .filter(
+          (exception): exception is NonNullable<typeof exception> => exception != null
         )
         .map((exception) => ({
           date: exception.date,
           label: exception.label,
-        })) ?? [],
+        })),
     note: "",
   };
 }

@@ -153,6 +153,7 @@ export function ConcessionsItemDialog({
   saveError = null,
   onOpenChange,
   onSave,
+  onDelete,
 }: {
   open: boolean;
   mode: "create" | "edit";
@@ -165,6 +166,7 @@ export function ConcessionsItemDialog({
     item: ConcessionsCatalogItem,
     mode: "create" | "edit"
   ) => void | Promise<void>;
+  onDelete?: (item: ConcessionsCatalogItem) => void | Promise<void>;
 }) {
   const seedItem = useMemo(
     () => item ?? createEmptyItem(theaters),
@@ -172,6 +174,7 @@ export function ConcessionsItemDialog({
   );
   const [values, setValues] = useState<FormValues>(() => toFormValues(seedItem));
   const [errors, setErrors] = useState<FormErrors>({});
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -598,6 +601,42 @@ export function ConcessionsItemDialog({
           <DialogFooter className="border-t border-border/20 px-6 py-4">
             {saveError ? (
               <p className="mr-auto text-sm text-destructive">{saveError}</p>
+            ) : null}
+            {mode === "edit" && onDelete ? (
+              confirmDelete ? (
+                <div className="mr-auto flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={isSaving}
+                    onClick={() => setConfirmDelete(false)}
+                  >
+                    Keep Item
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    disabled={isSaving}
+                    onClick={() => {
+                      void onDelete(seedItem);
+                    }}
+                  >
+                    <Trash2 data-icon="inline-start" />
+                    {isSaving ? "Deleting..." : "Confirm Delete"}
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={isSaving}
+                  className="mr-auto"
+                  onClick={() => setConfirmDelete(true)}
+                >
+                  <Trash2 data-icon="inline-start" />
+                  Delete Item
+                </Button>
+              )
             ) : null}
             <Button variant="outline" disabled={isSaving} onClick={() => onOpenChange(false)}>
               Cancel

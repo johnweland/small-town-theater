@@ -101,15 +101,18 @@ export function AdminMockForm({
   children,
   submitLabel,
   submitDescription = "Changes stay in this preview flow for now.",
+  dataE2EReady,
 }: {
   children: ReactNode;
   submitLabel: string;
   submitDescription?: string;
+  dataE2EReady?: string;
 }) {
   const [saved, setSaved] = useState(false);
 
   return (
     <form
+      data-e2e-ready={dataE2EReady}
       className="flex flex-col gap-8"
       onSubmit={(event) => {
         event.preventDefault();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   AlertTriangle,
@@ -71,6 +71,7 @@ export function ConcessionsInventoryView({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
   const [filters, setFilters] = useState<ConcessionsFilterState>({
     search: "",
     itemType: "all",
@@ -88,6 +89,7 @@ export function ConcessionsInventoryView({
     saveItem,
     duplicateItem,
     toggleItemActive,
+    deleteItem,
     refreshData,
   } = useConcessionsCatalog({
     initialData,
@@ -179,8 +181,12 @@ export function ConcessionsInventoryView({
     ];
   }, [items, lowStockAlerts.length]);
 
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8" data-e2e-ready={isHydrated ? "true" : undefined}>
       <AdminPageHeader
         eyebrow="Concessions"
         title="Concessions inventory"
@@ -372,6 +378,11 @@ export function ConcessionsInventoryView({
         onSave={async (item, mode) => {
           await saveItem(item, mode);
           setDialogOpen(false);
+        }}
+        onDelete={async (item) => {
+          await deleteItem(item);
+          setDialogOpen(false);
+          setSelectedItemId(null);
         }}
       />
     </div>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { createAdminNoticeHref } from "@/lib/admin/notice";
@@ -28,6 +28,11 @@ export function NewTheaterForm() {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [heroImage, setHeroImage] = useState("");
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   return (
     <div className="flex flex-col gap-8">
@@ -43,6 +48,7 @@ export function NewTheaterForm() {
       />
 
       <form
+        data-e2e-ready={isHydrated ? "true" : undefined}
         className="flex flex-col gap-8"
         onSubmit={(event) => {
           event.preventDefault();

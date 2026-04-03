@@ -4,6 +4,19 @@ import { parseAmplifyConfig } from "aws-amplify/utils";
 
 import outputs from "@/amplify_outputs.json";
 import type { Schema } from "@/amplify/data/resource";
+import {
+  createMockRecord,
+  deleteMockRecord,
+  getMockRecord,
+  listMockRecords,
+  updateMockRecord,
+} from "@/lib/e2e/admin-mock-store";
+import { isE2ETestMode } from "@/lib/e2e/config";
+import type {
+  MockMovieRecord,
+  MockScreenRecord,
+  MockTheaterRecord,
+} from "@/lib/e2e/admin-mock-types";
 import { runWithAuthServerContext } from "@/lib/auth/server";
 import { getAmplifyStoragePathFromUrl } from "@/lib/amplify/storage";
 
@@ -29,6 +42,13 @@ function getEventModel() {
 }
 
 export async function listTheatersFromAmplify() {
+  if (isE2ETestMode()) {
+    return {
+      data: await listMockRecords("Theater"),
+      errors: undefined,
+    };
+  }
+
   return runWithAuthServerContext((contextSpec) =>
     client.models.Theater.list(contextSpec, {
       authMode: "userPool",
@@ -38,12 +58,26 @@ export async function listTheatersFromAmplify() {
 }
 
 export async function getTheaterFromAmplify(theaterId: string) {
+  if (isE2ETestMode()) {
+    return {
+      data: await getMockRecord("Theater", theaterId),
+      errors: undefined,
+    };
+  }
+
   return runWithAuthServerContext((contextSpec) =>
     client.models.Theater.get(contextSpec, { id: theaterId }, { authMode: "userPool" })
   );
 }
 
 export async function listScreensFromAmplify(theaterId?: string) {
+  if (isE2ETestMode()) {
+    return {
+      data: await listMockRecords("Screen", theaterId ? { theaterId } : undefined),
+      errors: undefined,
+    };
+  }
+
   return runWithAuthServerContext((contextSpec) =>
     theaterId
       ? client.models.Screen.listScreensByTheater(
@@ -59,12 +93,26 @@ export async function listScreensFromAmplify(theaterId?: string) {
 }
 
 export async function getScreenFromAmplify(screenId: string) {
+  if (isE2ETestMode()) {
+    return {
+      data: await getMockRecord("Screen", screenId),
+      errors: undefined,
+    };
+  }
+
   return runWithAuthServerContext((contextSpec) =>
     client.models.Screen.get(contextSpec, { id: screenId }, { authMode: "userPool" })
   );
 }
 
 export async function listMoviesFromAmplify() {
+  if (isE2ETestMode()) {
+    return {
+      data: await listMockRecords("Movie"),
+      errors: undefined,
+    };
+  }
+
   return runWithAuthServerContext((contextSpec) =>
     client.models.Movie.list(contextSpec, {
       authMode: "userPool",
@@ -74,12 +122,60 @@ export async function listMoviesFromAmplify() {
 }
 
 export async function getMovieFromAmplify(movieId: string) {
+  if (isE2ETestMode()) {
+    return {
+      data: await getMockRecord("Movie", movieId),
+      errors: undefined,
+    };
+  }
+
   return runWithAuthServerContext((contextSpec) =>
     client.models.Movie.get(contextSpec, { id: movieId }, { authMode: "userPool" })
   );
 }
 
+export async function updateMovieInAmplify(
+  input: Schema["Movie"]["updateType"]
+) {
+  if (isE2ETestMode()) {
+    return {
+      data: (await updateMockRecord(
+        "Movie",
+        input as Record<string, unknown>
+      )) as unknown as Schema["Movie"]["type"] | null,
+      errors: undefined,
+    };
+  }
+
+  return runWithAuthServerContext((contextSpec) =>
+    client.models.Movie.update(contextSpec, input, { authMode: "userPool" })
+  );
+}
+
+export async function deleteMovieInAmplify(id: string) {
+  if (isE2ETestMode()) {
+    return {
+      data: (await deleteMockRecord(
+        "Movie",
+        id
+      )) as unknown as Schema["Movie"]["type"] | null,
+      errors: undefined,
+    };
+  }
+
+  return runWithAuthServerContext((contextSpec) =>
+    client.models.Movie.delete(contextSpec, { id }, { authMode: "userPool" })
+  );
+}
+
 export async function listBookingsFromAmplify() {
+  if (isE2ETestMode()) {
+    return {
+      data: await listMockRecords("Booking"),
+      errors: undefined,
+    };
+  }
+
   return runWithAuthServerContext((contextSpec) =>
     client.models.Booking.list(contextSpec, {
       authMode: "userPool",
@@ -89,12 +185,26 @@ export async function listBookingsFromAmplify() {
 }
 
 export async function getBookingFromAmplify(bookingId: string) {
+  if (isE2ETestMode()) {
+    return {
+      data: await getMockRecord("Booking", bookingId),
+      errors: undefined,
+    };
+  }
+
   return runWithAuthServerContext((contextSpec) =>
     client.models.Booking.get(contextSpec, { id: bookingId }, { authMode: "userPool" })
   );
 }
 
 export async function listEventsFromAmplify() {
+  if (isE2ETestMode()) {
+    return {
+      data: (await listMockRecords("Event")) as unknown as Schema["Event"]["type"][],
+      errors: undefined,
+    };
+  }
+
   const eventModel = getEventModel();
 
   return runWithAuthServerContext((contextSpec) =>
@@ -109,6 +219,16 @@ export async function listEventsFromAmplify() {
 }
 
 export async function getEventFromAmplify(eventId: string) {
+  if (isE2ETestMode()) {
+    return {
+      data: (await getMockRecord(
+        "Event",
+        eventId
+      )) as unknown as Schema["Event"]["type"] | null,
+      errors: undefined,
+    };
+  }
+
   const eventModel = getEventModel();
 
   return runWithAuthServerContext((contextSpec) =>
@@ -119,7 +239,19 @@ export async function getEventFromAmplify(eventId: string) {
   }>;
 }
 
-export async function createEventInAmplify(input: Schema["Event"]["createType"]) {
+export async function createEventInAmplify(
+  input: Schema["Event"]["createType"]
+) {
+  if (isE2ETestMode()) {
+    return {
+      data: (await createMockRecord(
+        "Event",
+        input as Record<string, unknown>
+      )) as unknown as Schema["Event"]["type"] | null,
+      errors: undefined,
+    };
+  }
+
   const eventModel = getEventModel();
 
   return runWithAuthServerContext((contextSpec) =>
@@ -130,7 +262,19 @@ export async function createEventInAmplify(input: Schema["Event"]["createType"])
   }>;
 }
 
-export async function updateEventInAmplify(input: Schema["Event"]["updateType"]) {
+export async function updateEventInAmplify(
+  input: Schema["Event"]["updateType"]
+) {
+  if (isE2ETestMode()) {
+    return {
+      data: (await updateMockRecord(
+        "Event",
+        input as Record<string, unknown>
+      )) as unknown as Schema["Event"]["type"] | null,
+      errors: undefined,
+    };
+  }
+
   const eventModel = getEventModel();
 
   return runWithAuthServerContext((contextSpec) =>
@@ -142,6 +286,16 @@ export async function updateEventInAmplify(input: Schema["Event"]["updateType"])
 }
 
 export async function deleteEventInAmplify(id: string) {
+  if (isE2ETestMode()) {
+    return {
+      data: (await deleteMockRecord(
+        "Event",
+        id
+      )) as unknown as Schema["Event"]["type"] | null,
+      errors: undefined,
+    };
+  }
+
   const eventModel = getEventModel();
 
   return runWithAuthServerContext((contextSpec) =>
@@ -153,6 +307,10 @@ export async function deleteEventInAmplify(id: string) {
 }
 
 export async function resolveProtectedStorageUrl(url?: string | null) {
+  if (isE2ETestMode()) {
+    return url ?? null;
+  }
+
   const path = getAmplifyStoragePathFromUrl(url);
 
   if (!url || !path) {
@@ -172,6 +330,10 @@ export async function resolveProtectedStorageUrl(url?: string | null) {
 }
 
 export async function deleteManagedStorageObjectByUrl(url?: string | null) {
+  if (isE2ETestMode()) {
+    return;
+  }
+
   const path = getAmplifyStoragePathFromUrl(url);
 
   if (!url || !path) {
@@ -186,7 +348,51 @@ export async function deleteManagedStorageObjectByUrl(url?: string | null) {
 export async function createBookingInAmplify(
   input: Schema["Booking"]["createType"]
 ) {
+  if (isE2ETestMode()) {
+    return {
+      data: (await createMockRecord(
+        "Booking",
+        input as Record<string, unknown>
+      )) as unknown as Schema["Booking"]["type"] | null,
+      errors: undefined,
+    };
+  }
+
   return runWithAuthServerContext((contextSpec) =>
     client.models.Booking.create(contextSpec, input, { authMode: "userPool" })
+  );
+}
+
+export async function updateBookingInAmplify(
+  input: Schema["Booking"]["updateType"]
+) {
+  if (isE2ETestMode()) {
+    return {
+      data: (await updateMockRecord(
+        "Booking",
+        input as Record<string, unknown>
+      )) as unknown as Schema["Booking"]["type"] | null,
+      errors: undefined,
+    };
+  }
+
+  return runWithAuthServerContext((contextSpec) =>
+    client.models.Booking.update(contextSpec, input, { authMode: "userPool" })
+  );
+}
+
+export async function deleteBookingInAmplify(id: string) {
+  if (isE2ETestMode()) {
+    return {
+      data: (await deleteMockRecord(
+        "Booking",
+        id
+      )) as unknown as Schema["Booking"]["type"] | null,
+      errors: undefined,
+    };
+  }
+
+  return runWithAuthServerContext((contextSpec) =>
+    client.models.Booking.delete(contextSpec, { id }, { authMode: "userPool" })
   );
 }

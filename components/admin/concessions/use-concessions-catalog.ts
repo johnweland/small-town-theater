@@ -190,6 +190,29 @@ async function toggleVenueItemActive(item: ConcessionsCatalogItem) {
   }
 }
 
+async function deleteVenueItem(item: ConcessionsCatalogItem) {
+  const client = getAmplifyClient();
+  const venueItemModel = getVenueItemModel(client);
+  const availabilityModel = getVenueItemAvailabilityModel(client);
+
+  const availabilityDeletes = item.availability
+    .filter((row) => Boolean(row.id))
+    .map((row) => availabilityModel.delete({ id: row.id! }, { authMode: "apiKey" }));
+
+  const availabilityResults = await Promise.all(availabilityDeletes);
+  const availabilityErrors = availabilityResults.flatMap((result) => result.errors ?? []);
+
+  if (availabilityErrors.length) {
+    throw new Error(joinErrors(availabilityErrors));
+  }
+
+  const result = await venueItemModel.delete({ id: item.id }, { authMode: "apiKey" });
+
+  if (result.errors?.length) {
+    throw new Error(joinErrors(result.errors));
+  }
+}
+
 export function useConcessionsCatalog({
   initialData,
   initialError = null,
@@ -345,6 +368,32 @@ export function useConcessionsCatalog({
     }
   }
 
+  async function deleteItem(item: ConcessionsCatalogItem) {
+    setIsSaving(true);
+    setSaveError(null);
+
+    try {
+      await deleteVenueItem(item);
+      await refreshData({ silent: true });
+      toast.success("Catalog item deleted.", {
+        description: "The item has been removed from the concessions catalog.",
+      });
+    } catch (deleteError) {
+      const message =
+        deleteError instanceof Error
+          ? toUserActionErrorMessage(
+              deleteError.message,
+              "We couldn't delete this item right now. Please try again."
+            )
+          : "Unable to delete the item.";
+      setSaveError(message);
+      toast.error("Delete failed.", { description: message });
+      throw deleteError;
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   return {
     data,
     error,
@@ -356,5 +405,6 @@ export function useConcessionsCatalog({
     saveItem,
     duplicateItem,
     toggleItemActive,
+    deleteItem,
   };
 }

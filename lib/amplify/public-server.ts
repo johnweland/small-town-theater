@@ -5,6 +5,8 @@ import { parseAmplifyConfig } from "aws-amplify/utils";
 
 import outputs from "@/amplify_outputs.json";
 import type { Schema } from "@/amplify/data/resource";
+import { listMockRecords } from "@/lib/e2e/admin-mock-store";
+import { isE2ETestMode } from "@/lib/e2e/config";
 import { runWithGuestServerContext } from "@/lib/auth/server";
 import { getAmplifyStoragePathFromUrl } from "@/lib/amplify/storage";
 
@@ -179,6 +181,13 @@ const publicVenueItemAvailabilitySelection = [
 ] as const;
 
 export async function listPublicTheatersFromAmplify() {
+  if (isE2ETestMode()) {
+    return {
+      data: (await listMockRecords("Theater")) as unknown as Schema["Theater"]["type"][],
+      errors: undefined,
+    };
+  }
+
   return runWithAmplifyServerContext(config, {}, (contextSpec) =>
     client.models.Theater.list(contextSpec, {
       authMode: "apiKey",
@@ -189,6 +198,16 @@ export async function listPublicTheatersFromAmplify() {
 }
 
 export async function listPublicScreensFromAmplify(theaterId: string) {
+  if (isE2ETestMode()) {
+    return {
+      data: (await listMockRecords(
+        "Screen",
+        { theaterId }
+      )) as unknown as Schema["Screen"]["type"][],
+      errors: undefined,
+    };
+  }
+
   return runWithAmplifyServerContext(config, {}, (contextSpec) =>
     client.models.Screen.listScreensByTheater(
       contextSpec,
@@ -202,6 +221,13 @@ export async function listPublicScreensFromAmplify(theaterId: string) {
 }
 
 export async function listPublicMoviesFromAmplify() {
+  if (isE2ETestMode()) {
+    return {
+      data: (await listMockRecords("Movie")) as unknown as Schema["Movie"]["type"][],
+      errors: undefined,
+    };
+  }
+
   return runWithAmplifyServerContext(config, {}, (contextSpec) =>
     client.models.Movie.list(contextSpec, {
       authMode: "apiKey",
@@ -212,6 +238,13 @@ export async function listPublicMoviesFromAmplify() {
 }
 
 export async function listPublicBookingsFromAmplify() {
+  if (isE2ETestMode()) {
+    return {
+      data: (await listMockRecords("Booking")) as unknown as Schema["Booking"]["type"][],
+      errors: undefined,
+    };
+  }
+
   return runWithAmplifyServerContext(config, {}, (contextSpec) =>
     client.models.Booking.list(contextSpec, {
       authMode: "apiKey",
@@ -222,6 +255,13 @@ export async function listPublicBookingsFromAmplify() {
 }
 
 export async function listPublicEventsFromAmplify() {
+  if (isE2ETestMode()) {
+    return {
+      data: (await listMockRecords("Event")) as unknown as Schema["Event"]["type"][],
+      errors: undefined,
+    };
+  }
+
   const eventModel = getPublicEventModel();
 
   return runWithAmplifyServerContext(config, {}, (contextSpec) =>
@@ -237,6 +277,13 @@ export async function listPublicEventsFromAmplify() {
 }
 
 export async function listPublicVenueItemsFromAmplify() {
+  if (isE2ETestMode()) {
+    return {
+      data: (await listMockRecords("VenueItem")) as unknown as Schema["VenueItem"]["type"][],
+      errors: undefined,
+    };
+  }
+
   const venueItemModel = getPublicVenueItemModel();
 
   return runWithAmplifyServerContext(config, {}, (contextSpec) =>
@@ -252,6 +299,15 @@ export async function listPublicVenueItemsFromAmplify() {
 }
 
 export async function listPublicVenueItemAvailabilityFromAmplify() {
+  if (isE2ETestMode()) {
+    return {
+      data: (await listMockRecords(
+        "VenueItemAvailability"
+      )) as unknown as Schema["VenueItemAvailability"]["type"][],
+      errors: undefined,
+    };
+  }
+
   const availabilityModel = getPublicVenueItemAvailabilityModel();
 
   return runWithAmplifyServerContext(config, {}, (contextSpec) =>
@@ -267,6 +323,10 @@ export async function listPublicVenueItemAvailabilityFromAmplify() {
 }
 
 export async function resolvePublicStorageUrl(url?: string | null) {
+  if (isE2ETestMode()) {
+    return url ?? null;
+  }
+
   const path = getAmplifyStoragePathFromUrl(url);
 
   if (!url || !path) {

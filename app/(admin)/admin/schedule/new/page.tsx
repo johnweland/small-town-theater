@@ -38,7 +38,7 @@ export default async function NewBookingPage({
         theaters={theaters}
         screens={screens}
         movies={movies}
-        createAction={createBookingAction}
+        action={createBookingAction}
         defaultMovieId={movieId}
       />
     </div>
