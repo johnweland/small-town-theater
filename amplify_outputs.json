@@ -4,7 +4,9 @@
     "aws_region": "us-east-2",
     "user_pool_client_id": "5protadhuk4ieprnv4pqi3nulf",
     "identity_pool_id": "us-east-2:d39e7291-708e-42e1-8230-c3349b971495",
-    "mfa_methods": [],
+    "mfa_methods": [
+      "TOTP"
+    ],
     "standard_required_attributes": [
       "email"
     ],
@@ -19,9 +21,14 @@
         "ADMINS": {
           "precedence": 0
         }
+      },
+      {
+        "OWNERS": {
+          "precedence": 1
+        }
       }
     ],
-    "mfa_configuration": "NONE",
+    "mfa_configuration": "OPTIONAL",
     "password_policy": {
       "min_length": 8,
       "require_lowercase": true,
@@ -1797,6 +1804,22 @@
               "delete"
             ],
             "authenticated": [
+              "get",
+              "list",
+              "write",
+              "delete"
+            ]
+          },
+          "avatars/${cognito-identity.amazonaws.com:sub}/*": {
+            "entityidentity": [
+              "get",
+              "list",
+              "write",
+              "delete"
+            ]
+          },
+          "avatars/*": {
+            "groupsADMINS": [
               "get",
               "list",
               "write",

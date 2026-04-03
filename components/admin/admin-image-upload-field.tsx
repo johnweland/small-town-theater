@@ -55,7 +55,7 @@ export function AdminImageUploadField({
 }: {
   label: string;
   description: string;
-  uploadPathPrefix: string;
+  uploadPathPrefix: string | ((identityId?: string) => string);
   value: string;
   onChange: (value: string) => void;
   previewLabel: string;
@@ -91,11 +91,17 @@ export function AdminImageUploadField({
 
       const extension = getFileExtension(file);
       const baseName = sanitizeFileName(file.name) || "image";
-      const path = `${uploadPathPrefix}/${Date.now()}-${baseName}-${crypto.randomUUID()}.${extension}`;
       const previousValue = value;
 
       const result = await uploadData({
-        path,
+        path: ({ identityId }) => {
+          const resolvedPrefix =
+            typeof uploadPathPrefix === "function"
+              ? uploadPathPrefix(identityId)
+              : uploadPathPrefix;
+
+          return `${resolvedPrefix}/${Date.now()}-${baseName}-${crypto.randomUUID()}.${extension}`;
+        },
         data: file,
         options: {
           contentType: file.type,
@@ -108,10 +114,11 @@ export function AdminImageUploadField({
       uploadedUrlsRef.current.add(uploadedUrl);
       onChange(uploadedUrl);
 
-      if (previousValue && uploadedUrlsRef.current.has(previousValue)) {
+      if (previousValue && getAmplifyStoragePathFromUrl(previousValue)) {
         await removeManagedImage(previousValue);
-        uploadedUrlsRef.current.delete(previousValue);
       }
+
+      uploadedUrlsRef.current.delete(previousValue);
     } catch (uploadError) {
       setError(
         uploadError instanceof Error
@@ -127,11 +134,11 @@ export function AdminImageUploadField({
     setError(null);
 
     try {
-      if (value && uploadedUrlsRef.current.has(value)) {
+      if (value && getAmplifyStoragePathFromUrl(value)) {
         await removeManagedImage(value);
-        uploadedUrlsRef.current.delete(value);
       }
 
+      uploadedUrlsRef.current.delete(value);
       onChange("");
     } catch (removeError) {
       setError(

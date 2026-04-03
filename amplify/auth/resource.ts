@@ -7,11 +7,20 @@ export const auth = defineAuth({
   loginWith: {
     email: true,
   },
-  groups: ["ADMINS"],
+  accountRecovery: "EMAIL_ONLY",
+  groups: ["ADMINS", "OWNERS"],
+  multifactor: {
+    mode: "OPTIONAL",
+    totp: true,
+  },
   userAttributes: {
     "custom:isAdminStaff": {
       dataType: "String",
       mutable: false,
+    },
+    "custom:isOwner": {
+      dataType: "String",
+      mutable: true,
     },
   },
   triggers: {

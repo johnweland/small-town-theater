@@ -16,6 +16,7 @@ type ReadyInvite = {
   email: string;
   expiresAt: string;
   expiresLabel?: string | null;
+  role: "owner" | "staff";
   signature: string;
 };
 
@@ -63,6 +64,7 @@ export function StaffSignUpForm(props: StaffSignUpFormProps) {
       const inviteMetadata = {
         [STAFF_INVITE_METADATA_KEYS.email]: email,
         [STAFF_INVITE_METADATA_KEYS.expiresAt]: props.invite.expiresAt,
+        [STAFF_INVITE_METADATA_KEYS.role]: props.invite.role,
         [STAFF_INVITE_METADATA_KEYS.signature]: props.invite.signature,
       };
 
@@ -72,6 +74,7 @@ export function StaffSignUpForm(props: StaffSignUpFormProps) {
         options: {
           userAttributes: {
             "custom:isAdminStaff": "true",
+            "custom:isOwner": props.invite.role === "owner" ? "true" : "false",
             email,
             name,
           },
@@ -150,6 +153,11 @@ export function StaffSignUpForm(props: StaffSignUpFormProps) {
               {props.mode === "ready" && props.invite.expiresLabel ? (
                 <p className="text-xs text-muted-foreground">
                   This link expires on {props.invite.expiresLabel}.
+                </p>
+              ) : null}
+              {props.mode === "ready" && props.invite.role === "owner" ? (
+                <p className="text-xs text-muted-foreground">
+                  This invite grants owner access for managing staff and elevated admin controls.
                 </p>
               ) : null}
               {error ? <p className="text-sm text-destructive">{error}</p> : null}

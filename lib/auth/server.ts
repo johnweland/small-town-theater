@@ -2,6 +2,8 @@ import { createHash } from "node:crypto";
 
 import { cookies } from "next/headers";
 import {
+  AdminDeleteUserCommand,
+  AdminUpdateUserAttributesCommand,
   CognitoIdentityProviderClient,
   ListUsersCommand,
 } from "@aws-sdk/client-cognito-identity-provider";
@@ -13,10 +15,11 @@ import {
   runWithAmplifyServerContext,
   type CookieStorage,
 } from "aws-amplify/adapter-core";
-import { fetchAuthSession } from "aws-amplify/auth/server";
+import { fetchAuthSession, fetchUserAttributes } from "aws-amplify/auth/server";
 import { parseAmplifyConfig } from "aws-amplify/utils";
 
 import outputs from "@/amplify_outputs.json";
+import { resolveAvatarUrl } from "@/lib/auth/profile";
 
 const config = parseAmplifyConfig(outputs);
 const authConfig = outputs.auth;
@@ -24,12 +27,26 @@ const authConfig = outputs.auth;
 type CookieStore = Awaited<ReturnType<typeof cookies>>;
 
 type StaffSession = {
+  avatarPreference: "uploaded" | "gravatar" | "initials";
   avatarUrl: string | null;
   displayName: string | null;
   email: string | null;
+  gravatarUrl: string | null;
   groups: string[];
   isAdmin: boolean;
   isAuthenticated: boolean;
+  isOwner: boolean;
+  uploadedAvatarUrl: string | null;
+};
+
+export type StaffDirectoryUser = {
+  createdAt: Date | null;
+  displayName: string | null;
+  email: string | null;
+  enabled: boolean;
+  isOwner: boolean;
+  status: string | null;
+  username: string;
 };
 
 function createCookieStorageAdapter(store: CookieStore): CookieStorage.Adapter {
@@ -189,7 +206,7 @@ function createGravatarUrl(email: string | null) {
 
   const hash = createHash("md5").update(normalizedEmail).digest("hex");
 
-  return `https://www.gravatar.com/avatar/${hash}?d=404&s=96`;
+  return `https://www.gravatar.com/avatar/${hash}?d=404&s=256`;
 }
 
 export async function getStaffSession(): Promise<StaffSession> {
@@ -197,27 +214,52 @@ export async function getStaffSession(): Promise<StaffSession> {
     return await runWithAuthServerContext(async (contextSpec) => {
       const session = await fetchAuthSession(contextSpec);
       const groups = readGroupsFromSession(session);
-      const email = session.tokens?.idToken?.payload.email;
+      const userAttributes = await fetchUserAttributes(contextSpec);
+      const email =
+        userAttributes.email ?? session.tokens?.idToken?.payload.email;
       const resolvedEmail = typeof email === "string" ? email : null;
-      const displayName = readDisplayNameFromSession(session);
+      const displayName =
+        userAttributes.name?.trim() || readDisplayNameFromSession(session);
+      const uploadedAvatarUrl =
+        userAttributes.picture?.trim() || userAttributes.profile?.trim() || null;
+      const gravatarUrl = createGravatarUrl(resolvedEmail);
+      const avatarUrl = resolveAvatarUrl({
+        uploadedAvatarUrl,
+        gravatarUrl,
+      });
+      const avatarPreference = uploadedAvatarUrl
+        ? "uploaded"
+        : avatarUrl
+          ? "gravatar"
+          : "initials";
+      const isOwner =
+        groups.includes("OWNERS") || userAttributes["custom:isOwner"] === "true";
 
       return {
-        avatarUrl: createGravatarUrl(resolvedEmail),
+        avatarPreference,
+        avatarUrl,
         displayName,
         email: resolvedEmail,
+        gravatarUrl,
         groups,
         isAdmin: groups.includes("ADMINS"),
         isAuthenticated: Boolean(session.tokens?.accessToken),
+        isOwner,
+        uploadedAvatarUrl,
       };
     });
   } catch {
     return {
+      avatarPreference: "initials",
       avatarUrl: null,
       displayName: null,
       email: null,
+      gravatarUrl: null,
       groups: [],
       isAdmin: false,
       isAuthenticated: false,
+      isOwner: false,
+      uploadedAvatarUrl: null,
     };
   }
 }
@@ -243,4 +285,118 @@ export async function hasStaffUsers(): Promise<boolean> {
   } catch {
     return true;
   }
+}
+
+async function createSessionCognitoClient() {
+  if (!authConfig?.user_pool_id || !authConfig?.aws_region) {
+    throw new Error("Cognito user pool configuration is unavailable.");
+  }
+
+  return runWithAuthServerContext(async (contextSpec) => {
+    const session = await fetchAuthSession(contextSpec);
+
+    if (!session.credentials) {
+      throw new Error("No AWS credentials are available for the current session.");
+    }
+
+    return new CognitoIdentityProviderClient({
+      credentials: session.credentials,
+      region: authConfig.aws_region,
+    });
+  });
+}
+
+function readUserAttribute(
+  attributes: { Name?: string; Value?: string }[] | undefined,
+  key: string
+) {
+  return attributes?.find((attribute) => attribute.Name === key)?.Value ?? null;
+}
+
+export async function listStaffUsers(): Promise<StaffDirectoryUser[]> {
+  if (!authConfig?.user_pool_id) {
+    return [];
+  }
+
+  try {
+    const cognito = await createSessionCognitoClient();
+    const users: StaffDirectoryUser[] = [];
+    let paginationToken: string | undefined;
+
+    do {
+      const result = await cognito.send(
+        new ListUsersCommand({
+          Limit: 60,
+          PaginationToken: paginationToken,
+          UserPoolId: authConfig.user_pool_id,
+        })
+      );
+
+      for (const user of result.Users ?? []) {
+        users.push({
+          createdAt: user.UserCreateDate ?? null,
+          displayName: readUserAttribute(user.Attributes, "name"),
+          email: readUserAttribute(user.Attributes, "email"),
+          enabled: user.Enabled ?? false,
+          isOwner: readUserAttribute(user.Attributes, "custom:isOwner") === "true",
+          status: user.UserStatus ?? null,
+          username: user.Username ?? "",
+        });
+      }
+
+      paginationToken = result.PaginationToken;
+    } while (paginationToken);
+
+    return users.sort((left, right) => {
+      const leftEmail = left.email ?? left.username;
+      const rightEmail = right.email ?? right.username;
+
+      return leftEmail.localeCompare(rightEmail);
+    });
+  } catch (error) {
+    console.error("[Auth] Unable to list staff users.", error);
+    return [];
+  }
+}
+
+export async function deleteStaffUser(username: string) {
+  if (!authConfig?.user_pool_id) {
+    throw new Error("Cognito user pool configuration is unavailable.");
+  }
+
+  const cognito = await createSessionCognitoClient();
+
+  await cognito.send(
+    new AdminDeleteUserCommand({
+      UserPoolId: authConfig.user_pool_id,
+      Username: username,
+    })
+  );
+}
+
+export async function updateStaffOwnerStatus({
+  isOwner,
+  username,
+}: {
+  isOwner: boolean;
+  username: string;
+}) {
+  if (!authConfig?.user_pool_id) {
+    throw new Error("Cognito user pool configuration is unavailable.");
+  }
+
+  const cognito = await createSessionCognitoClient();
+
+  await cognito.send(
+    new AdminUpdateUserAttributesCommand({
+      UserAttributes: [
+        {
+          Name: "custom:isOwner",
+          Value: isOwner ? "true" : "false",
+        },
+      ],
+      UserPoolId: authConfig.user_pool_id,
+      Username: username,
+    })
+  );
 }

@@ -101,6 +101,7 @@ export async function createBootstrapInviteAction(
       payload: {
         email,
         expiresAt,
+        role: "owner",
       },
       secret: signupSecret,
     }),

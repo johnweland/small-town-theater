@@ -18,6 +18,7 @@ describe("staff bootstrap invite URL", () => {
     expect(inviteUrl.pathname).toBe("/admin/sign-up");
     expect(inviteUrl.searchParams.get("email")).toBe("staff@example.com");
     expect(inviteUrl.searchParams.get("expires")).toBe("2030-01-01T00:00:00.000Z");
+    expect(inviteUrl.searchParams.get("role")).toBe("staff");
     expect(inviteUrl.searchParams.get("signature")).toBeTruthy();
   });
 });
