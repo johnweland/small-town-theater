@@ -5,14 +5,23 @@ import { STAFF_INVITE_METADATA_KEYS } from "./staff-invite-constants";
 export type StaffInviteTokenPayload = {
   email: string;
   expiresAt: string;
+  role?: "owner" | "staff";
 };
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
 
-function createPayloadString({ email, expiresAt }: StaffInviteTokenPayload) {
-  return `${normalizeEmail(email)}:${expiresAt}`;
+function createPayloadString({ email, expiresAt, role }: StaffInviteTokenPayload) {
+  return `${normalizeEmail(email)}:${expiresAt}:${resolveInviteRole({
+    email,
+    expiresAt,
+    role,
+  })}`;
+}
+
+export function resolveInviteRole(payload: StaffInviteTokenPayload) {
+  return payload.role === "owner" ? "owner" : "staff";
 }
 
 export function createStaffInviteSignature(
@@ -38,6 +47,7 @@ export function createStaffInviteUrl({
 
   inviteUrl.searchParams.set("email", normalizeEmail(payload.email));
   inviteUrl.searchParams.set("expires", payload.expiresAt);
+  inviteUrl.searchParams.set("role", resolveInviteRole(payload));
   inviteUrl.searchParams.set("signature", signature);
 
   return inviteUrl.toString();
@@ -86,6 +96,7 @@ export function readInvitePayloadFromClientMetadata(
   return {
     email: normalizeEmail(email),
     expiresAt,
+    role: clientMetadata[STAFF_INVITE_METADATA_KEYS.role] === "owner" ? "owner" : "staff",
   };
 }
 

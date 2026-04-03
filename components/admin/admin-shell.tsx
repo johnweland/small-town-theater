@@ -17,9 +17,11 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { AdminNotice } from "@/components/admin/admin-notice";
+import { ResolvedAvatarImage } from "@/components/shared/avatar-image";
+import { getUserInitials } from "@/lib/auth/profile";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -127,8 +129,11 @@ export function AdminShell({
                 <Button variant="outline" size="icon-sm" type="button">
                   <Bell />
                 </Button>
-                <div className="hidden min-w-0 items-center gap-3 sm:flex">
-                  <div className="min-w-0 text-right">
+                <Link
+                  href="/admin/account"
+                  className="flex items-center gap-3 rounded-lg px-2 py-1 transition-colors hover:bg-surface-container-high"
+                >
+                  <div className="hidden min-w-0 text-right sm:block">
                     <p className="truncate text-sm font-semibold leading-none text-foreground">
                       {headerIdentity}
                     </p>
@@ -137,12 +142,12 @@ export function AdminShell({
                     </p>
                   </div>
                   <Avatar className="size-10 ring-1 ring-border/30">
-                    <AvatarImage src={userAvatarUrl ?? undefined} alt={headerIdentity} />
+                    <ResolvedAvatarImage src={userAvatarUrl} alt={headerIdentity} />
                     <AvatarFallback className="bg-primary/10 text-sm font-semibold text-primary">
                       {initials}
                     </AvatarFallback>
                   </Avatar>
-                </div>
+                </Link>
               </div>
             </div>
             <div className="flex gap-2 overflow-x-auto pb-1 md:hidden">
@@ -180,24 +185,4 @@ export function AdminShell({
       </div>
     </div>
   );
-}
-
-function getUserInitials(displayName?: string | null, email?: string | null) {
-  const source = displayName?.trim() || email?.trim() || "";
-
-  if (!source) {
-    return "AD";
-  }
-
-  if (displayName?.trim()) {
-    const words = displayName
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2);
-
-    return words.map((word) => word[0]?.toUpperCase() ?? "").join("") || "AD";
-  }
-
-  return source.replace(/[^a-zA-Z0-9]/g, "").slice(0, 2).toUpperCase() || "AD";
 }

@@ -4,6 +4,7 @@ type AdminSignUpPageProps = {
   searchParams: Promise<{
     email?: string;
     expires?: string;
+    role?: string;
     signature?: string;
   }>;
 };
@@ -11,7 +12,7 @@ type AdminSignUpPageProps = {
 export default async function AdminSignUpPage({
   searchParams,
 }: AdminSignUpPageProps) {
-  const { email, expires, signature } = await searchParams;
+  const { email, expires, role, signature } = await searchParams;
 
   if (!email || !expires || !signature) {
     return <StaffSignUpForm mode="invalid" />;
@@ -33,6 +34,7 @@ export default async function AdminSignUpPage({
         email,
         expiresAt: expires,
         expiresLabel,
+        role: role === "owner" ? "owner" : "staff",
         signature,
       }}
     />

@@ -12,13 +12,14 @@ describe("staff invite helpers", () => {
     const secret = "top-secret";
     const email = "staff@example.com";
     const expiresAt = "2030-01-01T00:00:00.000Z";
-    const signature = createStaffInviteSignature({ email, expiresAt }, secret);
+    const signature = createStaffInviteSignature({ email, expiresAt, role: "staff" }, secret);
 
     expect(
       verifyStaffInvite({
         clientMetadata: {
           [STAFF_INVITE_METADATA_KEYS.email]: email,
           [STAFF_INVITE_METADATA_KEYS.expiresAt]: expiresAt,
+          [STAFF_INVITE_METADATA_KEYS.role]: "staff",
           [STAFF_INVITE_METADATA_KEYS.signature]: signature,
         },
         email,
@@ -39,6 +40,7 @@ describe("staff invite helpers", () => {
       {
         email: "staff@example.com",
         expiresAt: "2030-01-01T00:00:00.000Z",
+        role: "staff",
       },
       secret
     );
@@ -48,9 +50,33 @@ describe("staff invite helpers", () => {
         clientMetadata: {
           [STAFF_INVITE_METADATA_KEYS.email]: "staff@example.com",
           [STAFF_INVITE_METADATA_KEYS.expiresAt]: "2030-01-01T00:00:00.000Z",
+          [STAFF_INVITE_METADATA_KEYS.role]: "staff",
           [STAFF_INVITE_METADATA_KEYS.signature]: signature,
         },
         email: "other@example.com",
+        secret,
+      })
+    ).toBe(false);
+  });
+
+  it("distinguishes owner invites from regular staff invites", () => {
+    const secret = "top-secret";
+    const email = "owner@example.com";
+    const expiresAt = "2030-01-01T00:00:00.000Z";
+    const ownerSignature = createStaffInviteSignature(
+      { email, expiresAt, role: "owner" },
+      secret
+    );
+
+    expect(
+      verifyStaffInvite({
+        clientMetadata: {
+          [STAFF_INVITE_METADATA_KEYS.email]: email,
+          [STAFF_INVITE_METADATA_KEYS.expiresAt]: expiresAt,
+          [STAFF_INVITE_METADATA_KEYS.role]: "staff",
+          [STAFF_INVITE_METADATA_KEYS.signature]: ownerSignature,
+        },
+        email,
         secret,
       })
     ).toBe(false);
