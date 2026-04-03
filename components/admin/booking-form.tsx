@@ -146,8 +146,8 @@ export function AdminBookingForm({
           <AdminField label="Ticket Price">
             <AdminInput
               name="ticketPrice"
-              defaultValue={booking?.ticketPrice ?? "$12"}
-              placeholder="$12"
+              defaultValue={booking?.ticketPrice ?? "$8"}
+              placeholder="$8"
             />
           </AdminField>
           <AdminField label="Public Badge">
@@ -162,7 +162,7 @@ export function AdminBookingForm({
 
       <AdminSectionCard
         title="Recurring Showtimes"
-        description="Model the weekly pattern now so it can later map directly to a persisted schedule object."
+        description="Define the weekly pattern for this booking."
       >
         <div className="grid gap-5 md:grid-cols-2">
           {[
@@ -236,7 +236,7 @@ export function AdminBookingForm({
     return (
       <AdminMockForm
         submitLabel={booking ? "Save Booking" : "Create Booking Draft"}
-        submitDescription="The theater, screen, and schedule form states are all wired so persistence can be added later with minimal refactor."
+        submitDescription="The theater, screen, and schedule details are all ready for review."
       >
         {formSections}
       </AdminMockForm>
@@ -249,7 +249,7 @@ export function AdminBookingForm({
       <div className="flex flex-col gap-4 rounded-lg bg-surface-container-high p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="font-sans text-sm font-semibold text-foreground">
-            Amplify-backed workflow
+            Booking workflow
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
             Creating this booking will persist the schedule and then redirect to its detail page.

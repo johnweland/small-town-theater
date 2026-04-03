@@ -23,7 +23,7 @@ export default async function TheaterScreensPage({
       <AdminPageHeader
         eyebrow="Screens"
         title={`${theater.name} screens`}
-        description="Keep room-level scheduling details implementation-ready before persistence exists."
+        description="Manage each room's capacity, presentation setup, and scheduling details."
         action={
           <div className="flex gap-3">
             <Button asChild variant="outline">

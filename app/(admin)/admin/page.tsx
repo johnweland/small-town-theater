@@ -97,7 +97,7 @@ export default async function AdminDashboardPage() {
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <AdminStatusBadge status={movie.status} />
+                        {movie.status ? <AdminStatusBadge status={movie.status} /> : null}
                         <Button asChild variant="outline">
                           <Link href={`/admin/movies/${movie.id}`}>View</Link>
                         </Button>
@@ -120,7 +120,7 @@ export default async function AdminDashboardPage() {
                       <p className="font-serif text-xl italic">{movie.title}</p>
                       <p className="text-sm text-muted-foreground">{movie.genres.join(" / ")}</p>
                     </div>
-                    <AdminStatusBadge status={movie.status} />
+                    {movie.status ? <AdminStatusBadge status={movie.status} /> : null}
                   </div>
                 ))}
             </div>
@@ -152,7 +152,7 @@ export default async function AdminDashboardPage() {
             </div>
           </AdminSectionCard>
 
-          <AdminSectionCard title="Recent Activity" description="Mocked activity feed ready to swap for real audit events later.">
+          <AdminSectionCard title="Recent Activity" description="A quick view of the latest activity across programming and operations.">
             <div className="flex flex-col gap-4">
               {activity.map((item) => (
                 <div key={item.id} className="rounded-lg bg-surface-container-high p-4">

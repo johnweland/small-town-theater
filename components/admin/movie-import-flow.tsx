@@ -170,7 +170,7 @@ export function AdminMovieImportFlow({
                       {candidate.year} • {candidate.genres.join(" / ")}
                     </p>
                   </div>
-                  <AdminStatusBadge status="coming-soon" />
+                  {candidate.status ? <AdminStatusBadge status={candidate.status} /> : null}
                 </button>
               ))}
             </div>
@@ -300,7 +300,7 @@ export function AdminMovieImportFlow({
               <div className="flex items-center gap-3">
                 <Sparkles className="size-4 text-primary" />
                 <p className="text-sm text-muted-foreground">
-                  Ready to create an Amplify-backed movie record with imported artwork and metadata.
+                  Ready to create a movie record with imported artwork and metadata.
                 </p>
               </div>
               <div className="flex items-center gap-3">
@@ -318,7 +318,7 @@ export function AdminMovieImportFlow({
                       const client = getAmplifyClient();
                       if (!client.models.Movie) {
                         setSaveError(
-                          "The Movie model is not available in the local Amplify client yet. Deploy or sandbox-sync the backend, then reload this page."
+                          "Movie saving is not available right now. Refresh the page and try again."
                         );
                         setIsSaving(false);
                         return;

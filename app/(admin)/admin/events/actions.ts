@@ -76,14 +76,14 @@ export async function createEventAction(formData: FormData) {
 
   if (result.errors?.length) {
     throw new Error(
-      `Unable to create event in Amplify: ${result.errors
+      `Unable to create event: ${result.errors
         .map((error) => error.message)
         .join("; ")}`
     );
   }
 
   if (!result.data) {
-    throw new Error("Amplify did not return the created event.");
+    throw new Error("The event could not be created.");
   }
 
   revalidateEventPaths(result.data.id);
@@ -123,7 +123,7 @@ export async function updateEventAction(formData: FormData) {
 
   if (existingEvent.errors?.length) {
     throw new Error(
-      `Unable to load existing event from Amplify: ${existingEvent.errors
+      `Unable to load the existing event: ${existingEvent.errors
         .map((error) => error.message)
         .join("; ")}`
     );
@@ -144,7 +144,7 @@ export async function updateEventAction(formData: FormData) {
 
   if (result.errors?.length) {
     throw new Error(
-      `Unable to update event in Amplify: ${result.errors
+      `Unable to update event: ${result.errors
         .map((error) => error.message)
         .join("; ")}`
     );
@@ -176,7 +176,7 @@ export async function deleteEventAction(formData: FormData) {
 
   if (existingEvent.errors?.length) {
     throw new Error(
-      `Unable to load existing event from Amplify: ${existingEvent.errors
+      `Unable to load the existing event: ${existingEvent.errors
         .map((error) => error.message)
         .join("; ")}`
     );
@@ -186,7 +186,7 @@ export async function deleteEventAction(formData: FormData) {
 
   if (result.errors?.length) {
     throw new Error(
-      `Unable to delete event in Amplify: ${result.errors
+      `Unable to delete event: ${result.errors
         .map((error) => error.message)
         .join("; ")}`
     );

@@ -33,9 +33,11 @@ function getErrorMessage(error: unknown) {
 export function SignInForm({
   initialEmail,
   created,
+  showBootstrapInvite,
 }: {
   initialEmail: string;
   created: boolean;
+  showBootstrapInvite: boolean;
 }) {
   ensureAmplifyConfigured();
 
@@ -83,7 +85,7 @@ export function SignInForm({
             Theater staff sign in
           </CardTitle>
           <CardDescription>
-            Staff access is limited to invited theater accounts in Amplify Auth.
+            Staff access is limited to invited theater accounts.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -132,15 +134,17 @@ export function SignInForm({
               Return to the public site
             </Link>
           </p>
-          <p className="mt-2 text-center text-sm text-muted-foreground">
-            First staff account?{" "}
-            <Link
-              className="text-primary underline-offset-4 hover:underline"
-              href="/admin/bootstrap"
-            >
-              Create a bootstrap invite
-            </Link>
-          </p>
+          {showBootstrapInvite ? (
+            <p className="mt-2 text-center text-sm text-muted-foreground">
+              First staff account?{" "}
+              <Link
+                className="text-primary underline-offset-4 hover:underline"
+                href="/admin/bootstrap"
+              >
+                Create a bootstrap invite
+              </Link>
+            </p>
+          ) : null}
         </CardContent>
       </Card>
     </main>

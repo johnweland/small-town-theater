@@ -115,11 +115,6 @@ export function ShowtimeFilters({
               </section>
             ))}
 
-            <ComingSoonList
-              title="Unscheduled Highlights"
-              description="These titles are on the horizon but do not yet have concrete public showtimes."
-              movies={unscheduledComingSoonMovies}
-            />
           </>
         ) : (
           <>
@@ -154,6 +149,12 @@ export function ShowtimeFilters({
             ) : null}
           </>
         )}
+
+        <ComingSoonList
+          title="Unscheduled Highlights"
+          description="These titles are on the horizon but do not yet have concrete public showtimes."
+          movies={unscheduledComingSoonMovies}
+        />
       </div>
     </div>
   );

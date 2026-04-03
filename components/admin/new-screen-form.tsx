@@ -13,7 +13,7 @@ export function NewScreenForm({ theater }: { theater: AdminTheater }) {
       <AdminPageHeader
         eyebrow="New Screen"
         title={`Add a screen for ${theater.name}`}
-        description="Room configuration is now stored in Amplify so scheduling and public theater details can depend on it."
+        description="Capture the room configuration that scheduling and public theater details depend on."
         action={
           <Button asChild variant="outline">
             <Link href={`/admin/theaters/${theater.id}/screens`}>Back to Screens</Link>

@@ -1,4 +1,10 @@
+import { createHash } from "node:crypto";
+
 import { cookies } from "next/headers";
+import {
+  CognitoIdentityProviderClient,
+  ListUsersCommand,
+} from "@aws-sdk/client-cognito-identity-provider";
 
 import {
   createAWSCredentialsAndIdentityIdProvider,
@@ -13,10 +19,13 @@ import { parseAmplifyConfig } from "aws-amplify/utils";
 import outputs from "@/amplify_outputs.json";
 
 const config = parseAmplifyConfig(outputs);
+const authConfig = outputs.auth;
 
 type CookieStore = Awaited<ReturnType<typeof cookies>>;
 
 type StaffSession = {
+  avatarUrl: string | null;
+  displayName: string | null;
   email: string | null;
   groups: string[];
   isAdmin: boolean;
@@ -148,15 +157,54 @@ function readGroupsFromSession(session: Awaited<ReturnType<typeof fetchAuthSessi
   return tokenGroups.filter((group): group is string => typeof group === "string");
 }
 
+function readDisplayNameFromSession(
+  session: Awaited<ReturnType<typeof fetchAuthSession>>
+) {
+  const name = session.tokens?.idToken?.payload.name;
+  const givenName = session.tokens?.idToken?.payload.given_name;
+  const familyName = session.tokens?.idToken?.payload.family_name;
+
+  if (typeof name === "string" && name.trim()) {
+    return name.trim();
+  }
+
+  const fullName = [givenName, familyName]
+    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    .join(" ")
+    .trim();
+
+  return fullName || null;
+}
+
+function createGravatarUrl(email: string | null) {
+  if (!email) {
+    return null;
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+
+  if (!normalizedEmail) {
+    return null;
+  }
+
+  const hash = createHash("md5").update(normalizedEmail).digest("hex");
+
+  return `https://www.gravatar.com/avatar/${hash}?d=404&s=96`;
+}
+
 export async function getStaffSession(): Promise<StaffSession> {
   try {
     return await runWithAuthServerContext(async (contextSpec) => {
       const session = await fetchAuthSession(contextSpec);
       const groups = readGroupsFromSession(session);
       const email = session.tokens?.idToken?.payload.email;
+      const resolvedEmail = typeof email === "string" ? email : null;
+      const displayName = readDisplayNameFromSession(session);
 
       return {
-        email: typeof email === "string" ? email : null,
+        avatarUrl: createGravatarUrl(resolvedEmail),
+        displayName,
+        email: resolvedEmail,
         groups,
         isAdmin: groups.includes("ADMINS"),
         isAuthenticated: Boolean(session.tokens?.accessToken),
@@ -164,10 +212,35 @@ export async function getStaffSession(): Promise<StaffSession> {
     });
   } catch {
     return {
+      avatarUrl: null,
+      displayName: null,
       email: null,
       groups: [],
       isAdmin: false,
       isAuthenticated: false,
     };
+  }
+}
+
+export async function hasStaffUsers(): Promise<boolean> {
+  if (!authConfig?.user_pool_id || !authConfig?.aws_region) {
+    return true;
+  }
+
+  try {
+    const cognito = new CognitoIdentityProviderClient({
+      region: authConfig.aws_region,
+    });
+
+    const result = await cognito.send(
+      new ListUsersCommand({
+        UserPoolId: authConfig.user_pool_id,
+        Limit: 1,
+      })
+    );
+
+    return (result.Users?.length ?? 0) > 0;
+  } catch {
+    return true;
   }
 }

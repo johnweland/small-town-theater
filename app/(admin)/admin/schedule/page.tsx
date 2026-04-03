@@ -83,7 +83,7 @@ export default async function SchedulePage() {
                                 </div>
                                 <div className="flex items-center gap-3">
                                   <AdminStatusBadge status={booking.status} />
-                                  <AdminStatusBadge status={movie.status} />
+                                  {movie.status ? <AdminStatusBadge status={movie.status} /> : null}
                                 </div>
                               </div>
                               <div className="mt-4 flex flex-wrap gap-2">

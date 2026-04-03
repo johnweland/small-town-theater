@@ -6,7 +6,7 @@ import {
   listPublicVenueItemsFromAmplify,
 } from "@/lib/amplify/public-server";
 
-export default async function ConcessionsPage() {
+export default async function AdminConcessionsPage() {
   try {
     const [itemsResult, availabilityResult, theatersResult] = await Promise.all([
       listPublicVenueItemsFromAmplify(),
@@ -37,7 +37,7 @@ export default async function ConcessionsPage() {
         initialError={
           error instanceof Error
             ? error.message
-            : "Unable to load concessions data from Amplify."
+            : "Unable to load concessions data."
         }
       />
     );

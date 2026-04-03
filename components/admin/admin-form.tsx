@@ -100,7 +100,7 @@ export function AdminCheckbox({
 export function AdminMockForm({
   children,
   submitLabel,
-  submitDescription = "Changes are captured in local mock state only for now.",
+  submitDescription = "Changes stay in this preview flow for now.",
 }: {
   children: ReactNode;
   submitLabel: string;
@@ -120,7 +120,7 @@ export function AdminMockForm({
       <div className="flex flex-col gap-4 rounded-lg bg-surface-container-high p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="font-sans text-sm font-semibold text-foreground">
-            Frontend-only workflow
+            Preview workflow
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
             {submitDescription}
@@ -130,7 +130,7 @@ export function AdminMockForm({
           {saved ? (
             <span className="inline-flex items-center gap-2 text-sm text-primary">
               <CheckCircle2 className="size-4" />
-              Saved locally
+              Saved in preview
             </span>
           ) : null}
           <Button type="submit">{submitLabel}</Button>
@@ -189,7 +189,7 @@ export function AdminConfirmDelete({
           <p className="mt-2 text-sm text-muted-foreground">{description}</p>
           {done ? (
             <p className="mt-3 text-sm text-secondary">
-              Delete flow confirmed in the UI. No data was actually removed.
+              Delete flow confirmed.
             </p>
           ) : null}
         </div>

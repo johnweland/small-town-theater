@@ -9,16 +9,15 @@ import {
   Building2,
   CalendarDays,
   Film,
-  Popcorn,
   HelpCircle,
   LayoutDashboard,
-  Search,
+  Popcorn,
   Settings,
   Ticket,
 } from "lucide-react";
 
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { AdminNotice } from "@/components/admin/admin-notice";
 import { cn } from "@/lib/utils";
@@ -29,18 +28,30 @@ const navItems = [
   { href: "/admin/movies", label: "Movies", icon: Film },
   { href: "/admin/schedule", label: "Schedule", icon: CalendarDays },
   { href: "/admin/events", label: "Events", icon: Ticket },
-  { href: "/concessions", label: "Concessions", icon: Popcorn },
+  { href: "/admin/concessions", label: "Concessions", icon: Popcorn },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
 export function AdminShell({
   children,
+  userAvatarUrl,
+  userDisplayName,
   userEmail,
 }: {
   children: ReactNode;
+  userAvatarUrl?: string | null;
+  userDisplayName?: string | null;
   userEmail?: string | null;
 }) {
   const pathname = usePathname();
+  const navLinkClasses =
+    "flex items-center gap-3 rounded-lg px-4 py-3 text-sm transition-colors";
+  const navLabelClasses =
+    "font-sans text-[11px] font-semibold uppercase tracking-[0.22em]";
+  const headerIdentity = userDisplayName?.trim() || userEmail || "Admin";
+  const headerSubtitle =
+    userDisplayName?.trim() && userEmail ? userEmail : "Marquee Admin";
+  const initials = getUserInitials(userDisplayName, userEmail);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -51,31 +62,52 @@ export function AdminShell({
             Small Town Theater
           </p>
         </div>
-        <nav className="flex flex-1 flex-col gap-1 px-4 pb-6">
-          {navItems.map(({ href, label, icon: Icon }) => {
-            const active =
-              href === "/admin"
-                ? pathname === "/admin"
-                : pathname.startsWith(href);
+        <nav className="flex flex-1 flex-col px-4 pb-6">
+          <div className="flex flex-1 flex-col gap-1">
+            {navItems.map(({ href, label, icon: Icon }) => {
+              const active =
+                href === "/admin"
+                  ? pathname === "/admin"
+                  : pathname.startsWith(href);
 
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-4 py-3 text-sm transition-colors",
-                  active
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-surface-container-high hover:text-foreground"
-                )}
-              >
-                <Icon className="size-4" />
-                <span className="font-sans text-[11px] font-semibold uppercase tracking-[0.22em]">
-                  {label}
-                </span>
-              </Link>
-            );
-          })}
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={cn(
+                    navLinkClasses,
+                    active
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-surface-container-high hover:text-foreground"
+                  )}
+                >
+                  <Icon className="size-4" />
+                  <span className={navLabelClasses}>{label}</span>
+                </Link>
+              );
+            })}
+          </div>
+          <div className="mt-8 border-t border-border/10 pt-6">
+            <button
+              type="button"
+              className={cn(
+                navLinkClasses,
+                "w-full text-muted-foreground hover:bg-surface-container-high hover:text-foreground"
+              )}
+            >
+              <HelpCircle className="size-4" />
+              <span className={navLabelClasses}>Support</span>
+            </button>
+            <SignOutButton
+              variant="ghost"
+              size="default"
+              label="Log out"
+              className={cn(
+                navLinkClasses,
+                "mt-1 w-full justify-start px-4 py-3 text-muted-foreground hover:bg-surface-container-high hover:text-foreground"
+              )}
+            />
+          </div>
         </nav>
       </div>
 
@@ -91,32 +123,27 @@ export function AdminShell({
                   Admin Navigation Below
                 </p>
               </div>
-              <div className="flex items-center gap-2">
-                {userEmail ? (
-                  <span className="hidden text-xs text-muted-foreground lg:inline">
-                    {userEmail}
-                  </span>
-                ) : null}
+              <div className="flex items-center gap-3">
                 <Button variant="outline" size="icon-sm" type="button">
                   <Bell />
                 </Button>
-                <Button variant="outline" size="icon-sm" type="button">
-                  <HelpCircle />
-                </Button>
-                <SignOutButton />
+                <div className="hidden min-w-0 items-center gap-3 sm:flex">
+                  <div className="min-w-0 text-right">
+                    <p className="truncate text-sm font-semibold leading-none text-foreground">
+                      {headerIdentity}
+                    </p>
+                    <p className="mt-1 truncate text-xs text-muted-foreground">
+                      {headerSubtitle}
+                    </p>
+                  </div>
+                  <Avatar className="size-10 ring-1 ring-border/30">
+                    <AvatarImage src={userAvatarUrl ?? undefined} alt={headerIdentity} />
+                    <AvatarFallback className="bg-primary/10 text-sm font-semibold text-primary">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
               </div>
-            </div>
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div className="relative w-full max-w-xl">
-                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-primary" />
-                <Input
-                  className="pl-10"
-                  placeholder="Search theaters, bookings, and titles..."
-                />
-              </div>
-              <Button asChild className="w-full sm:w-auto">
-                <Link href="/admin/schedule/new">New Booking</Link>
-              </Button>
             </div>
             <div className="flex gap-2 overflow-x-auto pb-1 md:hidden">
               {navItems.map(({ href, label }) => {
@@ -153,4 +180,24 @@ export function AdminShell({
       </div>
     </div>
   );
+}
+
+function getUserInitials(displayName?: string | null, email?: string | null) {
+  const source = displayName?.trim() || email?.trim() || "";
+
+  if (!source) {
+    return "AD";
+  }
+
+  if (displayName?.trim()) {
+    const words = displayName
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2);
+
+    return words.map((word) => word[0]?.toUpperCase() ?? "").join("") || "AD";
+  }
+
+  return source.replace(/[^a-zA-Z0-9]/g, "").slice(0, 2).toUpperCase() || "AD";
 }

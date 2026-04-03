@@ -14,7 +14,7 @@ export default async function NewEventPage() {
       <AdminPageHeader
         eyebrow="New Event"
         title="Create an event"
-        description="Event authoring mirrors the structure needed for future public publishing and image/media management."
+        description="Set the core details, timing, venue, and artwork for a new event."
         action={
           <Button asChild variant="outline">
             <Link href="/admin/events">Back to Events</Link>

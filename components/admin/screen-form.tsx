@@ -60,7 +60,7 @@ export function AdminScreenForm({
             const client = getAmplifyClient();
             if (!client.models.Screen) {
               setError(
-                "The Screen model is not available in the local Amplify client yet. Deploy or sandbox-sync the updated backend so amplify_outputs.json includes Screen, then reload this page."
+                "Screen management is not available right now. Refresh the page and try again."
               );
               return;
             }
@@ -124,7 +124,7 @@ export function AdminScreenForm({
         title={isEditing ? "Room Settings" : "Screen Configuration"}
         description={
           isEditing
-            ? "Screen-level metadata now persists to Amplify so scheduling and theater operations stay in sync."
+            ? "Keep screen details current so scheduling and theater operations stay aligned."
             : "Capture the operational fields that bookings and public theater details can depend on."
         }
       >
@@ -208,12 +208,12 @@ export function AdminScreenForm({
       <div className="flex flex-col gap-4 rounded-lg bg-surface-container-high p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="font-sans text-sm font-semibold text-foreground">
-            Amplify-backed workflow
+            Screen workflow
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
             {isEditing
-              ? "Saving this screen updates the Amplify record immediately."
-              : "New screens are created in AppSync and appear in the admin screen list after save."}
+              ? "Saving this screen updates it immediately."
+              : "New screens appear in the admin screen list after save."}
           </p>
           {error ? <p className="mt-2 text-sm text-destructive">{error}</p> : null}
         </div>
@@ -255,7 +255,7 @@ export function DeleteScreenButton({
             Retire this screen
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
-            Removing this screen deletes the Amplify record and returns you to the theater&apos;s screen list.
+            Removing this screen deletes it and returns you to the theater&apos;s screen list.
           </p>
           {error ? <p className="mt-3 text-sm text-destructive">{error}</p> : null}
         </div>
@@ -271,7 +271,7 @@ export function DeleteScreenButton({
                 const client = getAmplifyClient();
                 if (!client.models.Screen) {
                   setError(
-                    "The Screen model is not available in the local Amplify client yet. Deploy or sandbox-sync the updated backend so amplify_outputs.json includes Screen, then reload this page."
+                    "Screen management is not available right now. Refresh the page and try again."
                   );
                   return;
                 }

@@ -22,7 +22,7 @@ export default async function NewMoviePage({
       <AdminPageHeader
         eyebrow="Import Flow"
         title="Import from TMDB"
-        description="Search TMDB from the admin panel, review the result, and create a real movie record in Amplify."
+        description="Search TMDB from the admin panel, review the result, and add it to your movie library."
         action={
           <Button asChild variant="outline">
             <Link href="/admin/movies">Back to Library</Link>

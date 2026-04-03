@@ -115,7 +115,7 @@ export function AdminEventForm({
             </AdminField>
             <AdminField
               label="Image URL"
-              description="Paste an image URL or upload artwork directly to S3."
+              description="Paste an image URL or upload artwork directly from this form."
             >
               <AdminInput
                 name="image"
@@ -126,11 +126,11 @@ export function AdminEventForm({
             </AdminField>
             <AdminImageUploadField
               label="Upload Artwork"
-              description="Upload event art directly to Amplify Storage. The public S3 URL will be saved back into this event."
+              description="Upload event art directly from this editor."
               uploadPathPrefix="events"
               value={image}
               onChange={setImage}
-              previewLabel="Direct browser-to-S3 uploads avoid sending the image body through AppSync or a Next.js route."
+              previewLabel="The uploaded image URL will be saved back into this event."
             />
           </AdminFieldGrid>
           <div className="mt-5 grid gap-5">
@@ -156,7 +156,7 @@ export function AdminEventForm({
       <div className="flex flex-col gap-8">
         <AdminSectionCard
           title="Promotional Art"
-          description="Mirror the Stitch layout with a dedicated poster preview instead of burying the image as a plain text field."
+          description="Preview the event artwork alongside the rest of the event details."
         >
           <div className="space-y-4">
             <div className="relative aspect-[2/3] overflow-hidden rounded-md bg-surface-container-highest">
@@ -177,7 +177,7 @@ export function AdminEventForm({
               </Button>
             </div>
             <p className="text-xs leading-5 text-muted-foreground">
-              The admin form now persists this image URL in Amplify and surfaces the preview in the events library.
+              Use this preview to confirm the artwork looks right before saving.
             </p>
           </div>
         </AdminSectionCard>
@@ -189,7 +189,7 @@ export function AdminEventForm({
     return (
       <AdminMockForm
         submitLabel={event ? "Save Event" : "Create Event Draft"}
-        submitDescription="Event editing is fully structured, but this version is not connected to persistence."
+        submitDescription="Event editing is fully structured and ready for review."
       >
         {formSections}
       </AdminMockForm>
@@ -202,7 +202,7 @@ export function AdminEventForm({
       <div className="flex flex-col gap-4 rounded-lg bg-surface-container-high p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="font-sans text-sm font-semibold text-foreground">
-            Amplify-backed workflow
+            Event workflow
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
             Saving this form will persist the event and keep the admin views in sync.

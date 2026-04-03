@@ -20,5 +20,13 @@ export default async function ProtectedAdminLayout({
     forbidden();
   }
 
-  return <AdminShell userEmail={session.email}>{children}</AdminShell>;
+  return (
+    <AdminShell
+      userAvatarUrl={session.avatarUrl}
+      userDisplayName={session.displayName}
+      userEmail={session.email}
+    >
+      {children}
+    </AdminShell>
+  );
 }
