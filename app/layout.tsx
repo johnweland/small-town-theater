@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Newsreader, Work_Sans } from "next/font/google";
 
+import { AppToaster } from "@/components/ui/sonner";
+
 import "./globals.css";
 
 const newsreader = Newsreader({
@@ -29,7 +31,10 @@ export default function RootLayout({
       lang="en"
       className={`h-full antialiased ${newsreader.variable} ${workSans.variable}`}
     >
-      <body className="flex min-h-full flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        {children}
+        <AppToaster />
+      </body>
     </html>
   );
 }
