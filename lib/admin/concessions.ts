@@ -1,3 +1,6 @@
+import type { Schema } from "@/amplify/data/resource";
+import { CONCESSION_ITEM_PLACEHOLDER_IMAGE } from "@/lib/concessions";
+
 export const catalogItemTypes = [
   "concession",
   "meal",
@@ -11,6 +14,14 @@ export const fulfillmentTypes = ["counter", "kitchen", "bar"] as const;
 export type CatalogItemType = (typeof catalogItemTypes)[number];
 export type FulfillmentType = (typeof fulfillmentTypes)[number];
 
+export type VenueItemRecord = Schema["VenueItem"]["type"];
+export type VenueItemAvailabilityRecord = Schema["VenueItemAvailability"]["type"];
+export type TheaterRecord = Schema["Theater"]["type"];
+export type VenueItemVariationRecord = NonNullable<
+  NonNullable<VenueItemRecord["variations"]>[number]
+>;
+type ConcessionsTheaterSource = Pick<TheaterRecord, "id" | "name">;
+
 export interface ConcessionsTheater {
   id: string;
   name: string;
@@ -18,18 +29,29 @@ export interface ConcessionsTheater {
 }
 
 export interface ConcessionsItemAvailability {
+  id?: string;
   theaterId: string;
   itemId: string;
   isAvailable: boolean;
   priceOverride: number | null;
   currentStock: number | null;
   lowStockThreshold: number | null;
+  updatedAt?: string | null;
+}
+
+export interface ConcessionsItemVariation {
+  id: string;
+  name: string;
+  description: string;
+  priceDelta: number | null;
+  sortOrder: number;
 }
 
 export interface ConcessionsCatalogItem {
   id: string;
   name: string;
   description: string;
+  image: string;
   itemType: CatalogItemType;
   category: string;
   basePrice: number;
@@ -40,6 +62,9 @@ export interface ConcessionsCatalogItem {
   prepRequired: boolean;
   ageRestricted: boolean;
   taxableCategory: string;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  variations: ConcessionsItemVariation[];
   availability: ConcessionsItemAvailability[];
 }
 
@@ -48,261 +73,247 @@ export interface ConcessionsDataset {
   theaters: ConcessionsTheater[];
 }
 
-export const mockConcessionsTheaters: ConcessionsTheater[] = [
-  { id: "orpheum", name: "The Orpheum", shortLabel: "ORP" },
-  { id: "lyric", name: "The Lyric", shortLabel: "LYR" },
-  { id: "bijou", name: "The Bijou", shortLabel: "BIJ" },
-];
+export interface SaveVenueItemPayload {
+  item: Omit<ConcessionsCatalogItem, "availability">;
+  availability: ConcessionsItemAvailability[];
+}
 
-function createAvailability(
-  itemId: string,
-  values: Array<
-    Pick<
-      ConcessionsItemAvailability,
-      "theaterId" | "isAvailable" | "priceOverride" | "currentStock" | "lowStockThreshold"
-    >
-  >
-): ConcessionsItemAvailability[] {
-  return values.map((value) => ({
-    itemId,
-    ...value,
+function toShortLabel(name: string) {
+  return name
+    .split(/\s+/)
+    .slice(0, 3)
+    .map((segment) => segment[0]?.toUpperCase() ?? "")
+    .join("")
+    .slice(0, 3);
+}
+
+export function toConcessionsTheaters(
+  theaters: ConcessionsTheaterSource[]
+): ConcessionsTheater[] {
+  return theaters.map((theater) => ({
+    id: theater.id,
+    name: theater.name,
+    shortLabel: toShortLabel(theater.name),
   }));
 }
 
-export const mockConcessionsItems: ConcessionsCatalogItem[] = [
-  {
-    id: "item-popcorn-classic",
-    name: "Classic Cinema Popcorn",
-    description: "Buttery house popcorn served fresh at the counter.",
-    itemType: "concession",
-    category: "Popcorn",
-    basePrice: 8.5,
-    isActive: true,
-    trackInventory: true,
-    sku: "CON-POP-CLSC",
-    fulfillmentType: "counter",
-    prepRequired: true,
-    ageRestricted: false,
-    taxableCategory: "prepared-food",
-    availability: createAvailability("item-popcorn-classic", [
-      {
-        theaterId: "orpheum",
-        isAvailable: true,
-        priceOverride: null,
-        currentStock: 1240,
-        lowStockThreshold: 120,
-      },
-      {
-        theaterId: "lyric",
-        isAvailable: true,
-        priceOverride: 9,
-        currentStock: 960,
-        lowStockThreshold: 100,
-      },
-      {
-        theaterId: "bijou",
-        isAvailable: true,
-        priceOverride: null,
-        currentStock: 510,
-        lowStockThreshold: 80,
-      },
-    ]),
-  },
-  {
-    id: "item-ginger-ale",
-    name: "Artisan Ginger Ale",
-    description: "Bottled local soda with a bright ginger finish.",
-    itemType: "concession",
-    category: "Beverages",
-    basePrice: 6.25,
-    isActive: true,
-    trackInventory: true,
-    sku: "CON-BEV-GNGR",
-    fulfillmentType: "counter",
-    prepRequired: false,
-    ageRestricted: false,
-    taxableCategory: "beverage",
-    availability: createAvailability("item-ginger-ale", [
-      {
-        theaterId: "orpheum",
-        isAvailable: true,
-        priceOverride: null,
-        currentStock: 42,
-        lowStockThreshold: 50,
-      },
-      {
-        theaterId: "lyric",
-        isAvailable: true,
-        priceOverride: null,
-        currentStock: 87,
-        lowStockThreshold: 40,
-      },
-      {
-        theaterId: "bijou",
-        isAvailable: false,
-        priceOverride: null,
-        currentStock: null,
-        lowStockThreshold: null,
-      },
-    ]),
-  },
-  {
-    id: "item-truffles",
-    name: "Local Cocoa Truffles",
-    description: "Gift-box style chocolate bites from a nearby chocolatier.",
-    itemType: "concession",
-    category: "Candy",
-    basePrice: 12,
-    isActive: true,
-    trackInventory: false,
-    sku: "CON-CND-TRUF",
-    fulfillmentType: "counter",
-    prepRequired: false,
-    ageRestricted: false,
-    taxableCategory: "retail-food",
-    availability: createAvailability("item-truffles", [
-      {
-        theaterId: "orpheum",
-        isAvailable: false,
-        priceOverride: null,
-        currentStock: null,
-        lowStockThreshold: null,
-      },
-      {
-        theaterId: "lyric",
-        isAvailable: true,
-        priceOverride: 11.5,
-        currentStock: 180,
-        lowStockThreshold: 30,
-      },
-      {
-        theaterId: "bijou",
-        isAvailable: true,
-        priceOverride: null,
-        currentStock: 60,
-        lowStockThreshold: 20,
-      },
-    ]),
-  },
-  {
-    id: "item-soft-pretzel",
-    name: "Jumbo Soft Pretzel",
-    description: "Warm pretzel with sea salt and optional cheese cup.",
-    itemType: "meal",
-    category: "Hot Snacks",
-    basePrice: 9,
-    isActive: true,
-    trackInventory: true,
-    sku: "MEAL-PRTZ-JMB",
-    fulfillmentType: "kitchen",
-    prepRequired: true,
-    ageRestricted: false,
-    taxableCategory: "prepared-food",
-    availability: createAvailability("item-soft-pretzel", [
-      {
-        theaterId: "orpheum",
-        isAvailable: true,
-        priceOverride: null,
-        currentStock: 65,
-        lowStockThreshold: 25,
-      },
-      {
-        theaterId: "lyric",
-        isAvailable: true,
-        priceOverride: 9.5,
-        currentStock: 15,
-        lowStockThreshold: 20,
-      },
-      {
-        theaterId: "bijou",
-        isAvailable: false,
-        priceOverride: null,
-        currentStock: null,
-        lowStockThreshold: null,
-      },
-    ]),
-  },
-  {
-    id: "item-house-red",
-    name: "House Red Pour",
-    description: "A simple red wine pour staged for future evening service.",
-    itemType: "alcohol",
-    category: "Wine",
-    basePrice: 11,
-    isActive: false,
-    trackInventory: true,
-    sku: "ALC-WIN-RED",
-    fulfillmentType: "bar",
-    prepRequired: false,
-    ageRestricted: true,
-    taxableCategory: "alcohol",
-    availability: createAvailability("item-house-red", [
-      {
-        theaterId: "orpheum",
-        isAvailable: false,
-        priceOverride: null,
-        currentStock: 0,
-        lowStockThreshold: 12,
-      },
-      {
-        theaterId: "lyric",
-        isAvailable: false,
-        priceOverride: null,
-        currentStock: 0,
-        lowStockThreshold: 12,
-      },
-      {
-        theaterId: "bijou",
-        isAvailable: false,
-        priceOverride: null,
-        currentStock: 0,
-        lowStockThreshold: 12,
-      },
-    ]),
-  },
-  {
-    id: "item-date-night-combo",
-    name: "Date Night Combo",
-    description: "Two popcorns, two drinks, and one candy bundle.",
-    itemType: "combo",
-    category: "Combos",
-    basePrice: 24,
-    isActive: true,
-    trackInventory: false,
-    sku: "COMBO-DATE-NT",
-    fulfillmentType: "counter",
-    prepRequired: true,
-    ageRestricted: false,
-    taxableCategory: "combo",
-    availability: createAvailability("item-date-night-combo", [
-      {
-        theaterId: "orpheum",
-        isAvailable: true,
-        priceOverride: null,
-        currentStock: null,
-        lowStockThreshold: null,
-      },
-      {
-        theaterId: "lyric",
-        isAvailable: true,
-        priceOverride: 22,
-        currentStock: null,
-        lowStockThreshold: null,
-      },
-      {
-        theaterId: "bijou",
-        isAvailable: true,
-        priceOverride: null,
-        currentStock: null,
-        lowStockThreshold: null,
-      },
-    ]),
-  },
-];
+function toAvailabilityMap(
+  availability: VenueItemAvailabilityRecord[]
+) {
+  return availability.reduce<Record<string, VenueItemAvailabilityRecord[]>>(
+    (map, record) => {
+      if (!map[record.itemId]) {
+        map[record.itemId] = [];
+      }
 
-export function getMockConcessionsDataset(): ConcessionsDataset {
+      map[record.itemId].push(record);
+      return map;
+    },
+    {}
+  );
+}
+
+function toConcessionsVariation(
+  variation: VenueItemVariationRecord
+): ConcessionsItemVariation {
   return {
-    items: mockConcessionsItems,
-    theaters: mockConcessionsTheaters,
+    id: variation.id,
+    name: variation.name,
+    description: variation.description ?? "",
+    priceDelta: variation.priceDelta ?? null,
+    sortOrder: variation.sortOrder,
+  };
+}
+
+function createEmptyAvailability(
+  itemId: string,
+  theaterId: string
+): ConcessionsItemAvailability {
+  return {
+    theaterId,
+    itemId,
+    isAvailable: false,
+    priceOverride: null,
+    currentStock: null,
+    lowStockThreshold: null,
+    updatedAt: null,
+  };
+}
+
+function toConcessionsAvailability(
+  itemId: string,
+  theaterId: string,
+  record?: VenueItemAvailabilityRecord
+): ConcessionsItemAvailability {
+  if (!record) {
+    return createEmptyAvailability(itemId, theaterId);
+  }
+
+  return {
+    id: record.id,
+    theaterId: record.theaterId,
+    itemId: record.itemId,
+    isAvailable: record.isAvailable,
+    priceOverride: record.priceOverride ?? null,
+    currentStock: record.currentStock ?? null,
+    lowStockThreshold: record.lowStockThreshold ?? null,
+    updatedAt: record.updatedAt ?? null,
+  };
+}
+
+export function buildConcessionsItems(params: {
+  items: VenueItemRecord[];
+  availability: VenueItemAvailabilityRecord[];
+  theaters: ConcessionsTheater[];
+}): ConcessionsCatalogItem[] {
+  const availabilityByItem = toAvailabilityMap(params.availability);
+
+  return params.items.map((item) => {
+    const availability = availabilityByItem[item.id] ?? [];
+
+    return {
+      id: item.id,
+      name: item.name,
+      description: item.description ?? "",
+      image: item.image?.trim() || CONCESSION_ITEM_PLACEHOLDER_IMAGE,
+      itemType: item.itemType,
+      category: item.category,
+      basePrice: item.basePrice,
+      isActive: item.isActive,
+      trackInventory: item.trackInventory,
+      sku: item.sku,
+      fulfillmentType: item.fulfillmentType,
+      prepRequired: item.prepRequired,
+      ageRestricted: item.ageRestricted,
+      taxableCategory: item.taxableCategory,
+      createdAt: item.createdAt ?? null,
+      updatedAt: item.updatedAt ?? null,
+      variations:
+        item.variations
+          ?.filter((variation): variation is VenueItemVariationRecord => Boolean(variation))
+          .map(toConcessionsVariation)
+          .sort((left, right) => left.sortOrder - right.sortOrder) ?? [],
+      availability: params.theaters.map((theater) =>
+        toConcessionsAvailability(
+          item.id,
+          theater.id,
+          availability.find((record) => record.theaterId === theater.id)
+        )
+      ),
+    };
+  });
+}
+
+export function buildConcessionsDataset(params: {
+  items: VenueItemRecord[];
+  availability: VenueItemAvailabilityRecord[];
+  theaters: ConcessionsTheaterSource[];
+}): ConcessionsDataset {
+  const concessionsTheaters = toConcessionsTheaters(params.theaters);
+
+  return {
+    theaters: concessionsTheaters,
+    items: buildConcessionsItems({
+      items: params.items,
+      availability: params.availability,
+      theaters: concessionsTheaters,
+    }),
+  };
+}
+
+export function toVenueItemCreateInput(
+  item: Omit<ConcessionsCatalogItem, "availability">
+): Schema["VenueItem"]["createType"] {
+  return {
+    name: item.name,
+    description: item.description || null,
+    image: item.image || null,
+    itemType: item.itemType,
+    category: item.category,
+    basePrice: item.basePrice,
+    isActive: item.isActive,
+    trackInventory: item.trackInventory,
+    sku: item.sku,
+    fulfillmentType: item.fulfillmentType,
+    prepRequired: item.prepRequired,
+    ageRestricted: item.ageRestricted,
+    taxableCategory: item.taxableCategory,
+    variations: item.variations.length
+      ? item.variations.map((variation) => ({
+          id: variation.id,
+          name: variation.name,
+          description: variation.description || null,
+          priceDelta: variation.priceDelta,
+          sortOrder: variation.sortOrder,
+        }))
+      : null,
+  };
+}
+
+export function toVenueItemUpdateInput(
+  item: Omit<ConcessionsCatalogItem, "availability">
+): Schema["VenueItem"]["updateType"] {
+  return {
+    id: item.id,
+    name: item.name,
+    description: item.description || null,
+    image: item.image || null,
+    itemType: item.itemType,
+    category: item.category,
+    basePrice: item.basePrice,
+    isActive: item.isActive,
+    trackInventory: item.trackInventory,
+    sku: item.sku,
+    fulfillmentType: item.fulfillmentType,
+    prepRequired: item.prepRequired,
+    ageRestricted: item.ageRestricted,
+    taxableCategory: item.taxableCategory,
+    variations: item.variations.length
+      ? item.variations.map((variation) => ({
+          id: variation.id,
+          name: variation.name,
+          description: variation.description || null,
+          priceDelta: variation.priceDelta,
+          sortOrder: variation.sortOrder,
+        }))
+      : null,
+  };
+}
+
+export function shouldPersistAvailabilityRow(
+  row: ConcessionsItemAvailability
+) {
+  return (
+    row.isAvailable ||
+    row.priceOverride != null ||
+    row.currentStock != null ||
+    row.lowStockThreshold != null
+  );
+}
+
+export function toVenueItemAvailabilityCreateInput(
+  row: ConcessionsItemAvailability
+): Schema["VenueItemAvailability"]["createType"] {
+  return {
+    theaterId: row.theaterId,
+    itemId: row.itemId,
+    isAvailable: row.isAvailable,
+    priceOverride: row.priceOverride,
+    currentStock: row.currentStock,
+    lowStockThreshold: row.lowStockThreshold,
+  };
+}
+
+export function toVenueItemAvailabilityUpdateInput(
+  row: ConcessionsItemAvailability
+): Schema["VenueItemAvailability"]["updateType"] {
+  return {
+    id: row.id!,
+    theaterId: row.theaterId,
+    itemId: row.itemId,
+    isAvailable: row.isAvailable,
+    priceOverride: row.priceOverride,
+    currentStock: row.currentStock,
+    lowStockThreshold: row.lowStockThreshold,
   };
 }

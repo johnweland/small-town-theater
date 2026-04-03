@@ -10,6 +10,7 @@ import { getAmplifyStoragePathFromUrl } from "@/lib/amplify/storage";
 
 const config = parseAmplifyConfig(outputs);
 const client = generateClient<Schema>({ config });
+
 function getPublicEventModel() {
   const eventModel = (client.models as Record<string, unknown>).Event;
 
@@ -20,6 +21,34 @@ function getPublicEventModel() {
   }
 
   return eventModel as {
+    list: (...args: unknown[]) => unknown;
+  };
+}
+
+function getPublicVenueItemModel() {
+  const venueItemModel = (client.models as Record<string, unknown>).VenueItem;
+
+  if (!venueItemModel) {
+    throw new Error(
+      "Amplify VenueItem model is unavailable in the current deployment. Deploy the updated Amplify schema before using concessions persistence."
+    );
+  }
+
+  return venueItemModel as {
+    list: (...args: unknown[]) => unknown;
+  };
+}
+
+function getPublicVenueItemAvailabilityModel() {
+  const availabilityModel = (client.models as Record<string, unknown>).VenueItemAvailability;
+
+  if (!availabilityModel) {
+    throw new Error(
+      "Amplify VenueItemAvailability model is unavailable in the current deployment. Deploy the updated Amplify schema before using concessions persistence."
+    );
+  }
+
+  return availabilityModel as {
     list: (...args: unknown[]) => unknown;
   };
 }
@@ -114,6 +143,40 @@ const publicEventSelection = [
   "createdAt",
   "updatedAt",
 ] as const;
+const publicVenueItemSelection = [
+  "id",
+  "name",
+  "description",
+  "image",
+  "itemType",
+  "category",
+  "basePrice",
+  "isActive",
+  "trackInventory",
+  "sku",
+  "fulfillmentType",
+  "prepRequired",
+  "ageRestricted",
+  "taxableCategory",
+  "variations.id",
+  "variations.name",
+  "variations.description",
+  "variations.priceDelta",
+  "variations.sortOrder",
+  "createdAt",
+  "updatedAt",
+] as const;
+const publicVenueItemAvailabilitySelection = [
+  "id",
+  "theaterId",
+  "itemId",
+  "isAvailable",
+  "priceOverride",
+  "currentStock",
+  "lowStockThreshold",
+  "createdAt",
+  "updatedAt",
+] as const;
 
 export async function listPublicTheatersFromAmplify() {
   return runWithAmplifyServerContext(config, {}, (contextSpec) =>
@@ -169,6 +232,36 @@ export async function listPublicEventsFromAmplify() {
     })
   ) as Promise<{
     data: Schema["Event"]["type"][];
+    errors?: { message: string }[];
+  }>;
+}
+
+export async function listPublicVenueItemsFromAmplify() {
+  const venueItemModel = getPublicVenueItemModel();
+
+  return runWithAmplifyServerContext(config, {}, (contextSpec) =>
+    venueItemModel.list(contextSpec, {
+      authMode: "apiKey",
+      sortDirection: "ASC",
+      selectionSet: publicVenueItemSelection,
+    })
+  ) as Promise<{
+    data: Schema["VenueItem"]["type"][];
+    errors?: { message: string }[];
+  }>;
+}
+
+export async function listPublicVenueItemAvailabilityFromAmplify() {
+  const availabilityModel = getPublicVenueItemAvailabilityModel();
+
+  return runWithAmplifyServerContext(config, {}, (contextSpec) =>
+    availabilityModel.list(contextSpec, {
+      authMode: "apiKey",
+      sortDirection: "ASC",
+      selectionSet: publicVenueItemAvailabilitySelection,
+    })
+  ) as Promise<{
+    data: Schema["VenueItemAvailability"]["type"][];
     errors?: { message: string }[];
   }>;
 }

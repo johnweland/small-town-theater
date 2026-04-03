@@ -20,6 +20,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { AdminDataTable } from "@/components/admin/data-table";
 import { AdminStatusBadge } from "@/components/admin/status-badge";
+import { ConcessionItemImage } from "@/components/shared/concession-item-image";
 import type {
   ConcessionsCatalogItem,
   ConcessionsTheater,
@@ -80,27 +81,40 @@ export function ConcessionsTable({
             onClick={() => onEdit(item)}
           >
             <TableCell className="py-5">
-              <div className="min-w-0">
-                <p className="truncate font-serif text-[1.45rem] italic text-foreground">
-                  {item.name}
-                </p>
-                <p className="mt-1 truncate text-sm leading-6 text-muted-foreground">
-                  {item.description}
-                </p>
-                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-                  <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">
-                    {item.sku}
+              <div className="flex min-w-0 items-start gap-4">
+                <ConcessionItemImage
+                  src={item.image}
+                  alt={`${item.name} item`}
+                  className="size-14 shrink-0 rounded-md"
+                />
+                <div className="min-w-0">
+                  <p className="truncate font-serif text-[1.45rem] italic text-foreground">
+                    {item.name}
                   </p>
-                  {item.prepRequired ? (
-                    <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                      Prep required
-                    </span>
-                  ) : null}
-                  {item.ageRestricted ? (
-                    <span className="text-[10px] uppercase tracking-[0.2em] text-secondary">
-                      21+
-                    </span>
-                  ) : null}
+                  <p className="mt-1 truncate text-sm leading-6 text-muted-foreground">
+                    {item.description}
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">
+                      {item.sku}
+                    </p>
+                    {item.variations.length ? (
+                      <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                        {item.variations.length} variation
+                        {item.variations.length === 1 ? "" : "s"}
+                      </span>
+                    ) : null}
+                    {item.prepRequired ? (
+                      <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                        Prep required
+                      </span>
+                    ) : null}
+                    {item.ageRestricted ? (
+                      <span className="text-[10px] uppercase tracking-[0.2em] text-secondary">
+                        21+
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
               </div>
             </TableCell>

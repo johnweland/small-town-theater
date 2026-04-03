@@ -1,0 +1,16 @@
+<svg width="640" height="480" viewBox="0 0 640 480" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="480" fill="#1D1B19"/>
+  <rect x="40" y="40" width="560" height="400" rx="28" fill="#2A2723" stroke="#4A4339" stroke-width="2"/>
+  <path d="M252 132H388L366 348H274L252 132Z" fill="#F3D8A5"/>
+  <path d="M276 132L288 348" stroke="#7D5D34" stroke-width="12" stroke-linecap="round"/>
+  <path d="M320 132V348" stroke="#7D5D34" stroke-width="12" stroke-linecap="round"/>
+  <path d="M364 132L352 348" stroke="#7D5D34" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="260" cy="118" r="28" fill="#FFF1D6"/>
+  <circle cx="296" cy="96" r="34" fill="#FFF1D6"/>
+  <circle cx="336" cy="102" r="36" fill="#FFF1D6"/>
+  <circle cx="376" cy="120" r="30" fill="#FFF1D6"/>
+  <path d="M208 384H432" stroke="#5E5548" stroke-width="2" stroke-dasharray="6 8"/>
+  <text x="320" y="404" text-anchor="middle" fill="#CBB58B" font-family="Georgia, serif" font-size="28" font-style="italic">
+    Concession Item
+  </text>
+</svg>

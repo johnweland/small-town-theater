@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import {
   AlertTriangle,
@@ -20,8 +20,9 @@ import { ConcessionsItemDialog } from "./concessions-item-dialog";
 import { ConcessionsTable } from "./concessions-table";
 import type {
   ConcessionsCatalogItem,
-  ConcessionsTheater,
+  ConcessionsDataset,
 } from "@/lib/admin/concessions";
+import { useConcessionsCatalog } from "./use-concessions-catalog";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-US", {
@@ -31,23 +32,9 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
-function createDuplicate(item: ConcessionsCatalogItem): ConcessionsCatalogItem {
-  const id = `${item.id}-copy-${Date.now()}`;
-  return {
-    ...item,
-    id,
-    name: `${item.name} Copy`,
-    sku: `${item.sku}-COPY`,
-    availability: item.availability.map((entry) => ({
-      ...entry,
-      itemId: id,
-    })),
-  };
-}
-
 function getLowStockAlerts(
   items: ConcessionsCatalogItem[],
-  theaters: ConcessionsTheater[]
+  theaters: ConcessionsDataset["theaters"]
 ) {
   return items.flatMap((item) =>
     item.availability.flatMap((entry) => {
@@ -75,14 +62,12 @@ function getLowStockAlerts(
 }
 
 export function ConcessionsInventoryView({
-  initialItems,
-  theaters,
+  initialData,
+  initialError = null,
 }: {
-  initialItems: ConcessionsCatalogItem[];
-  theaters: ConcessionsTheater[];
+  initialData: ConcessionsDataset;
+  initialError?: string | null;
 }) {
-  const [items, setItems] = useState(initialItems);
-  const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
@@ -93,11 +78,22 @@ export function ConcessionsInventoryView({
     theaterId: "all",
     status: "all",
   });
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setIsLoading(false), 450);
-    return () => window.clearTimeout(timer);
-  }, []);
+  const {
+    data,
+    error,
+    isLoading,
+    isSaving,
+    saveError,
+    clearSaveError,
+    saveItem,
+    duplicateItem,
+    toggleItemActive,
+    refreshData,
+  } = useConcessionsCatalog({
+    initialData,
+    initialError,
+  });
+  const { items, theaters } = data;
 
   const categories = useMemo(
     () => Array.from(new Set(items.map((item) => item.category))).sort(),
@@ -192,6 +188,7 @@ export function ConcessionsInventoryView({
         action={
           <Button
             onClick={() => {
+              clearSaveError();
               setDialogMode("create");
               setSelectedItemId(null);
               setDialogOpen(true);
@@ -232,8 +229,8 @@ export function ConcessionsInventoryView({
         description="Filter across item type, category, theater, and current catalog status while keeping future inventory metadata visible."
         action={
           <div className="flex gap-3">
-            <Button variant="outline" disabled>
-              Export Report
+            <Button variant="outline" onClick={() => void refreshData()}>
+              Refresh
             </Button>
             <Button variant="outline" disabled>
               Bulk Update
@@ -251,6 +248,22 @@ export function ConcessionsInventoryView({
 
       <div className="grid gap-8 xl:grid-cols-[minmax(0,1.85fr)_280px]">
         <div className="flex flex-col gap-4">
+          {error ? (
+            <AdminSectionCard
+              title="Amplify sync issue"
+              description={error}
+            >
+              <div className="flex items-center justify-between gap-4">
+                <p className="text-sm leading-6 text-muted-foreground">
+                  Deploy the updated Gen 2 schema if the new VenueItem models are not available yet, then refresh this page.
+                </p>
+                <Button variant="outline" onClick={() => void refreshData()}>
+                  Retry
+                </Button>
+              </div>
+            </AdminSectionCard>
+          ) : null}
+
           {isLoading ? (
             <div className="rounded-lg border border-border/20 bg-surface-container-low p-4">
               <div className="grid gap-3">
@@ -266,25 +279,16 @@ export function ConcessionsInventoryView({
                 items={filteredItems}
                 theaters={theaters}
                 onEdit={(item) => {
+                  clearSaveError();
                   setDialogMode("edit");
                   setSelectedItemId(item.id);
                   setDialogOpen(true);
                 }}
                 onDuplicate={(item) => {
-                  const duplicate = createDuplicate(item);
-                  setItems((currentItems) => [duplicate, ...currentItems]);
-                  setDialogMode("edit");
-                  setSelectedItemId(duplicate.id);
-                  setDialogOpen(true);
+                  void duplicateItem(item);
                 }}
                 onToggleActive={(item) => {
-                  setItems((currentItems) =>
-                    currentItems.map((currentItem) =>
-                      currentItem.id === item.id
-                        ? { ...currentItem, isActive: !currentItem.isActive }
-                        : currentItem
-                    )
-                  );
+                  void toggleItemActive(item);
                 }}
               />
               <div className="flex items-center justify-between px-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -307,6 +311,7 @@ export function ConcessionsInventoryView({
               action={
                 <Button
                   onClick={() => {
+                    clearSaveError();
                     setDialogMode("create");
                     setSelectedItemId(null);
                     setDialogOpen(true);
@@ -361,28 +366,11 @@ export function ConcessionsInventoryView({
         mode={dialogMode}
         item={selectedItem}
         theaters={theaters}
+        isSaving={isSaving}
+        saveError={saveError}
         onOpenChange={setDialogOpen}
-        onSave={(item, mode) => {
-          setItems((currentItems) => {
-            if (mode === "create") {
-              const nextId = `item-${Date.now()}`;
-              return [
-                {
-                  ...item,
-                  id: nextId,
-                  availability: item.availability.map((entry) => ({
-                    ...entry,
-                    itemId: nextId,
-                  })),
-                },
-                ...currentItems,
-              ];
-            }
-
-            return currentItems.map((currentItem) =>
-              currentItem.id === item.id ? item : currentItem
-            );
-          });
+        onSave={async (item, mode) => {
+          await saveItem(item, mode);
           setDialogOpen(false);
         }}
       />

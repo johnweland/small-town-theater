@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from "react";
 
-import { Save, Sparkles } from "lucide-react";
+import { Plus, Save, Sparkles, Trash2 } from "lucide-react";
 
+import { AdminImageUploadField } from "@/components/admin/admin-image-upload-field";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,6 +31,7 @@ import type {
   CatalogItemType,
   ConcessionsCatalogItem,
   ConcessionsItemAvailability,
+  ConcessionsItemVariation,
   ConcessionsTheater,
   FulfillmentType,
 } from "@/lib/admin/concessions";
@@ -37,6 +39,7 @@ import type {
 type FormValues = {
   name: string;
   description: string;
+  image: string;
   itemType: CatalogItemType;
   category: string;
   basePrice: string;
@@ -47,6 +50,7 @@ type FormValues = {
   prepRequired: boolean;
   ageRestricted: boolean;
   taxableCategory: string;
+  variations: ConcessionsItemVariation[];
   availability: ConcessionsItemAvailability[];
 };
 
@@ -57,6 +61,7 @@ function createEmptyItem(theaters: ConcessionsTheater[]): ConcessionsCatalogItem
     id: "new-item",
     name: "",
     description: "",
+    image: "",
     itemType: "concession",
     category: "",
     basePrice: 0,
@@ -67,6 +72,7 @@ function createEmptyItem(theaters: ConcessionsTheater[]): ConcessionsCatalogItem
     prepRequired: false,
     ageRestricted: false,
     taxableCategory: "",
+    variations: [],
     availability: theaters.map((theater) => ({
       theaterId: theater.id,
       itemId: "new-item",
@@ -82,6 +88,7 @@ function toFormValues(item: ConcessionsCatalogItem): FormValues {
   return {
     name: item.name,
     description: item.description,
+    image: item.image,
     itemType: item.itemType,
     category: item.category,
     basePrice: String(item.basePrice),
@@ -92,6 +99,7 @@ function toFormValues(item: ConcessionsCatalogItem): FormValues {
     prepRequired: item.prepRequired,
     ageRestricted: item.ageRestricted,
     taxableCategory: item.taxableCategory,
+    variations: item.variations,
     availability: item.availability,
   };
 }
@@ -126,11 +134,23 @@ function fieldClass(error?: string) {
   return error ? "border-destructive/40 focus-visible:ring-destructive/20" : undefined;
 }
 
+function createVariation(order: number): ConcessionsItemVariation {
+  return {
+    id: crypto.randomUUID(),
+    name: "",
+    description: "",
+    priceDelta: null,
+    sortOrder: order,
+  };
+}
+
 export function ConcessionsItemDialog({
   open,
   mode,
   item,
   theaters,
+  isSaving = false,
+  saveError = null,
   onOpenChange,
   onSave,
 }: {
@@ -138,8 +158,13 @@ export function ConcessionsItemDialog({
   mode: "create" | "edit";
   item: ConcessionsCatalogItem | null;
   theaters: ConcessionsTheater[];
+  isSaving?: boolean;
+  saveError?: string | null;
   onOpenChange: (open: boolean) => void;
-  onSave: (item: ConcessionsCatalogItem, mode: "create" | "edit") => void;
+  onSave: (
+    item: ConcessionsCatalogItem,
+    mode: "create" | "edit"
+  ) => void | Promise<void>;
 }) {
   const seedItem = useMemo(
     () => item ?? createEmptyItem(theaters),
@@ -192,6 +217,30 @@ export function ConcessionsItemDialog({
                   rows={4}
                 />
               </label>
+
+              <label className="flex flex-col gap-2 md:col-span-2">
+                <span className="font-sans text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">
+                  Item Image URL
+                </span>
+                <Input
+                  value={values.image}
+                  onChange={(event) =>
+                    setValues({ ...values, image: event.target.value })
+                  }
+                  placeholder="https://example.com/item-image.jpg"
+                />
+              </label>
+
+              <div className="md:col-span-2">
+                <AdminImageUploadField
+                  label="Upload Item Image"
+                  description="Upload a product image directly to Amplify Storage for this catalog item."
+                  uploadPathPrefix="venue-items"
+                  value={values.image}
+                  onChange={(image) => setValues({ ...values, image })}
+                  previewLabel="This writes the resulting public storage URL into the item image field so the catalog can render a real product image."
+                />
+              </div>
 
               <label className="flex flex-col gap-2">
                 <span className="font-sans text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">
@@ -371,6 +420,152 @@ export function ConcessionsItemDialog({
               </div>
             </section>
 
+            <section className="space-y-4 rounded-lg border border-border/20 bg-surface-container-high p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="font-serif text-2xl italic text-foreground">
+                    Variations
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    Optional size or format choices like small, medium, and large drinks. Leave this empty for single-option items.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() =>
+                    setValues({
+                      ...values,
+                      variations: [
+                        ...values.variations,
+                        createVariation(values.variations.length + 1),
+                      ],
+                    })
+                  }
+                >
+                  <Plus data-icon="inline-start" />
+                  Add Variation
+                </Button>
+              </div>
+
+              {values.variations.length ? (
+                <div className="flex flex-col gap-4">
+                  {values.variations
+                    .slice()
+                    .sort((left, right) => left.sortOrder - right.sortOrder)
+                    .map((variation, index) => (
+                      <div
+                        key={variation.id}
+                        className="rounded-md border border-border/20 bg-surface-container-highest p-4"
+                      >
+                        <div className="mb-4 flex items-center justify-between gap-3">
+                          <p className="font-sans text-sm font-semibold text-foreground">
+                            Variation {index + 1}
+                          </p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon-sm"
+                            onClick={() =>
+                              setValues({
+                                ...values,
+                                variations: values.variations.filter(
+                                  (currentVariation) =>
+                                    currentVariation.id !== variation.id
+                                ),
+                              })
+                            }
+                            aria-label={`Remove ${variation.name || `variation ${index + 1}`}`}
+                          >
+                            <Trash2 />
+                          </Button>
+                        </div>
+
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <label className="flex flex-col gap-2">
+                            <span className="font-sans text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">
+                              Name
+                            </span>
+                            <Input
+                              value={variation.name}
+                              onChange={(event) =>
+                                setValues({
+                                  ...values,
+                                  variations: values.variations.map((currentVariation) =>
+                                    currentVariation.id === variation.id
+                                      ? {
+                                          ...currentVariation,
+                                          name: event.target.value,
+                                        }
+                                      : currentVariation
+                                  ),
+                                })
+                              }
+                              placeholder="Large"
+                            />
+                          </label>
+
+                          <label className="flex flex-col gap-2">
+                            <span className="font-sans text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">
+                              Price Delta
+                            </span>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={variation.priceDelta ?? ""}
+                              onChange={(event) =>
+                                setValues({
+                                  ...values,
+                                  variations: values.variations.map((currentVariation) =>
+                                    currentVariation.id === variation.id
+                                      ? {
+                                          ...currentVariation,
+                                          priceDelta:
+                                            event.target.value === ""
+                                              ? null
+                                              : Number(event.target.value),
+                                        }
+                                      : currentVariation
+                                  ),
+                                })
+                              }
+                              placeholder="1.50"
+                            />
+                          </label>
+
+                          <label className="flex flex-col gap-2 md:col-span-2">
+                            <span className="font-sans text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">
+                              Description
+                            </span>
+                            <Input
+                              value={variation.description}
+                              onChange={(event) =>
+                                setValues({
+                                  ...values,
+                                  variations: values.variations.map((currentVariation) =>
+                                    currentVariation.id === variation.id
+                                      ? {
+                                          ...currentVariation,
+                                          description: event.target.value,
+                                        }
+                                      : currentVariation
+                                  ),
+                                })
+                              }
+                              placeholder="32 oz fountain pour"
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              ) : (
+                <p className="text-sm leading-6 text-muted-foreground">
+                  No variations configured. Simple catalog items can stay variation-free.
+                </p>
+              )}
+            </section>
+
             <section className="space-y-4">
               <div>
                 <p className="font-serif text-2xl italic text-foreground">
@@ -390,21 +585,25 @@ export function ConcessionsItemDialog({
             <Separator className="bg-border/20" />
 
             <section className="rounded-lg border border-dashed border-primary/30 bg-primary/5 p-4">
-              {/* TODO: Replace local onSave handling with Amplify mutation calls and optimistic cache updates. */}
+              {/* TODO: Add inventory transaction history and modifier/option modeling on top of the existing VenueItem records. */}
               <p className="font-sans text-sm font-semibold text-foreground">
-                Backend handoff note
+                Future inventory expansion
               </p>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                This form currently saves into local typed state only. The field structure is intentionally aligned for later Amplify models and per-theater mutations.
+                The catalog now saves through Amplify Data. A later pass can layer inventory transactions, meal modifiers, and alcohol compliance rules onto the same base records without redesigning this form.
               </p>
             </section>
           </div>
 
           <DialogFooter className="border-t border-border/20 px-6 py-4">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            {saveError ? (
+              <p className="mr-auto text-sm text-destructive">{saveError}</p>
+            ) : null}
+            <Button variant="outline" disabled={isSaving} onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button
+              disabled={isSaving}
               onClick={() => {
                 const nextErrors = validate(values);
                 setErrors(nextErrors);
@@ -413,11 +612,12 @@ export function ConcessionsItemDialog({
                   return;
                 }
 
-                onSave(
+                void onSave(
                   {
                     ...seedItem,
                     name: values.name.trim(),
                     description: values.description.trim(),
+                    image: values.image.trim(),
                     itemType: values.itemType,
                     category: values.category.trim(),
                     basePrice: Number(values.basePrice),
@@ -428,6 +628,14 @@ export function ConcessionsItemDialog({
                     prepRequired: values.prepRequired,
                     ageRestricted: values.ageRestricted,
                     taxableCategory: values.taxableCategory.trim(),
+                    variations: values.variations
+                      .map((variation, index) => ({
+                        ...variation,
+                        name: variation.name.trim(),
+                        description: variation.description.trim(),
+                        sortOrder: index + 1,
+                      }))
+                      .filter((variation) => variation.name.length > 0),
                     availability: values.availability.map((entry) => ({
                       ...entry,
                       itemId: seedItem.id,
@@ -438,7 +646,13 @@ export function ConcessionsItemDialog({
               }}
             >
               <Save data-icon="inline-start" />
-              {mode === "create" ? "Create Item" : "Save Changes"}
+              {isSaving
+                ? mode === "create"
+                  ? "Creating..."
+                  : "Saving..."
+                : mode === "create"
+                  ? "Create Item"
+                  : "Save Changes"}
             </Button>
           </DialogFooter>
         </div>

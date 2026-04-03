@@ -75,6 +75,7 @@ export interface ConcessionItem {
   name: string;
   price: string;
   note: string;
+  image: string;
 }
 
 export interface Theater {
