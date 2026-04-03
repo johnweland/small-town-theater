@@ -152,7 +152,7 @@ export default async function AdminDashboardPage() {
             </div>
           </AdminSectionCard>
 
-          <AdminSectionCard title="Recent Activity" description="Mocked activity feed ready to swap for real audit events later.">
+          <AdminSectionCard title="Recent Activity" description="A quick view of the latest activity across programming and operations.">
             <div className="flex flex-col gap-4">
               {activity.map((item) => (
                 <div key={item.id} className="rounded-lg bg-surface-container-high p-4">

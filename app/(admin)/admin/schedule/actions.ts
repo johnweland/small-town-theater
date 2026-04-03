@@ -132,14 +132,14 @@ export async function createBookingAction(formData: FormData) {
 
   if (result.errors?.length) {
     throw new Error(
-      `Unable to create booking in Amplify: ${result.errors
+      `Unable to create booking: ${result.errors
         .map((error) => error.message)
         .join("; ")}`
     );
   }
 
   if (!result.data) {
-    throw new Error("Amplify did not return the created booking.");
+    throw new Error("The booking could not be created.");
   }
 
   revalidatePath("/admin");

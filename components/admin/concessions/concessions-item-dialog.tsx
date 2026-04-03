@@ -182,7 +182,7 @@ export function ConcessionsItemDialog({
               {mode === "create" ? "Add catalog item" : values.name || "Edit catalog item"}
             </DialogTitle>
             <DialogDescription>
-              Manage a shared catalog item now, with availability and inventory fields ready for future Amplify wiring.
+              Manage a shared catalog item with theater availability, pricing, and inventory settings.
             </DialogDescription>
           </DialogHeader>
 
@@ -234,7 +234,7 @@ export function ConcessionsItemDialog({
               <div className="md:col-span-2">
                 <AdminImageUploadField
                   label="Upload Item Image"
-                  description="Upload a product image directly to Amplify Storage for this catalog item."
+                  description="Upload a product image directly from this editor."
                   uploadPathPrefix="venue-items"
                   value={values.image}
                   onChange={(image) => setValues({ ...values, image })}
@@ -590,7 +590,7 @@ export function ConcessionsItemDialog({
                 Future inventory expansion
               </p>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                The catalog now saves through Amplify Data. A later pass can layer inventory transactions, meal modifiers, and alcohol compliance rules onto the same base records without redesigning this form.
+                This catalog is designed to grow with inventory history, meal modifiers, and alcohol compliance workflows without redesigning the form.
               </p>
             </section>
           </div>

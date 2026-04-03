@@ -155,11 +155,11 @@ export function NewTheaterForm() {
             </AdminField>
             <AdminImageUploadField
               label="Upload Hero Image"
-              description="Upload a theater hero image directly to Amplify Storage."
+              description="Upload a theater hero image directly from this form."
               uploadPathPrefix="theaters"
               value={heroImage}
               onChange={setHeroImage}
-              previewLabel="This writes the resulting public S3 URL into the hero image field before the theater record is created."
+              previewLabel="The uploaded image URL will be added to the hero image field before the theater is created."
             />
           </AdminFieldGrid>
         </AdminSectionCard>
@@ -177,14 +177,13 @@ export function NewTheaterForm() {
         </AdminSectionCard>
 
         <div className="flex flex-col gap-4 rounded-lg bg-surface-container-high p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="font-sans text-sm font-semibold text-foreground">
-              Amplify-backed workflow
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Theater records are created in AppSync through the generated Amplify
-              Data client.
-            </p>
+        <div>
+          <p className="font-sans text-sm font-semibold text-foreground">
+            Theater workflow
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Creating this theater adds it to the admin library and makes it available for related setup work.
+          </p>
             {error ? (
               <p className="mt-2 text-sm text-destructive">{error}</p>
             ) : null}

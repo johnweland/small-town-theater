@@ -5,11 +5,23 @@ import { useState } from "react";
 import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { signOut } from "aws-amplify/auth";
+import type { VariantProps } from "class-variance-authority";
 
 import { ensureAmplifyConfigured } from "@/lib/amplify/client";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-export function SignOutButton() {
+type SignOutButtonProps = {
+  className?: string;
+  label?: string;
+} & VariantProps<typeof buttonVariants>;
+
+export function SignOutButton({
+  className,
+  label = "Sign out",
+  size = "sm",
+  variant = "outline",
+}: SignOutButtonProps) {
   ensureAmplifyConfigured();
 
   const router = useRouter();
@@ -29,14 +41,15 @@ export function SignOutButton() {
 
   return (
     <Button
-      variant="outline"
-      size="sm"
+      variant={variant}
+      size={size}
       type="button"
       onClick={handleSignOut}
       disabled={isPending}
+      className={cn(className)}
     >
       <LogOut className="size-4" />
-      <span>{isPending ? "Signing out..." : "Sign out"}</span>
+      <span>{isPending ? "Signing out..." : label}</span>
     </Button>
   );
 }

@@ -249,13 +249,13 @@ export function ConcessionsInventoryView({
       <div className="grid gap-8 xl:grid-cols-[minmax(0,1.85fr)_280px]">
         <div className="flex flex-col gap-4">
           {error ? (
-            <AdminSectionCard
-              title="Amplify sync issue"
-              description={error}
-            >
+          <AdminSectionCard
+            title="Catalog sync issue"
+            description={error}
+          >
               <div className="flex items-center justify-between gap-4">
                 <p className="text-sm leading-6 text-muted-foreground">
-                  Deploy the updated Gen 2 schema if the new VenueItem models are not available yet, then refresh this page.
+                  Refresh the page to try loading the latest catalog data again.
                 </p>
                 <Button variant="outline" onClick={() => void refreshData()}>
                   Retry
@@ -307,7 +307,7 @@ export function ConcessionsInventoryView({
           ) : (
             <AdminEmptyState
               title="No catalog items match these filters"
-              description="Try broadening the search or add a new item to seed the concessions catalog for upcoming theater rollouts."
+              description="Try broadening the search or add a new item to expand the concessions catalog."
               action={
                 <Button
                   onClick={() => {
@@ -328,7 +328,7 @@ export function ConcessionsInventoryView({
         <div className="flex flex-col gap-6">
           <AdminSectionCard
             title="Availability alerts"
-            description="Stock values are mock data for now, but the UI is already shaping the future low-stock workflow."
+            description="Track low-stock signals across theaters and spot items that need attention."
           >
             {lowStockAlerts.length ? (
               <div className="flex flex-col gap-4">
@@ -353,7 +353,7 @@ export function ConcessionsInventoryView({
               </div>
             ) : (
               <p className="text-sm leading-6 text-muted-foreground">
-                No low-stock mock alerts right now.
+                No low-stock alerts right now.
               </p>
             )}
           </AdminSectionCard>

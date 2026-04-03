@@ -20,7 +20,7 @@ type ModelOperationError = { message: string };
 const concessionsTheaterSelection = ["id", "name"] as const;
 
 function joinErrors(errors?: readonly ModelOperationError[]) {
-  return errors?.map((error) => error.message).join("; ") ?? "Unknown Amplify error.";
+  return errors?.map((error) => error.message).join("; ") ?? "An unexpected error occurred.";
 }
 
 function toUserActionErrorMessage(
@@ -41,7 +41,7 @@ function getVenueItemModel(client: ReturnType<typeof getAmplifyClient>) {
 
   if (!model) {
     throw new Error(
-      "Amplify VenueItem model is unavailable. Deploy the updated Amplify schema and refresh amplify_outputs.json."
+      "Catalog items are not available right now. Refresh the page and try again."
     );
   }
 
@@ -53,7 +53,7 @@ function getVenueItemAvailabilityModel(client: ReturnType<typeof getAmplifyClien
 
   if (!model) {
     throw new Error(
-      "Amplify VenueItemAvailability model is unavailable. Deploy the updated Amplify schema and refresh amplify_outputs.json."
+      "Item availability is not available right now. Refresh the page and try again."
     );
   }
 

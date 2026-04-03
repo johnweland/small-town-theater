@@ -15,7 +15,7 @@ function getEventModel() {
 
   if (!eventModel) {
     throw new Error(
-      "Amplify Event model is unavailable in the current deployment. Deploy the updated Amplify schema before using admin events persistence."
+      "Events are not available right now."
     );
   }
 

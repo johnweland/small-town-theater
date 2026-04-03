@@ -161,14 +161,16 @@ export function AdminTheaterEditor({ theater }: { theater: AdminTheater }) {
                 onChange={(event) => setHeroImage(event.target.value)}
               />
             </AdminField>
-            <AdminImageUploadField
-              label="Upload Hero Image"
-              description="Upload a new hero image directly to Amplify Storage."
-              uploadPathPrefix="theaters"
-              value={heroImage}
-              onChange={setHeroImage}
-              previewLabel="Replacing an S3-backed hero image here uploads the new file immediately and swaps the saved URL in the form."
-            />
+            <div className="md:col-span-2">
+              <AdminImageUploadField
+                label="Upload Hero Image"
+                description="Upload a new hero image directly from this form."
+                uploadPathPrefix="theaters"
+                value={heroImage}
+                onChange={setHeroImage}
+                previewLabel="Replacing the hero image updates the saved image URL in the form."
+              />
+            </div>
           </AdminFieldGrid>
           <div className="mt-5">
             <AdminField label="Operational Notes">
@@ -194,28 +196,6 @@ export function AdminTheaterEditor({ theater }: { theater: AdminTheater }) {
                 defaultValue={theater.descriptionParagraphs[1] ?? ""}
               />
             </AdminField>
-            <AdminField
-              label="Venue Specs"
-              description="This field is still fixture-backed and is not persisted to Amplify yet."
-            >
-              <AdminTextarea
-                defaultValue={theater.specs
-                  .map((spec) => `${spec.label}: ${spec.value}`)
-                  .join("\n")}
-                disabled
-              />
-            </AdminField>
-            <AdminField
-              label="Concessions"
-              description="This field is still fixture-backed and is not persisted to Amplify yet."
-            >
-              <AdminTextarea
-                defaultValue={theater.concessions
-                  .map((item) => `${item.name} — ${item.price} — ${item.note}`)
-                  .join("\n")}
-                disabled
-              />
-            </AdminField>
           </div>
         </AdminSectionCard>
       </div>
@@ -223,11 +203,10 @@ export function AdminTheaterEditor({ theater }: { theater: AdminTheater }) {
       <div className="flex flex-col gap-4 rounded-lg bg-surface-container-high p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="font-sans text-sm font-semibold text-foreground">
-            Amplify-backed workflow
+            Theater workflow
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Core theater fields are saved to AppSync. Fixture-only presentation
-            fields remain read-only until the schema grows.
+            Core theater fields and public story details can be updated here.
           </p>
           {error ? (
             <p className="mt-2 text-sm text-destructive">{error}</p>
@@ -262,8 +241,7 @@ export function AdminTheaterDeleteCard({
             Archive this theater
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
-            This permanently removes the theater record from Amplify. Screens and
-            other fixture-backed admin references are not automatically cleaned up.
+            This permanently removes the theater. Related references may still need follow-up cleanup.
           </p>
           {error ? (
             <p className="mt-3 text-sm text-destructive">{error}</p>

@@ -16,7 +16,7 @@ function getPublicEventModel() {
 
   if (!eventModel) {
     throw new Error(
-      "Amplify Event model is unavailable in the current deployment. Deploy the updated Amplify schema before using public events."
+      "Events are not available right now."
     );
   }
 
@@ -30,7 +30,7 @@ function getPublicVenueItemModel() {
 
   if (!venueItemModel) {
     throw new Error(
-      "Amplify VenueItem model is unavailable in the current deployment. Deploy the updated Amplify schema before using concessions persistence."
+      "Catalog items are not available right now."
     );
   }
 
@@ -44,7 +44,7 @@ function getPublicVenueItemAvailabilityModel() {
 
   if (!availabilityModel) {
     throw new Error(
-      "Amplify VenueItemAvailability model is unavailable in the current deployment. Deploy the updated Amplify schema before using concessions persistence."
+      "Item availability is not available right now."
     );
   }
 

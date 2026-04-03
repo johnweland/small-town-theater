@@ -30,7 +30,7 @@ export default async function EventsPage() {
         {events.length === 0 ? (
           <AdminSectionCard
             title="No events yet"
-            description="Create the first Amplify-backed event to populate the library."
+            description="Create the first event to populate the library."
           >
             <Button asChild>
               <Link href="/admin/events/new">Add Event</Link>

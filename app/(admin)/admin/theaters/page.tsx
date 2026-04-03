@@ -70,7 +70,7 @@ export default async function AdminTheatersPage() {
           ) : (
             <TableRow>
               <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                No theaters found in Amplify yet.
+                No theaters found yet.
               </TableCell>
             </TableRow>
           )}

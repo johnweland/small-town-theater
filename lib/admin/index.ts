@@ -296,7 +296,7 @@ async function toAdminEvent(event: AmplifyEventRecord) {
 function isMissingEventModelError(error: unknown) {
   return (
     error instanceof Error &&
-    error.message.includes("Amplify Event model is unavailable")
+    error.message.includes("Events are not available right now")
   );
 }
 
@@ -305,7 +305,7 @@ export async function getAdminTheaters() {
 
   if (result.errors?.length) {
     throw new Error(
-      `Unable to load theaters from Amplify: ${result.errors
+      `Unable to load theaters: ${result.errors
         .map((error) => error.message)
         .join("; ")}`
     );
@@ -319,7 +319,7 @@ export async function getAdminTheater(theaterId: string) {
 
   if (result.errors?.length) {
     throw new Error(
-      `Unable to load theater from Amplify: ${result.errors
+      `Unable to load theater: ${result.errors
         .map((error) => error.message)
         .join("; ")}`
     );
@@ -333,7 +333,7 @@ export async function getAdminScreens() {
 
   if (result.errors?.length) {
     throw new Error(
-      `Unable to load screens from Amplify: ${result.errors
+      `Unable to load screens: ${result.errors
         .map((error) => error.message)
         .join("; ")}`
     );
@@ -347,7 +347,7 @@ export async function getAdminScreen(screenId: string) {
 
   if (result.errors?.length) {
     throw new Error(
-      `Unable to load screen from Amplify: ${result.errors
+      `Unable to load screen: ${result.errors
         .map((error) => error.message)
         .join("; ")}`
     );
@@ -361,7 +361,7 @@ export async function getAdminScreensForTheater(theaterId: string) {
 
   if (result.errors?.length) {
     throw new Error(
-      `Unable to load theater screens from Amplify: ${result.errors
+      `Unable to load theater screens: ${result.errors
         .map((error) => error.message)
         .join("; ")}`
     );
@@ -375,7 +375,7 @@ export async function getAdminMovies() {
 
   if (result.errors?.length) {
     throw new Error(
-      `Unable to load movies from Amplify: ${result.errors
+      `Unable to load movies: ${result.errors
         .map((error) => error.message)
         .join("; ")}`
     );
@@ -389,7 +389,7 @@ export async function getAdminMovie(movieId: string) {
 
   if (result.errors?.length) {
     throw new Error(
-      `Unable to load movie from Amplify: ${result.errors
+      `Unable to load movie: ${result.errors
         .map((error) => error.message)
         .join("; ")}`
     );
@@ -403,7 +403,7 @@ export async function getAdminMovieDetail(movieId: string) {
 
   if (result.errors?.length) {
     throw new Error(
-      `Unable to load movie detail from Amplify: ${result.errors
+      `Unable to load movie detail: ${result.errors
         .map((error) => error.message)
         .join("; ")}`
     );
@@ -454,7 +454,7 @@ export async function getAdminBookings() {
 
   if (bookingsResult.errors?.length) {
     throw new Error(
-      `Unable to load bookings from Amplify: ${bookingsResult.errors
+      `Unable to load bookings: ${bookingsResult.errors
         .map((error) => error.message)
         .join("; ")}`
     );
@@ -462,7 +462,7 @@ export async function getAdminBookings() {
 
   if (movies.errors?.length) {
     throw new Error(
-      `Unable to load movies for bookings from Amplify: ${movies.errors
+      `Unable to load movies for bookings: ${movies.errors
         .map((error) => error.message)
         .join("; ")}`
     );
@@ -483,7 +483,7 @@ export async function getAdminBooking(bookingId: string) {
 
   if (bookingResult.errors?.length) {
     throw new Error(
-      `Unable to load booking from Amplify: ${bookingResult.errors
+      `Unable to load booking: ${bookingResult.errors
         .map((error) => error.message)
         .join("; ")}`
     );
@@ -491,7 +491,7 @@ export async function getAdminBooking(bookingId: string) {
 
   if (movies.errors?.length) {
     throw new Error(
-      `Unable to load movies for booking from Amplify: ${movies.errors
+      `Unable to load movies for booking: ${movies.errors
         .map((error) => error.message)
         .join("; ")}`
     );
@@ -523,7 +523,7 @@ export async function getAdminEvents() {
 
   if (result.errors?.length) {
     throw new Error(
-      `Unable to load events from Amplify: ${result.errors
+      `Unable to load events: ${result.errors
         .map((error) => error.message)
         .join("; ")}`
     );
@@ -547,7 +547,7 @@ export async function getAdminEvent(eventId: string) {
 
   if (result.errors?.length) {
     throw new Error(
-      `Unable to load event from Amplify: ${result.errors
+      `Unable to load event: ${result.errors
         .map((error) => error.message)
         .join("; ")}`
     );

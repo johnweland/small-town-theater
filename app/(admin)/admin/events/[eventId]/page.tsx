@@ -39,14 +39,14 @@ export default async function EventDetailPage({
       <div className="flex flex-col gap-8">
         <AdminEventForm theaters={theaters} event={event} action={updateEventAction} />
         <div className="flex flex-col gap-8">
-          <AdminSectionCard title="Publishing Notes" description="Placeholder area for future audience targeting, ticketing, and media integrations.">
+          <AdminSectionCard title="Publishing Notes" description="Space for audience targeting, ticketing, and media planning as the workflow expands.">
             <p className="text-sm leading-6 text-muted-foreground">
-              This event editor now reads and writes through Amplify, while keeping media, venue, schedule, and publication state separated for later public publishing work.
+              Keep media, venue, schedule, and publication details organized here as event operations grow more sophisticated.
             </p>
           </AdminSectionCard>
           <AdminConfirmDelete
             title="Delete this event"
-            description="Deleting this event removes the Amplify record and returns you to the events library."
+            description="Deleting this event removes it from the library and returns you to the events list."
             action={deleteEventAction}
             itemId={event.id}
           />
