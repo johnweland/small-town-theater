@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -145,7 +145,9 @@ export function AdminShell({
         </header>
 
         <main className="px-4 py-8 sm:px-6 lg:px-8">
-          <AdminNotice />
+          <Suspense fallback={null}>
+            <AdminNotice />
+          </Suspense>
           {children}
         </main>
       </div>
