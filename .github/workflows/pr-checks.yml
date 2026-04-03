@@ -27,11 +27,11 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
-        run: npm install --include=optional
+        run: npm ci
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
