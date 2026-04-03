@@ -3,7 +3,6 @@ import path from "path";
 
 import { adminEvents } from "@/lib/admin/mock-data";
 import { movies as siteMovies } from "@/lib/data/movies";
-import { isE2ETestMode } from "./config";
 import type {
   MockBookingRecord,
   MockEventRecord,

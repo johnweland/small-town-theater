@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 
 import type { AdminScreen, AdminTheater } from "@/lib/admin";
 import { createAdminNoticeHref } from "@/lib/admin/notice";
 import { getAmplifyClient } from "@/lib/amplify/client";
 import { Button } from "@/components/ui/button";
 import { AdminSectionCard } from "@/components/admin/section-card";
+import { useHydratedFlag } from "@/components/admin/use-hydrated-flag";
 import {
   AdminField,
   AdminFieldGrid,
@@ -45,11 +46,7 @@ export function AdminScreenForm({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const isEditing = Boolean(screen);
-  const [isHydrated, setIsHydrated] = useState(false);
-
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
+  const isHydrated = useHydratedFlag();
 
   return (
     <form

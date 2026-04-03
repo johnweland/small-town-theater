@@ -37,7 +37,7 @@ function createSubscription() {
 
 function createModel(model: MockModelName) {
   return {
-    list(_: Record<string, unknown> = {}, params?: Record<string, unknown>) {
+    list(params?: Record<string, unknown>) {
       return callMockApi({ action: "list", model, params });
     },
     get(payload: { id: string }) {
@@ -70,7 +70,9 @@ export function createE2EAmplifyClient() {
       Theater: createModel("Theater"),
       Screen: {
         ...createModel("Screen"),
-        listScreensByTheater(_: Record<string, unknown>, params: { theaterId: string }) {
+        listScreensByTheater(
+          ...[, params]: [Record<string, unknown>, { theaterId: string }]
+        ) {
           return callMockApi({
             action: "list",
             model: "Screen",

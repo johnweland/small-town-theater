@@ -1,4 +1,5 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 test.describe.configure({ mode: "serial" });
 test.setTimeout(120_000);
@@ -53,7 +54,7 @@ async function expectRecordMissing(
   expect(record, `Expected ${model} with ${field}=${value} to be deleted`).toBeUndefined();
 }
 
-async function gotoFresh(page: Parameters<typeof test>[0] extends never ? never : any, path: string) {
+async function gotoFresh(page: Page, path: string) {
   const separator = path.includes("?") ? "&" : "?";
   await page.goto(`${path}${separator}e2e=${Date.now()}`);
 }

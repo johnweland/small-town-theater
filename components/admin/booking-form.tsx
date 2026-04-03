@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import type { AdminBooking, AdminMovie, AdminScreen, AdminTheater } from "@/lib/admin";
 import { AdminSectionCard } from "@/components/admin/section-card";
+import { useHydratedFlag } from "@/components/admin/use-hydrated-flag";
 import {
   AdminCheckbox,
   AdminConfirmDelete,
@@ -56,11 +57,7 @@ export function AdminBookingForm({
       : defaultMovieId && movies.some((movie) => movie.id === defaultMovieId)
         ? defaultMovieId
         : movies[0]?.id ?? "";
-  const [isHydrated, setIsHydrated] = useState(false);
-
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
+  const isHydrated = useHydratedFlag();
 
   const formSections = (
     <>

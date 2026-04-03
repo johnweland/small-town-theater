@@ -12,11 +12,6 @@ import {
   updateMockRecord,
 } from "@/lib/e2e/admin-mock-store";
 import { isE2ETestMode } from "@/lib/e2e/config";
-import type {
-  MockMovieRecord,
-  MockScreenRecord,
-  MockTheaterRecord,
-} from "@/lib/e2e/admin-mock-types";
 import { runWithAuthServerContext } from "@/lib/auth/server";
 import { getAmplifyStoragePathFromUrl } from "@/lib/amplify/storage";
 
