@@ -3,17 +3,12 @@ import { notFound } from "next/navigation";
 
 import { getAdminScreen, getAdminTheater } from "@/lib/admin";
 import { Button } from "@/components/ui/button";
+import {
+  AdminScreenForm,
+  DeleteScreenButton,
+} from "@/components/admin/screen-form";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { AdminSectionCard } from "@/components/admin/section-card";
-import {
-  AdminCheckbox,
-  AdminConfirmDelete,
-  AdminField,
-  AdminFieldGrid,
-  AdminInput,
-  AdminMockForm,
-  AdminSelect,
-} from "@/components/admin/admin-form";
 import { AdminStatusBadge } from "@/components/admin/status-badge";
 
 export default async function ScreenDetailPage({
@@ -39,41 +34,7 @@ export default async function ScreenDetailPage({
       />
 
       <div className="grid gap-8 xl:grid-cols-[1fr_0.8fr]">
-        <AdminMockForm submitLabel="Save Screen">
-          <AdminSectionCard title="Room Settings" description="Screen-level metadata is ready for future availability, pricing, and accessibility integrations.">
-            <AdminFieldGrid>
-              <AdminField label="Name">
-                <AdminInput defaultValue={screen.name} />
-              </AdminField>
-              <AdminField label="Slug">
-                <AdminInput defaultValue={screen.slug} />
-              </AdminField>
-              <AdminField label="Capacity">
-                <AdminInput type="number" defaultValue={String(screen.capacity)} />
-              </AdminField>
-              <AdminField label="Sort Order">
-                <AdminInput type="number" defaultValue={String(screen.sortOrder)} />
-              </AdminField>
-              <AdminField label="Projection">
-                <AdminInput defaultValue={screen.projection} />
-              </AdminField>
-              <AdminField label="Sound Format">
-                <AdminInput defaultValue={screen.soundFormat} />
-              </AdminField>
-              <AdminField label="Status">
-                <AdminSelect defaultValue={screen.status}>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </AdminSelect>
-              </AdminField>
-            </AdminFieldGrid>
-            <div className="mt-5 grid gap-3 md:grid-cols-2">
-              {screen.features.map((feature) => (
-                <AdminCheckbox key={feature} label={feature} defaultChecked />
-              ))}
-            </div>
-          </AdminSectionCard>
-        </AdminMockForm>
+        <AdminScreenForm theater={theater} screen={screen} />
 
         <div className="flex flex-col gap-8">
           <AdminSectionCard title="Scheduling Notes" description="Keep a quick summary of how this room behaves for operators.">
@@ -91,10 +52,7 @@ export default async function ScreenDetailPage({
             </div>
           </AdminSectionCard>
 
-          <AdminConfirmDelete
-            title="Retire this screen"
-            description="This keeps the destructive UX realistic without removing any mock data."
-          />
+          <DeleteScreenButton theaterId={theater.id} screenId={screen.id} />
 
           <Button asChild variant="outline">
             <Link href={`/admin/theaters/${theater.id}/screens`}>Back to Screens</Link>

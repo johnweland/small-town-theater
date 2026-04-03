@@ -25,7 +25,7 @@ export async function SiteNav() {
                 href={`/theaters/${theater.slug}`}
                 className="hover:text-[#ffe2ab] transition-colors"
               >
-                {theater.name}
+                {theater.city}
               </Link>
             ))}
             <Link

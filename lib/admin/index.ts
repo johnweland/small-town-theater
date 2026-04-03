@@ -13,6 +13,9 @@ import {
   listMoviesFromAmplify,
   getBookingFromAmplify,
   listBookingsFromAmplify,
+  getEventFromAmplify,
+  listEventsFromAmplify,
+  resolveProtectedStorageUrl,
 } from "@/lib/amplify/server";
 import {
   getTmdbCredits,
@@ -21,6 +24,7 @@ import {
   getTmdbTrailerYouTubeId,
   searchTmdbMovies,
 } from "@/lib/data/tmdb";
+import type { Schema } from "@/amplify/data/resource";
 
 type AdminMovieStatus = "now-playing" | "coming-soon" | "draft" | "archived";
 
@@ -48,6 +52,7 @@ type AmplifyMovieRecord = NonNullable<
 type AmplifyBookingRecord = NonNullable<
   Awaited<ReturnType<typeof getBookingFromAmplify>>["data"]
 >;
+type AmplifyEventRecord = Schema["Event"]["type"];
 
 function toAdminMovieStatus(
   status: AmplifyMovieRecord["status"]
@@ -95,6 +100,26 @@ function toAmplifyDate(value?: string) {
   }
 
   return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : undefined;
+}
+
+function toAdminDateTimeLabel(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function toEventImage(image?: string | null) {
+  return image?.trim() || "/next.svg";
 }
 
 function toAdminMovie(movie: AmplifyMovieRecord) {
@@ -153,7 +178,7 @@ function toAdminMovieDetail(movie: AmplifyMovieRecord) {
   };
 }
 
-function toAdminTheater(
+async function toAdminTheater(
   theater: AmplifyTheaterRecord
 ) {
   const fallback = siteTheaters.find(
@@ -176,6 +201,10 @@ function toAdminTheater(
     manager: theater.manager ?? fallback?.manager ?? "",
     notes: theater.notes ?? fallback?.notes ?? "",
     heroImage: theater.heroImage ?? fallback?.heroImage ?? "/next.svg",
+    heroImagePreview:
+      (await resolveProtectedStorageUrl(theater.heroImage)) ??
+      fallback?.heroImage ??
+      "/next.svg",
     descriptionParagraphs: (
       theater.descriptionParagraphs ?? fallback?.descriptionParagraphs ?? []
     ).filter((paragraph): paragraph is string => Boolean(paragraph)),
@@ -246,6 +275,31 @@ function toAdminBooking(
   };
 }
 
+async function toAdminEvent(event: AmplifyEventRecord) {
+  return {
+    id: event.id,
+    title: event.title,
+    slug: event.slug,
+    summary: event.summary,
+    description: event.description ?? "",
+    theaterId: event.theaterId,
+    image: toEventImage(event.image),
+    imagePreview: toEventImage(await resolveProtectedStorageUrl(event.image)),
+    startsAt: event.startsAt,
+    endsAt: event.endsAt,
+    startsAtLabel: toAdminDateTimeLabel(event.startsAt),
+    endsAtLabel: toAdminDateTimeLabel(event.endsAt),
+    status: event.status,
+  };
+}
+
+function isMissingEventModelError(error: unknown) {
+  return (
+    error instanceof Error &&
+    error.message.includes("Amplify Event model is unavailable")
+  );
+}
+
 export async function getAdminTheaters() {
   const result = await listTheatersFromAmplify();
 
@@ -257,7 +311,7 @@ export async function getAdminTheaters() {
     );
   }
 
-  return result.data.map(toAdminTheater);
+  return Promise.all(result.data.map(toAdminTheater));
 }
 
 export async function getAdminTheater(theaterId: string) {
@@ -455,11 +509,51 @@ export async function getAdminBooking(bookingId: string) {
 }
 
 export async function getAdminEvents() {
-  return adminEvents;
+  let result: Awaited<ReturnType<typeof listEventsFromAmplify>>;
+
+  try {
+    result = await listEventsFromAmplify();
+  } catch (error) {
+    if (isMissingEventModelError(error)) {
+      return adminEvents;
+    }
+
+    throw error;
+  }
+
+  if (result.errors?.length) {
+    throw new Error(
+      `Unable to load events from Amplify: ${result.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  return Promise.all(result.data.map(toAdminEvent));
 }
 
 export async function getAdminEvent(eventId: string) {
-  return adminEvents.find((event) => event.id === eventId) ?? null;
+  let result: Awaited<ReturnType<typeof getEventFromAmplify>>;
+
+  try {
+    result = await getEventFromAmplify(eventId);
+  } catch (error) {
+    if (isMissingEventModelError(error)) {
+      return adminEvents.find((event) => event.id === eventId) ?? null;
+    }
+
+    throw error;
+  }
+
+  if (result.errors?.length) {
+    throw new Error(
+      `Unable to load event from Amplify: ${result.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  return result.data ? toAdminEvent(result.data) : null;
 }
 
 export async function getAdminRecentActivity() {

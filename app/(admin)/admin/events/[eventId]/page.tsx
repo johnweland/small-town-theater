@@ -2,17 +2,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getAdminEvent, getAdminTheaters } from "@/lib/admin";
+import {
+  deleteEventAction,
+  updateEventAction,
+} from "@/app/(admin)/admin/events/actions";
 import { Button } from "@/components/ui/button";
+import { AdminEventForm } from "@/components/admin/event-form";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { AdminSectionCard } from "@/components/admin/section-card";
 import {
   AdminConfirmDelete,
-  AdminField,
-  AdminFieldGrid,
-  AdminInput,
-  AdminMockForm,
-  AdminSelect,
-  AdminTextarea,
 } from "@/components/admin/admin-form";
 import { AdminStatusBadge } from "@/components/admin/status-badge";
 
@@ -37,67 +36,19 @@ export default async function EventDetailPage({
         action={<AdminStatusBadge status={event.status} />}
       />
 
-      <div className="grid gap-8 xl:grid-cols-[1fr_0.8fr]">
-        <AdminMockForm submitLabel="Save Event">
-          <AdminSectionCard title="Editable Event Fields" description="Polished event editing now, future publishing model later.">
-            <AdminFieldGrid>
-              <AdminField label="Title">
-                <AdminInput defaultValue={event.title} />
-              </AdminField>
-              <AdminField label="Slug">
-                <AdminInput defaultValue={event.slug} />
-              </AdminField>
-              <AdminField label="Theater">
-                <AdminSelect defaultValue={event.theaterId}>
-                  {theaters.map((theater) => (
-                    <option key={theater.id} value={theater.id}>
-                      {theater.name}
-                    </option>
-                  ))}
-                </AdminSelect>
-              </AdminField>
-              <AdminField label="Status">
-                <AdminSelect defaultValue={event.status}>
-                  <option value="draft">Draft</option>
-                  <option value="published">Published</option>
-                </AdminSelect>
-              </AdminField>
-              <AdminField label="Start">
-                <AdminInput
-                  type="datetime-local"
-                  defaultValue={event.startsAt.slice(0, 16)}
-                />
-              </AdminField>
-              <AdminField label="End">
-                <AdminInput
-                  type="datetime-local"
-                  defaultValue={event.endsAt.slice(0, 16)}
-                />
-              </AdminField>
-              <AdminField label="Image URL">
-                <AdminInput defaultValue={event.image} />
-              </AdminField>
-            </AdminFieldGrid>
-            <div className="mt-5 grid gap-5">
-              <AdminField label="Summary">
-                <AdminTextarea defaultValue={event.summary} />
-              </AdminField>
-              <AdminField label="Description">
-                <AdminTextarea defaultValue={event.description} />
-              </AdminField>
-            </div>
-          </AdminSectionCard>
-        </AdminMockForm>
-
+      <div className="flex flex-col gap-8">
+        <AdminEventForm theaters={theaters} event={event} action={updateEventAction} />
         <div className="flex flex-col gap-8">
           <AdminSectionCard title="Publishing Notes" description="Placeholder area for future audience targeting, ticketing, and media integrations.">
             <p className="text-sm leading-6 text-muted-foreground">
-              This event editor already separates summary, description, media, venue, and publication state so later Amplify-backed records can slot in cleanly.
+              This event editor now reads and writes through Amplify, while keeping media, venue, schedule, and publication state separated for later public publishing work.
             </p>
           </AdminSectionCard>
           <AdminConfirmDelete
             title="Delete this event"
-            description="A realistic confirmation pattern is in place even though persistence is still mocked."
+            description="Deleting this event removes the Amplify record and returns you to the events library."
+            action={deleteEventAction}
+            itemId={event.id}
           />
           <Button asChild variant="outline">
             <Link href="/admin/events">Back to Events</Link>

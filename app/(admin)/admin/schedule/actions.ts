@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { createBookingInAmplify } from "@/lib/amplify/server";
+import { createAdminNoticeHref } from "@/lib/admin/notice";
 
 const bookingDays = [
   "Monday",
@@ -150,5 +151,10 @@ export async function createBookingAction(formData: FormData) {
     revalidatePath(`/theaters/${theaterSlug}`);
   }
 
-  redirect(`/admin/schedule/${result.data.id}`);
+  redirect(
+    createAdminNoticeHref(`/admin/schedule/${result.data.id}`, {
+      type: "success",
+      message: "Booking created successfully.",
+    })
+  );
 }

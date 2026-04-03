@@ -8,11 +8,14 @@
 import { movies } from "./movies";
 import { memberships } from "./memberships";
 import { theaters } from "./theaters";
+import { adminEvents as fallbackAdminEvents } from "@/lib/admin/mock-data";
 import {
   listPublicBookingsFromAmplify,
+  listPublicEventsFromAmplify,
   listPublicMoviesFromAmplify,
   listPublicScreensFromAmplify,
   listPublicTheatersFromAmplify,
+  resolvePublicStorageUrl,
 } from "@/lib/amplify/public-server";
 import {
   getTmdbCredits,
@@ -36,6 +39,7 @@ import type {
   TheaterWithBookings,
   TheaterWithShowtimes,
   BookingTimeSlot,
+  Event,
 } from "./types";
 
 export type {
@@ -54,6 +58,7 @@ export type {
   TheaterWithBookings,
   TheaterWithShowtimes,
   BookingTimeSlot,
+  Event,
 };
 
 type PublicAmplifyTheater = Awaited<
@@ -68,7 +73,6 @@ type PublicAmplifyMovie = Awaited<
 type PublicAmplifyBooking = Awaited<
   ReturnType<typeof listPublicBookingsFromAmplify>
 >["data"][number];
-
 function buildTheaterSpecs(
   theater: PublicAmplifyTheater,
   associatedScreens: PublicAmplifyScreen[]
@@ -147,7 +151,10 @@ async function toSiteTheater(theater: PublicAmplifyTheater): Promise<Theater> {
     contactEmail: theater.contactEmail ?? fallback?.contactEmail ?? "",
     manager: theater.manager ?? fallback?.manager ?? "",
     notes: fallback?.notes ?? "",
-    heroImage: theater.heroImage ?? fallback?.heroImage ?? "/next.svg",
+    heroImage:
+      (await resolvePublicStorageUrl(theater.heroImage)) ??
+      fallback?.heroImage ??
+      "/next.svg",
     descriptionParagraphs: (
       theater.descriptionParagraphs ?? fallback?.descriptionParagraphs ?? []
     ).filter((paragraph): paragraph is string => Boolean(paragraph)),
@@ -335,6 +342,93 @@ function flattenBookingTimes(showtimes: BookingShowtime[]): BookingTimeSlot[] {
   );
 }
 
+function toPublicEventDateLabel(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function isMissingPublicEventModelError(error: unknown) {
+  return (
+    error instanceof Error &&
+    error.message.includes("Amplify Event model is unavailable")
+  );
+}
+
+async function getPublicEventsFromAmplify(): Promise<Event[]> {
+  const [eventsResult, publicTheaters] = await Promise.all([
+    listPublicEventsFromAmplify(),
+    getPublicTheatersFromAmplify(),
+  ]);
+
+  if (eventsResult.errors?.length) {
+    throw new Error(
+      `Unable to load public events from Amplify: ${eventsResult.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  const theaterById = Object.fromEntries(
+    publicTheaters.map((theater) => [theater.id, theater])
+  );
+
+  return Promise.all(eventsResult.data.map(async (event) => {
+    const theater = theaterById[event.theaterId];
+
+    return {
+      id: event.id,
+      slug: event.slug,
+      theaterId: event.theaterId,
+      theaterName: theater?.name ?? "Unknown theater",
+      theaterSlug: theater?.slug ?? "",
+      title: event.title,
+      summary: event.summary,
+      description: event.description ?? "",
+      image: (await resolvePublicStorageUrl(event.image))?.trim() || "/next.svg",
+      startsAt: event.startsAt,
+      endsAt: event.endsAt,
+      startsAtLabel: toPublicEventDateLabel(event.startsAt),
+      endsAtLabel: toPublicEventDateLabel(event.endsAt),
+      status: event.status,
+    };
+  }));
+}
+
+async function getFallbackEvents(): Promise<Event[]> {
+  const publicTheaters = await getPublicTheatersFromAmplify();
+  const theaterById = Object.fromEntries(
+    publicTheaters.map((theater) => [theater.id, theater])
+  );
+
+  return fallbackAdminEvents.map((event) => ({
+    id: event.id,
+    slug: event.slug,
+    theaterId: event.theaterId,
+    theaterName: theaterById[event.theaterId]?.name ?? "Unknown theater",
+    theaterSlug: theaterById[event.theaterId]?.slug ?? "",
+    title: event.title,
+    summary: event.summary,
+    description: event.description,
+    image: event.image,
+    startsAt: event.startsAt,
+    endsAt: event.endsAt,
+    startsAtLabel: event.startsAtLabel,
+    endsAtLabel: event.endsAtLabel,
+    status: event.status,
+  }));
+}
+
 // ── Movies ────────────────────────────────────────────────────────────────────
 
 export async function getMovies(): Promise<Movie[]> {
@@ -421,6 +515,30 @@ export async function getMovieShowtimes(slug: string): Promise<MovieShowtime[]> 
       times: flattenBookingTimes(booking.showtimes),
       price: booking.ticketPrice,
     }));
+}
+
+export async function getEvents(): Promise<Event[]> {
+  let publicEvents: Event[];
+
+  try {
+    publicEvents = await getPublicEventsFromAmplify();
+  } catch (error) {
+    if (isMissingPublicEventModelError(error)) {
+      publicEvents = await getFallbackEvents();
+    } else {
+      throw error;
+    }
+  }
+
+  const now = Date.now();
+
+  return publicEvents
+    .filter((event) => event.status === "published")
+    .filter((event) => {
+      const endsAt = new Date(event.endsAt).getTime();
+      return Number.isNaN(endsAt) || endsAt >= now;
+    })
+    .sort((left, right) => left.startsAt.localeCompare(right.startsAt));
 }
 
 // ── Theaters ──────────────────────────────────────────────────────────────────

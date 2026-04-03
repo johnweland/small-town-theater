@@ -1,4 +1,9 @@
 import type { NextConfig } from "next";
+import outputs from "./amplify_outputs.json";
+
+const storageHostname = outputs.storage
+  ? `${outputs.storage.bucket_name}.s3.${outputs.storage.aws_region}.amazonaws.com`
+  : null;
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["10.1.1.35"],
@@ -19,6 +24,15 @@ const nextConfig: NextConfig = {
         hostname: "**.fbcdn.net",
         pathname: "/**",
       },
+      ...(storageHostname
+        ? [
+            {
+              protocol: "https" as const,
+              hostname: storageHostname,
+              pathname: "/**",
+            },
+          ]
+        : []),
     ],
   },
 };

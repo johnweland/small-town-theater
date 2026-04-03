@@ -19,6 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { AdminNotice } from "@/components/admin/admin-notice";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -141,7 +142,10 @@ export function AdminShell({
           </div>
         </header>
 
-        <main className="px-4 py-8 sm:px-6 lg:px-8">{children}</main>
+        <main className="px-4 py-8 sm:px-6 lg:px-8">
+          <AdminNotice />
+          {children}
+        </main>
       </div>
     </div>
   );

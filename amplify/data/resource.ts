@@ -5,6 +5,7 @@ const schema = a.schema({
   ScreenStatus: a.enum(['active', 'inactive']),
   MovieStatus: a.enum(['draft', 'comingSoon', 'nowPlaying', 'archived']),
   BookingStatus: a.enum(['draft', 'published', 'archived']),
+  EventStatus: a.enum(['draft', 'published', 'archived']),
   BookingDay: a.enum([
     'Monday',
     'Tuesday',
@@ -43,6 +44,7 @@ const schema = a.schema({
       descriptionParagraphs: a.string().array(),
       screens: a.hasMany('Screen', 'theaterId'),
       bookings: a.hasMany('Booking', 'theaterId'),
+      events: a.hasMany('Event', 'theaterId'),
     })
     .secondaryIndexes((index) => [
       index('slug').queryField('listTheatersBySlug'),
@@ -146,6 +148,29 @@ const schema = a.schema({
       allow.group('ADMINS'),
       // Native public reads keep the public site simple; the UI should filter to
       // published records until a dedicated public projection is added.
+      allow.publicApiKey().to(['read']),
+    ]),
+
+  Event: a
+    .model({
+      slug: a.string().required(),
+      theaterId: a.id().required(),
+      title: a.string().required(),
+      summary: a.string().required(),
+      description: a.string(),
+      image: a.url(),
+      status: a.ref('EventStatus').required(),
+      startsAt: a.datetime().required(),
+      endsAt: a.datetime().required(),
+      theater: a.belongsTo('Theater', 'theaterId'),
+    })
+    .secondaryIndexes((index) => [
+      index('slug').queryField('listEventsBySlug'),
+      index('theaterId').sortKeys(['startsAt']).queryField('listEventsByTheater'),
+      index('status').sortKeys(['startsAt']).queryField('listEventsByStatus'),
+    ])
+    .authorization((allow) => [
+      allow.group('ADMINS'),
       allow.publicApiKey().to(['read']),
     ]),
 });

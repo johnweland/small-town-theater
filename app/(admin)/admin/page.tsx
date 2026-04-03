@@ -1,5 +1,6 @@
+/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import { CalendarDays, Ticket, Workflow } from "lucide-react";
+import { Building2, CalendarDays, Film, MonitorPlay, Ticket } from "lucide-react";
 
 import {
   getAdminBookings,
@@ -44,9 +45,9 @@ export default async function AdminDashboardPage() {
       />
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-5">
-        <AdminStatCard label="Theaters" value={String(theaters.length)} meta="network locations" icon={<Workflow className="size-4 text-primary" />} />
-        <AdminStatCard label="Screens" value={String(screens.length)} meta="managed rooms" />
-        <AdminStatCard label="Movies" value={String(movies.length)} meta="local catalog" />
+        <AdminStatCard label="Theaters" value={String(theaters.length)} meta="network locations" icon={<Building2 className="size-4 text-primary" />} />
+        <AdminStatCard label="Screens" value={String(screens.length)} meta="managed rooms" icon={<MonitorPlay className="size-4 text-primary" />} />
+        <AdminStatCard label="Movies" value={String(movies.length)} meta="local catalog" icon={<Film className="size-4 text-primary" />} />
         <AdminStatCard label="Bookings" value={String(bookings.length)} meta="active planning" accent icon={<CalendarDays className="size-4 text-primary" />} />
         <AdminStatCard label="Events" value={String(events.length)} meta="community programs" icon={<Ticket className="size-4 text-primary" />} />
       </div>
@@ -129,12 +130,22 @@ export default async function AdminDashboardPage() {
             <div className="flex flex-col gap-3">
               {events.map((event) => (
                 <div key={event.id} className="rounded-lg bg-surface-container-high p-4">
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-4">
+                    <img
+                      src={event.imagePreview ?? event.image}
+                      alt={`${event.title} poster`}
+                      className="h-24 w-[72px] rounded-md object-cover"
+                    />
                     <div>
-                      <p className="font-serif text-xl italic">{event.title}</p>
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="font-serif text-xl italic">{event.title}</p>
+                        <AdminStatusBadge status={event.status} />
+                      </div>
                       <p className="mt-2 text-sm text-muted-foreground">{event.summary}</p>
+                      <p className="mt-3 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                        {event.startsAtLabel}
+                      </p>
                     </div>
-                    <AdminStatusBadge status={event.status} />
                   </div>
                 </div>
               ))}

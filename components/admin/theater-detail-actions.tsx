@@ -3,10 +3,14 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-import { AlertTriangle, CheckCircle2, Trash2 } from "lucide-react";
+import { AlertTriangle, Trash2 } from "lucide-react";
+import { remove } from "aws-amplify/storage";
 
 import type { AdminTheater } from "@/lib/admin";
+import { createAdminNoticeHref } from "@/lib/admin/notice";
 import { getAmplifyClient } from "@/lib/amplify/client";
+import { getAmplifyStoragePathFromUrl } from "@/lib/amplify/storage";
+import { AdminImageUploadField } from "@/components/admin/admin-image-upload-field";
 import { Button } from "@/components/ui/button";
 import { AdminSectionCard } from "@/components/admin/section-card";
 import {
@@ -25,8 +29,8 @@ function getString(formData: FormData, key: string) {
 export function AdminTheaterEditor({ theater }: { theater: AdminTheater }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [heroImage, setHeroImage] = useState(theater.heroImage);
 
   return (
     <form
@@ -35,7 +39,6 @@ export function AdminTheaterEditor({ theater }: { theater: AdminTheater }) {
         event.preventDefault();
 
         const formData = new FormData(event.currentTarget);
-        setSaved(false);
         setError(null);
 
         startTransition(() => {
@@ -44,6 +47,7 @@ export function AdminTheaterEditor({ theater }: { theater: AdminTheater }) {
             const established = getString(formData, "established");
             const introParagraph = getString(formData, "introParagraph");
             const secondaryParagraph = getString(formData, "secondaryParagraph");
+            const nextHeroImage = getString(formData, "heroImage") || null;
 
             const response = await client.models.Theater.update(
               {
@@ -63,7 +67,7 @@ export function AdminTheaterEditor({ theater }: { theater: AdminTheater }) {
                 contactEmail: getString(formData, "contactEmail") || null,
                 manager: getString(formData, "manager") || null,
                 notes: getString(formData, "notes") || null,
-                heroImage: getString(formData, "heroImage") || null,
+                heroImage: nextHeroImage,
                 descriptionParagraphs: [
                   introParagraph,
                   secondaryParagraph,
@@ -77,7 +81,19 @@ export function AdminTheaterEditor({ theater }: { theater: AdminTheater }) {
               return;
             }
 
-            setSaved(true);
+            const previousHeroPath = getAmplifyStoragePathFromUrl(theater.heroImage);
+            const nextHeroPath = getAmplifyStoragePathFromUrl(nextHeroImage);
+
+            if (previousHeroPath && previousHeroPath !== nextHeroPath) {
+              await remove({ path: previousHeroPath }).result;
+            }
+
+            router.replace(
+              createAdminNoticeHref(`/admin/theaters/${theater.id}`, {
+                type: "success",
+                message: "Theater saved successfully.",
+              })
+            );
             router.refresh();
           })();
         });
@@ -139,8 +155,20 @@ export function AdminTheaterEditor({ theater }: { theater: AdminTheater }) {
               <AdminInput name="address" defaultValue={theater.address} required />
             </AdminField>
             <AdminField label="Hero Image">
-              <AdminInput name="heroImage" defaultValue={theater.heroImage} />
+              <AdminInput
+                name="heroImage"
+                value={heroImage}
+                onChange={(event) => setHeroImage(event.target.value)}
+              />
             </AdminField>
+            <AdminImageUploadField
+              label="Upload Hero Image"
+              description="Upload a new hero image directly to Amplify Storage."
+              uploadPathPrefix="theaters"
+              value={heroImage}
+              onChange={setHeroImage}
+              previewLabel="Replacing an S3-backed hero image here uploads the new file immediately and swaps the saved URL in the form."
+            />
           </AdminFieldGrid>
           <div className="mt-5">
             <AdminField label="Operational Notes">
@@ -206,12 +234,6 @@ export function AdminTheaterEditor({ theater }: { theater: AdminTheater }) {
           ) : null}
         </div>
         <div className="flex items-center gap-3">
-          {saved ? (
-            <span className="inline-flex items-center gap-2 text-sm text-primary">
-              <CheckCircle2 className="size-4" />
-              Saved to Amplify
-            </span>
-          ) : null}
           <Button type="submit" disabled={isPending}>
             {isPending ? "Saving..." : "Save Theater Changes"}
           </Button>
@@ -279,7 +301,12 @@ export function AdminTheaterDeleteCard({
                         return;
                       }
 
-                      router.push("/admin/theaters");
+                      router.push(
+                        createAdminNoticeHref("/admin/theaters", {
+                          type: "success",
+                          message: "Theater deleted successfully.",
+                        })
+                      );
                       router.refresh();
                     })();
                   });

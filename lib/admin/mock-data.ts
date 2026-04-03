@@ -143,6 +143,8 @@ export const adminEvents: AdminEvent[] = [
     image: jacksonTheater.heroImage,
     startsAt: "2026-04-25T18:30:00",
     endsAt: "2026-04-25T22:00:00",
+    startsAtLabel: "Apr 25, 2026, 6:30 PM",
+    endsAtLabel: "Apr 25, 2026, 10:00 PM",
     status: "published",
   },
   {
@@ -156,6 +158,8 @@ export const adminEvents: AdminEvent[] = [
     image: sherburnTheater.heroImage,
     startsAt: "2026-05-08T19:00:00",
     endsAt: "2026-05-08T23:30:00",
+    startsAtLabel: "May 8, 2026, 7:00 PM",
+    endsAtLabel: "May 8, 2026, 11:30 PM",
     status: "draft",
   },
 ];
