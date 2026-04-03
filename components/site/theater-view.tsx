@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { MembershipProgram, Movie, Theater, TheaterWithShowtimes } from "@/lib/data";
 import { TheaterShowtimesPanel } from "@/components/site/theater-showtimes-panel";
+import { ConcessionItemImage } from "@/components/shared/concession-item-image";
 
 export function TheaterView({
   theater,
@@ -127,11 +128,18 @@ export function TheaterView({
             <div className="mt-8 space-y-8">
               {theater.concessions.map((item) => (
                 <div key={item.name} className="flex items-start justify-between gap-6">
-                  <div>
+                  <div className="flex min-w-0 items-start gap-4">
+                    <ConcessionItemImage
+                      src={item.image}
+                      alt={item.name}
+                      className="size-16 shrink-0 rounded-sm bg-[#2a2a2a]"
+                    />
+                    <div>
                     <p className="font-serif text-xl text-[#e5e2e1]">{item.name}</p>
                     <p className="mt-2 font-sans text-sm leading-6 text-[#d4c5ab]">
                       {item.note}
                     </p>
+                  </div>
                   </div>
                   <p className="shrink-0 font-sans text-sm font-semibold text-[#ffe2ab]">
                     {item.price}

@@ -15,8 +15,11 @@ import {
   listPublicMoviesFromAmplify,
   listPublicScreensFromAmplify,
   listPublicTheatersFromAmplify,
+  listPublicVenueItemAvailabilityFromAmplify,
+  listPublicVenueItemsFromAmplify,
   resolvePublicStorageUrl,
 } from "@/lib/amplify/public-server";
+import { CONCESSION_ITEM_PLACEHOLDER_IMAGE } from "@/lib/concessions";
 import {
   getTmdbCredits,
   getTmdbMovieDetails,
@@ -73,6 +76,43 @@ type PublicAmplifyMovie = Awaited<
 type PublicAmplifyBooking = Awaited<
   ReturnType<typeof listPublicBookingsFromAmplify>
 >["data"][number];
+type PublicAmplifyVenueItem = Awaited<
+  ReturnType<typeof listPublicVenueItemsFromAmplify>
+>["data"][number];
+type PublicAmplifyVenueItemAvailability = Awaited<
+  ReturnType<typeof listPublicVenueItemAvailabilityFromAmplify>
+>["data"][number];
+
+function formatConcessionPrice(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: value % 1 === 0 ? 0 : 2,
+  }).format(value);
+}
+
+function getConcessionDisplayPrice(item: PublicAmplifyVenueItem, basePrice: number) {
+  const variationPrices = (item.variations ?? [])
+    .filter((variation): variation is NonNullable<typeof variation> => Boolean(variation))
+    .map((variation) => basePrice + (variation.priceDelta ?? 0));
+
+  if (!variationPrices.length) {
+    return formatConcessionPrice(basePrice);
+  }
+
+  const uniquePrices = Array.from(
+    new Set(
+      [basePrice, ...variationPrices].map((price) => Number(price.toFixed(2)))
+    )
+  ).sort((left, right) => left - right);
+
+  if (uniquePrices.length <= 1) {
+    return formatConcessionPrice(basePrice);
+  }
+
+  return `From ${formatConcessionPrice(uniquePrices[0])}`;
+}
+
 function buildTheaterSpecs(
   theater: PublicAmplifyTheater,
   associatedScreens: PublicAmplifyScreen[]
@@ -159,7 +199,11 @@ async function toSiteTheater(theater: PublicAmplifyTheater): Promise<Theater> {
       theater.descriptionParagraphs ?? fallback?.descriptionParagraphs ?? []
     ).filter((paragraph): paragraph is string => Boolean(paragraph)),
     specs: buildTheaterSpecs(theater, associatedScreens),
-    concessions: fallback?.concessions ?? [],
+    concessions:
+      fallback?.concessions.map((item) => ({
+        ...item,
+        image: item.image?.trim() || CONCESSION_ITEM_PLACEHOLDER_IMAGE,
+      })) ?? [],
   };
 }
 
@@ -429,6 +473,83 @@ async function getFallbackEvents(): Promise<Event[]> {
   }));
 }
 
+function isMissingPublicVenueItemModelError(error: unknown) {
+  return (
+    error instanceof Error &&
+    (error.message.includes("Amplify VenueItem model is unavailable") ||
+      error.message.includes("Amplify VenueItemAvailability model is unavailable"))
+  );
+}
+
+async function toSiteConcessionItem(params: {
+  item: PublicAmplifyVenueItem;
+  availability: PublicAmplifyVenueItemAvailability;
+}) {
+  const effectivePrice = params.availability.priceOverride ?? params.item.basePrice;
+
+  return {
+    name: params.item.name,
+    price: getConcessionDisplayPrice(params.item, effectivePrice),
+    note: params.item.description?.trim() || params.item.category,
+    image:
+      (await resolvePublicStorageUrl(params.item.image))?.trim() ||
+      CONCESSION_ITEM_PLACEHOLDER_IMAGE,
+  };
+}
+
+async function getPublicConcessionsForTheater(theaterId: string) {
+  const [itemsResult, availabilityResult] = await Promise.all([
+    listPublicVenueItemsFromAmplify(),
+    listPublicVenueItemAvailabilityFromAmplify(),
+  ]);
+
+  if (itemsResult.errors?.length) {
+    throw new Error(
+      `Unable to load public venue items from Amplify: ${itemsResult.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  if (availabilityResult.errors?.length) {
+    throw new Error(
+      `Unable to load public venue item availability from Amplify: ${availabilityResult.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  const itemById = Object.fromEntries(itemsResult.data.map((item) => [item.id, item]));
+
+  const availableItems = availabilityResult.data
+    .filter((availability) => availability.theaterId === theaterId && availability.isAvailable)
+    .map((availability) => ({
+      availability,
+      item: itemById[availability.itemId],
+    }))
+    .filter(
+      (
+        record
+      ): record is {
+        availability: PublicAmplifyVenueItemAvailability;
+        item: PublicAmplifyVenueItem;
+      } => Boolean(record.item?.isActive)
+    )
+    .sort((left, right) => {
+      if (left.item.category === right.item.category) {
+        return left.item.name.localeCompare(right.item.name);
+      }
+
+      return left.item.category.localeCompare(right.item.category);
+    });
+
+  return Promise.all(
+    availableItems.map(({ item, availability }) =>
+      toSiteConcessionItem({ item, availability })
+    )
+  );
+}
+
 // ── Movies ────────────────────────────────────────────────────────────────────
 
 export async function getMovies(): Promise<Movie[]> {
@@ -659,7 +780,17 @@ export async function getTheaterWithShowtimes(
     })
     .filter((booking): booking is NonNullable<typeof booking> => Boolean(booking));
 
-  return { ...theater, currentBookings };
+  let concessions = theater.concessions;
+
+  try {
+    concessions = await getPublicConcessionsForTheater(theater.id);
+  } catch (error) {
+    if (!isMissingPublicVenueItemModelError(error)) {
+      throw error;
+    }
+  }
+
+  return { ...theater, concessions, currentBookings };
 }
 
 export async function getTheaterSlugs(): Promise<string[]> {

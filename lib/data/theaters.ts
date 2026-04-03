@@ -1,4 +1,5 @@
 import type { Theater } from "./types";
+import { CONCESSION_ITEM_PLACEHOLDER_IMAGE } from "@/lib/concessions";
 
 export const theaters: Theater[] = [
   {
@@ -30,9 +31,24 @@ export const theaters: Theater[] = [
       { label: "Phone", value: "(555) 010-1928" },
     ],
     concessions: [
-      { name: "Real Butter Popcorn", price: "$8", note: "Members: free refills" },
-      { name: "Small Batch Sodas", price: "$6", note: "Cherry, vanilla, & seasonal" },
-      { name: "Local Truffles", price: "$12", note: "From Main Street Sweets" },
+      {
+        name: "Real Butter Popcorn",
+        price: "$8",
+        note: "Members: free refills",
+        image: CONCESSION_ITEM_PLACEHOLDER_IMAGE,
+      },
+      {
+        name: "Small Batch Sodas",
+        price: "$6",
+        note: "Cherry, vanilla, & seasonal",
+        image: CONCESSION_ITEM_PLACEHOLDER_IMAGE,
+      },
+      {
+        name: "Local Truffles",
+        price: "$12",
+        note: "From Main Street Sweets",
+        image: CONCESSION_ITEM_PLACEHOLDER_IMAGE,
+      },
     ],
   },
   {
@@ -68,16 +84,19 @@ export const theaters: Theater[] = [
         name: "Artisan Coffee Bar",
         price: "$5–$7",
         note: "Single-origin espresso & pour-overs",
+        image: CONCESSION_ITEM_PLACEHOLDER_IMAGE,
       },
       {
         name: "Seasonal Concessions",
         price: "$6–$10",
         note: "Local ingredients, rotating menu",
+        image: CONCESSION_ITEM_PLACEHOLDER_IMAGE,
       },
       {
         name: "Outdoor Courtyard",
         price: "Free",
         note: "Open before & after evening shows",
+        image: CONCESSION_ITEM_PLACEHOLDER_IMAGE,
       },
     ],
   },

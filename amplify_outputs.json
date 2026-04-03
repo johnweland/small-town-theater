@@ -202,6 +202,22 @@
                 ]
               }
             },
+            "venueItemAvailability": {
+              "name": "venueItemAvailability",
+              "isArray": true,
+              "type": {
+                "model": "VenueItemAvailability"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "theaterId"
+                ]
+              }
+            },
             "createdAt": {
               "name": "createdAt",
               "isArray": false,
@@ -1156,6 +1172,395 @@
             "primaryKeyFieldName": "id",
             "sortKeyFieldNames": []
           }
+        },
+        "VenueItem": {
+          "name": "VenueItem",
+          "fields": {
+            "id": {
+              "name": "id",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "name": {
+              "name": "name",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "description": {
+              "name": "description",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "image": {
+              "name": "image",
+              "isArray": false,
+              "type": "AWSURL",
+              "isRequired": false,
+              "attributes": []
+            },
+            "itemType": {
+              "name": "itemType",
+              "isArray": false,
+              "type": {
+                "enum": "VenueItemType"
+              },
+              "isRequired": true,
+              "attributes": []
+            },
+            "category": {
+              "name": "category",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "basePrice": {
+              "name": "basePrice",
+              "isArray": false,
+              "type": "Float",
+              "isRequired": true,
+              "attributes": []
+            },
+            "isActive": {
+              "name": "isActive",
+              "isArray": false,
+              "type": "Boolean",
+              "isRequired": true,
+              "attributes": []
+            },
+            "trackInventory": {
+              "name": "trackInventory",
+              "isArray": false,
+              "type": "Boolean",
+              "isRequired": true,
+              "attributes": []
+            },
+            "sku": {
+              "name": "sku",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "fulfillmentType": {
+              "name": "fulfillmentType",
+              "isArray": false,
+              "type": {
+                "enum": "FulfillmentType"
+              },
+              "isRequired": true,
+              "attributes": []
+            },
+            "prepRequired": {
+              "name": "prepRequired",
+              "isArray": false,
+              "type": "Boolean",
+              "isRequired": true,
+              "attributes": []
+            },
+            "ageRestricted": {
+              "name": "ageRestricted",
+              "isArray": false,
+              "type": "Boolean",
+              "isRequired": true,
+              "attributes": []
+            },
+            "taxableCategory": {
+              "name": "taxableCategory",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "variations": {
+              "name": "variations",
+              "isArray": true,
+              "type": {
+                "nonModel": "VenueItemVariation"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true
+            },
+            "availability": {
+              "name": "availability",
+              "isArray": true,
+              "type": {
+                "model": "VenueItemAvailability"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true,
+              "association": {
+                "connectionType": "HAS_MANY",
+                "associatedWith": [
+                  "itemId"
+                ]
+              }
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "VenueItems",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "venueItemsByItemTypeAndCategory",
+                "queryField": "listVenueItemsByType",
+                "fields": [
+                  "itemType",
+                  "category"
+                ]
+              }
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "venueItemsByCategoryAndName",
+                "queryField": "listVenueItemsByCategory",
+                "fields": [
+                  "category",
+                  "name"
+                ]
+              }
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "venueItemsBySku",
+                "queryField": "listVenueItemsBySku",
+                "fields": [
+                  "sku"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "groupClaim": "cognito:groups",
+                    "provider": "userPools",
+                    "allow": "groups",
+                    "groups": [
+                      "ADMINS"
+                    ],
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "apiKey",
+                    "operations": [
+                      "read",
+                      "create",
+                      "update",
+                      "delete"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": false,
+            "primaryKeyFieldName": "id",
+            "sortKeyFieldNames": []
+          }
+        },
+        "VenueItemAvailability": {
+          "name": "VenueItemAvailability",
+          "fields": {
+            "id": {
+              "name": "id",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "theaterId": {
+              "name": "theaterId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "itemId": {
+              "name": "itemId",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "isAvailable": {
+              "name": "isAvailable",
+              "isArray": false,
+              "type": "Boolean",
+              "isRequired": true,
+              "attributes": []
+            },
+            "priceOverride": {
+              "name": "priceOverride",
+              "isArray": false,
+              "type": "Float",
+              "isRequired": false,
+              "attributes": []
+            },
+            "currentStock": {
+              "name": "currentStock",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "lowStockThreshold": {
+              "name": "lowStockThreshold",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "theater": {
+              "name": "theater",
+              "isArray": false,
+              "type": {
+                "model": "Theater"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "theaterId"
+                ]
+              }
+            },
+            "item": {
+              "name": "item",
+              "isArray": false,
+              "type": {
+                "model": "VenueItem"
+              },
+              "isRequired": false,
+              "attributes": [],
+              "association": {
+                "connectionType": "BELONGS_TO",
+                "targetNames": [
+                  "itemId"
+                ]
+              }
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": [],
+              "isReadOnly": true
+            }
+          },
+          "syncable": true,
+          "pluralName": "VenueItemAvailabilities",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "venueItemAvailabilitiesByTheaterId",
+                "queryField": "listVenueItemAvailabilityByTheater",
+                "fields": [
+                  "theaterId"
+                ]
+              }
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "venueItemAvailabilitiesByItemId",
+                "queryField": "listVenueItemAvailabilityByItem",
+                "fields": [
+                  "itemId"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "groupClaim": "cognito:groups",
+                    "provider": "userPools",
+                    "allow": "groups",
+                    "groups": [
+                      "ADMINS"
+                    ],
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "apiKey",
+                    "operations": [
+                      "read",
+                      "create",
+                      "update",
+                      "delete"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": false,
+            "primaryKeyFieldName": "id",
+            "sortKeyFieldNames": []
+          }
         }
       },
       "enums": {
@@ -1197,6 +1602,24 @@
             "draft",
             "published",
             "archived"
+          ]
+        },
+        "VenueItemType": {
+          "name": "VenueItemType",
+          "values": [
+            "concession",
+            "meal",
+            "alcohol",
+            "combo",
+            "merch"
+          ]
+        },
+        "FulfillmentType": {
+          "name": "FulfillmentType",
+          "values": [
+            "counter",
+            "kitchen",
+            "bar"
           ]
         },
         "BookingDay": {
@@ -1249,6 +1672,46 @@
               "name": "label",
               "isArray": false,
               "type": "String",
+              "isRequired": true,
+              "attributes": []
+            }
+          }
+        },
+        "VenueItemVariation": {
+          "name": "VenueItemVariation",
+          "fields": {
+            "id": {
+              "name": "id",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "name": {
+              "name": "name",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "description": {
+              "name": "description",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "priceDelta": {
+              "name": "priceDelta",
+              "isArray": false,
+              "type": "Float",
+              "isRequired": false,
+              "attributes": []
+            },
+            "sortOrder": {
+              "name": "sortOrder",
+              "isArray": false,
+              "type": "Int",
               "isRequired": true,
               "attributes": []
             }
@@ -1326,6 +1789,20 @@
               "delete"
             ]
           },
+          "venue-items/*": {
+            "guest": [
+              "get",
+              "list",
+              "write",
+              "delete"
+            ],
+            "authenticated": [
+              "get",
+              "list",
+              "write",
+              "delete"
+            ]
+          },
           "admin/*": {
             "groupsADMINS": [
               "get",
@@ -1362,7 +1839,8 @@
           "backdrops/*",
           "trailers/*",
           "theaters/*",
-          "events/*"
+          "events/*",
+          "venue-items/*"
         ]
       }
     }

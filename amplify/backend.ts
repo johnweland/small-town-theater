@@ -34,6 +34,7 @@ backend.addOutput({
           'trailers/*',
           'theaters/*',
           'events/*',
+          'venue-items/*',
         ],
       },
     },

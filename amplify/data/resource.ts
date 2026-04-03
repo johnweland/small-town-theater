@@ -6,6 +6,8 @@ const schema = a.schema({
   MovieStatus: a.enum(['draft', 'comingSoon', 'nowPlaying', 'archived']),
   BookingStatus: a.enum(['draft', 'published', 'archived']),
   EventStatus: a.enum(['draft', 'published', 'archived']),
+  VenueItemType: a.enum(['concession', 'meal', 'alcohol', 'combo', 'merch']),
+  FulfillmentType: a.enum(['counter', 'kitchen', 'bar']),
   BookingDay: a.enum([
     'Monday',
     'Tuesday',
@@ -24,6 +26,14 @@ const schema = a.schema({
   BookingException: a.customType({
     date: a.date().required(),
     label: a.string().required(),
+  }),
+
+  VenueItemVariation: a.customType({
+    id: a.string().required(),
+    name: a.string().required(),
+    description: a.string(),
+    priceDelta: a.float(),
+    sortOrder: a.integer().required(),
   }),
 
   Theater: a
@@ -45,6 +55,7 @@ const schema = a.schema({
       screens: a.hasMany('Screen', 'theaterId'),
       bookings: a.hasMany('Booking', 'theaterId'),
       events: a.hasMany('Event', 'theaterId'),
+      venueItemAvailability: a.hasMany('VenueItemAvailability', 'theaterId'),
     })
     .secondaryIndexes((index) => [
       index('slug').queryField('listTheatersBySlug'),
@@ -172,6 +183,54 @@ const schema = a.schema({
     .authorization((allow) => [
       allow.group('ADMINS'),
       allow.publicApiKey().to(['read']),
+    ]),
+
+  VenueItem: a
+    .model({
+      name: a.string().required(),
+      description: a.string(),
+      image: a.url(),
+      itemType: a.ref('VenueItemType').required(),
+      category: a.string().required(),
+      basePrice: a.float().required(),
+      isActive: a.boolean().required(),
+      trackInventory: a.boolean().required(),
+      sku: a.string().required(),
+      fulfillmentType: a.ref('FulfillmentType').required(),
+      prepRequired: a.boolean().required(),
+      ageRestricted: a.boolean().required(),
+      taxableCategory: a.string().required(),
+      variations: a.ref('VenueItemVariation').array(),
+      availability: a.hasMany('VenueItemAvailability', 'itemId'),
+    })
+    .secondaryIndexes((index) => [
+      index('sku').queryField('listVenueItemsBySku'),
+      index('itemType').sortKeys(['category']).queryField('listVenueItemsByType'),
+      index('category').sortKeys(['name']).queryField('listVenueItemsByCategory'),
+    ])
+    .authorization((allow) => [
+      allow.group('ADMINS'),
+      allow.publicApiKey().to(['read', 'create', 'update', 'delete']),
+    ]),
+
+  VenueItemAvailability: a
+    .model({
+      theaterId: a.id().required(),
+      itemId: a.id().required(),
+      isAvailable: a.boolean().required(),
+      priceOverride: a.float(),
+      currentStock: a.integer(),
+      lowStockThreshold: a.integer(),
+      theater: a.belongsTo('Theater', 'theaterId'),
+      item: a.belongsTo('VenueItem', 'itemId'),
+    })
+    .secondaryIndexes((index) => [
+      index('theaterId').queryField('listVenueItemAvailabilityByTheater'),
+      index('itemId').queryField('listVenueItemAvailabilityByItem'),
+    ])
+    .authorization((allow) => [
+      allow.group('ADMINS'),
+      allow.publicApiKey().to(['read', 'create', 'update', 'delete']),
     ]),
 });
 
