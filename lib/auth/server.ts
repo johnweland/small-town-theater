@@ -20,6 +20,7 @@ import { parseAmplifyConfig } from "aws-amplify/utils";
 
 import outputs from "@/amplify_outputs.json";
 import { resolveAvatarUrl } from "@/lib/auth/profile";
+import { isE2ETestMode } from "@/lib/e2e/config";
 
 const config = parseAmplifyConfig(outputs);
 const authConfig = outputs.auth;
@@ -210,6 +211,21 @@ function createGravatarUrl(email: string | null) {
 }
 
 export async function getStaffSession(): Promise<StaffSession> {
+  if (isE2ETestMode()) {
+    return {
+      avatarPreference: "initials",
+      avatarUrl: null,
+      displayName: "E2E Admin",
+      email: "e2e-admin@example.com",
+      gravatarUrl: null,
+      groups: ["ADMINS", "OWNERS"],
+      isAdmin: true,
+      isAuthenticated: true,
+      isOwner: true,
+      uploadedAvatarUrl: null,
+    };
+  }
+
   try {
     return await runWithAuthServerContext(async (contextSpec) => {
       const session = await fetchAuthSession(contextSpec);
@@ -265,6 +281,10 @@ export async function getStaffSession(): Promise<StaffSession> {
 }
 
 export async function hasStaffUsers(): Promise<boolean> {
+  if (isE2ETestMode()) {
+    return true;
+  }
+
   if (!authConfig?.user_pool_id || !authConfig?.aws_region) {
     return true;
   }

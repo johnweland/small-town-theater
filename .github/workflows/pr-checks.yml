@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  validate:
+  lint:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     if: github.event.pull_request.draft == false
@@ -33,17 +33,73 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
-
       - name: Lint
         run: npm run lint
+
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.event.pull_request.draft == false
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.event.pull_request.draft == false
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Coverage
+        run: |
+          npm run test:coverage
+          node -e '
+            const fs = require("node:fs");
+            const summaryPath = "coverage/coverage-summary.json";
+            const threshold = 80;
+            const summary = JSON.parse(fs.readFileSync(summaryPath, "utf8"));
+            const totals = summary.total;
+            const metrics = ["lines", "statements", "functions", "branches"];
+            const failures = metrics.filter((metric) => totals[metric].pct <= threshold);
+            metrics.forEach((metric) => {
+              console.log(`${metric}: ${totals[metric].pct}%`);
+            });
+            if (failures.length > 0) {
+              console.error(`Coverage must be greater than ${threshold}% for: ${failures.join(", ")}`);
+              process.exit(1);
+            }
+          '
 
       - name: Unit tests
         run: npm run test:unit
 
-      - name: Build
-        run: npm run build
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
 
       - name: End-to-end tests
         run: npm run test:e2e

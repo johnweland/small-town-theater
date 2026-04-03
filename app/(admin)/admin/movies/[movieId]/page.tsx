@@ -3,6 +3,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getAdminBookings, getAdminMovieDetail } from "@/lib/admin";
+import {
+  deleteMovieAction,
+  syncMovieFromTmdbAction,
+  updateMovieAction,
+} from "@/app/(admin)/admin/movies/actions";
+import { AdminConfirmDelete } from "@/components/admin/admin-form";
+import { AdminMovieForm } from "@/components/admin/movie-form";
 import { Button } from "@/components/ui/button";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { AdminSectionCard } from "@/components/admin/section-card";
@@ -33,6 +40,14 @@ export default async function MovieDetailPage({
         action={
           <div className="flex gap-3">
             <AdminStatusBadge status={adminMovie.status} />
+            {movie.tmdbId ? (
+              <form action={syncMovieFromTmdbAction}>
+                <input type="hidden" name="id" value={movie.id} />
+                <Button type="submit" variant="outline">
+                  Sync from TMDB
+                </Button>
+              </form>
+            ) : null}
             <Button asChild>
               <Link href={`/admin/schedule/new?movieId=${adminMovie.id}`}>Create Booking</Link>
             </Button>
@@ -184,6 +199,57 @@ export default async function MovieDetailPage({
           </AdminSectionCard>
         </div>
       </div>
+
+      <AdminMovieForm
+        action={updateMovieAction}
+        movie={{
+          id: movie.id,
+          slug: movie.slug,
+          title: movie.title,
+          tagline: movie.tagline,
+          rating: movie.rating,
+          runtime: movie.runtime,
+          genre: movie.genre,
+          status: movie.libraryStatus,
+          director: movie.director,
+          cast: movie.cast.filter(
+            (credit): credit is string => typeof credit === "string" && credit.length > 0
+          ),
+          synopsis: movie.synopsis,
+          production: movie.production,
+          score: movie.score,
+          cinematography: movie.cinematography,
+          backdrop: movie.backdrop,
+          poster: movie.poster,
+          releaseDate: movie.releaseDate,
+          audienceScore: movie.audienceScore,
+          originalLanguage: movie.originalLanguage,
+          productionCompanies: movie.productionCompanies.filter(
+            (company): company is string =>
+              typeof company === "string" && company.length > 0
+          ),
+          trailerYouTubeId: movie.trailerYouTubeId,
+        }}
+      />
+
+      {bookings.length > 0 ? (
+        <AdminSectionCard
+          title="Delete unavailable"
+          description="This movie still has related bookings."
+        >
+          <p className="text-sm leading-6 text-muted-foreground">
+            Delete the related bookings before removing this movie from the library.
+          </p>
+        </AdminSectionCard>
+      ) : (
+        <AdminConfirmDelete
+          title="Delete this movie"
+          description="Deleting this movie removes it from the library and returns you to the movie list."
+          action={deleteMovieAction}
+          itemId={movie.id}
+          confirmLabel="Confirm Delete"
+        />
+      )}
     </div>
   );
 }

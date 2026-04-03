@@ -7,6 +7,10 @@ import {
   getAdminScreens,
   getAdminTheaters,
 } from "@/lib/admin";
+import {
+  deleteBookingAction,
+  updateBookingAction,
+} from "@/app/(admin)/admin/schedule/actions";
 import { Button } from "@/components/ui/button";
 import { AdminBookingForm } from "@/components/admin/booking-form";
 import { AdminPageHeader } from "@/components/admin/page-header";
@@ -43,6 +47,8 @@ export default async function BookingDetailPage({
         screens={screens}
         movies={movies}
         booking={booking}
+        action={updateBookingAction.bind(null, booking.id)}
+        deleteAction={deleteBookingAction}
       />
     </div>
   );

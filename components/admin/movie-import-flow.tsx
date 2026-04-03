@@ -39,11 +39,16 @@ export function AdminMovieImportFlow({
   const [hasSearched, setHasSearched] = useState(initialQuery.trim().length > 0);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
     setResults(candidates);
     setSelectedId((current) => current || candidates[0]?.id || "");
   }, [candidates]);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   useEffect(() => {
     if (deferredQuery === initialQuery.trim()) {
@@ -106,7 +111,10 @@ export function AdminMovieImportFlow({
     results[0];
 
   return (
-    <div className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
+    <div
+      data-e2e-ready={isHydrated ? "true" : undefined}
+      className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr]"
+    >
       <AdminSectionCard
         title="Search External Catalog"
         description="Search TMDB directly from the admin panel, then review the selected result with enriched metadata before importing."

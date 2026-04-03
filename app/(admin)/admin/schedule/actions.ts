@@ -5,7 +5,12 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { createBookingInAmplify } from "@/lib/amplify/server";
+import {
+  createBookingInAmplify,
+  deleteBookingInAmplify,
+  getBookingFromAmplify,
+  updateBookingInAmplify,
+} from "@/lib/amplify/server";
 import { createAdminNoticeHref } from "@/lib/admin/notice";
 
 const bookingDays = [
@@ -17,6 +22,8 @@ const bookingDays = [
   "Saturday",
   "Sunday",
 ] as const;
+
+type BookingLifecycleStatus = "draft" | "published" | "archived";
 
 function getString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -34,7 +41,7 @@ function toSlugPart(value: string) {
     .replace(/^-+|-+$/g, "");
 }
 
-export async function createBookingAction(formData: FormData) {
+function parseBookingFormData(formData: FormData) {
   const theaterId = getString(formData, "theaterId");
   const theaterSlug = getString(formData, "theaterSlug");
   const screenId = getString(formData, "screenId");
@@ -62,7 +69,7 @@ export async function createBookingAction(formData: FormData) {
     throw new Error("Invalid booking status.");
   }
 
-  const effectiveStatus =
+  const effectiveStatus: BookingLifecycleStatus =
     status === "archived"
       ? "archived"
       : publishPublicShowtimes
@@ -103,6 +110,68 @@ export async function createBookingAction(formData: FormData) {
       return [{ date: normalizedDate, label }];
     });
 
+  return {
+    badge,
+    effectiveStatus,
+    exceptions,
+    movieId,
+    movieSlug,
+    note,
+    runEndsOn,
+    runStartsOn,
+    screenId,
+    screenName,
+    showtimes,
+    status,
+    theaterId,
+    theaterSlug,
+    ticketPrice,
+  };
+}
+
+function revalidateBookingPaths(params: {
+  bookingId?: string;
+  movieId?: string;
+  theaterSlug?: string;
+}) {
+  revalidatePath("/admin");
+  revalidatePath("/admin/schedule");
+  revalidatePath("/admin/schedule/new");
+  revalidatePath("/admin/movies");
+  revalidatePath("/showtimes");
+  revalidatePath("/");
+
+  if (params.bookingId) {
+    revalidatePath(`/admin/schedule/${params.bookingId}`);
+  }
+
+  if (params.movieId) {
+    revalidatePath(`/admin/movies/${params.movieId}`);
+  }
+
+  if (params.theaterSlug) {
+    revalidatePath(`/theaters/${params.theaterSlug}`);
+  }
+}
+
+export async function createBookingAction(formData: FormData) {
+  const {
+    badge,
+    effectiveStatus,
+    exceptions,
+    movieId,
+    movieSlug,
+    note,
+    runEndsOn,
+    runStartsOn,
+    screenId,
+    screenName,
+    showtimes,
+    theaterId,
+    theaterSlug,
+    ticketPrice,
+  } = parseBookingFormData(formData);
+
   const slugBase = [movieSlug, theaterSlug || theaterId, runStartsOn]
     .map(toSlugPart)
     .filter(Boolean)
@@ -142,19 +211,139 @@ export async function createBookingAction(formData: FormData) {
     throw new Error("The booking could not be created.");
   }
 
-  revalidatePath("/admin");
-  revalidatePath("/admin/schedule");
-  revalidatePath("/admin/schedule/new");
-  revalidatePath("/showtimes");
-  revalidatePath("/");
-  if (theaterSlug) {
-    revalidatePath(`/theaters/${theaterSlug}`);
-  }
+  revalidateBookingPaths({
+    bookingId: result.data.id,
+    movieId,
+    theaterSlug,
+  });
 
   redirect(
     createAdminNoticeHref(`/admin/schedule/${result.data.id}`, {
       type: "success",
       message: "Booking created successfully.",
+    })
+  );
+}
+
+export async function updateBookingAction(bookingId: string, formData: FormData) {
+  if (!bookingId) {
+    throw new Error("Missing booking id.");
+  }
+
+  const existingBooking = await getBookingFromAmplify(bookingId);
+
+  if (existingBooking.errors?.length) {
+    throw new Error(
+      `Unable to load the existing booking: ${existingBooking.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  if (!existingBooking.data) {
+    throw new Error("The booking could not be found.");
+  }
+
+  const {
+    badge,
+    effectiveStatus,
+    exceptions,
+    movieId,
+    note,
+    runEndsOn,
+    runStartsOn,
+    screenId,
+    screenName,
+    showtimes,
+    theaterId,
+    theaterSlug,
+    ticketPrice,
+  } = parseBookingFormData(formData);
+
+  const result = await updateBookingInAmplify({
+    id: bookingId,
+    theaterId,
+    movieId,
+    screenId,
+    screenName,
+    status: effectiveStatus,
+    runStartsOn,
+    runEndsOn,
+    ticketPrice: ticketPrice || null,
+    badge: badge || null,
+    showtimes,
+    exceptions: exceptions.length ? exceptions : null,
+    note: note || null,
+    publishedAt:
+      effectiveStatus === "published" ? new Date().toISOString() : null,
+    expiresAtEpoch:
+      effectiveStatus === "published"
+        ? Math.floor(new Date(`${runEndsOn}T23:59:59Z`).getTime() / 1000)
+        : null,
+  });
+
+  if (result.errors?.length) {
+    throw new Error(
+      `Unable to update booking: ${result.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  revalidateBookingPaths({
+    bookingId,
+    movieId,
+    theaterSlug,
+  });
+
+  redirect(
+    createAdminNoticeHref(`/admin/schedule/${bookingId}`, {
+      type: "success",
+      message: "Booking saved successfully.",
+    })
+  );
+}
+
+export async function deleteBookingAction(formData: FormData) {
+  const bookingId = getString(formData, "id");
+
+  if (!bookingId) {
+    throw new Error("Missing booking id.");
+  }
+
+  const existingBooking = await getBookingFromAmplify(bookingId);
+
+  if (existingBooking.errors?.length) {
+    throw new Error(
+      `Unable to load the existing booking: ${existingBooking.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  if (!existingBooking.data) {
+    throw new Error("The booking could not be found.");
+  }
+
+  const result = await deleteBookingInAmplify(bookingId);
+
+  if (result.errors?.length) {
+    throw new Error(
+      `Unable to delete booking: ${result.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  revalidateBookingPaths({
+    bookingId,
+    movieId: existingBooking.data.movieId,
+  });
+
+  redirect(
+    createAdminNoticeHref("/admin/schedule", {
+      type: "success",
+      message: "Booking deleted successfully.",
     })
   );
 }

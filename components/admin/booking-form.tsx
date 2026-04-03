@@ -3,10 +3,11 @@
 import { useMemo, useState } from "react";
 
 import type { AdminBooking, AdminMovie, AdminScreen, AdminTheater } from "@/lib/admin";
-import { BookingSubmitButton } from "@/components/admin/booking-submit-button";
 import { AdminSectionCard } from "@/components/admin/section-card";
+import { useHydratedFlag } from "@/components/admin/use-hydrated-flag";
 import {
   AdminCheckbox,
+  AdminConfirmDelete,
   AdminField,
   AdminFieldGrid,
   AdminInput,
@@ -15,20 +16,23 @@ import {
   AdminTextarea,
 } from "@/components/admin/admin-form";
 import { Button } from "@/components/ui/button";
+import { AdminSubmitButton } from "@/components/admin/admin-submit-button";
 
 export function AdminBookingForm({
   theaters,
   screens,
   movies,
   booking,
-  createAction,
+  action,
+  deleteAction,
   defaultMovieId,
 }: {
   theaters: AdminTheater[];
   screens: AdminScreen[];
   movies: AdminMovie[];
   booking?: AdminBooking | null;
-  createAction?: (formData: FormData) => void | Promise<void>;
+  action?: (formData: FormData) => void | Promise<void>;
+  deleteAction?: (formData: FormData) => void | Promise<void>;
   defaultMovieId?: string;
 }) {
   const initialTheaterId = booking?.theaterId ?? theaters[0]?.id ?? "";
@@ -53,6 +57,7 @@ export function AdminBookingForm({
       : defaultMovieId && movies.some((movie) => movie.id === defaultMovieId)
         ? defaultMovieId
         : movies[0]?.id ?? "";
+  const isHydrated = useHydratedFlag();
 
   const formSections = (
     <>
@@ -63,6 +68,7 @@ export function AdminBookingForm({
         name="movieSlug"
         value={movies.find((movie) => movie.id === selectedMovieId)?.slug ?? ""}
       />
+      {booking ? <input type="hidden" name="id" value={booking.id} /> : null}
 
       <AdminSectionCard
         title="Run Details"
@@ -232,9 +238,10 @@ export function AdminBookingForm({
     </>
   );
 
-  if (!createAction) {
+  if (!action) {
     return (
       <AdminMockForm
+        dataE2EReady={isHydrated ? "true" : undefined}
         submitLabel={booking ? "Save Booking" : "Create Booking Draft"}
         submitDescription="The theater, screen, and schedule details are all ready for review."
       >
@@ -244,24 +251,34 @@ export function AdminBookingForm({
   }
 
   return (
-    <form action={createAction} className="flex flex-col gap-8">
-      {formSections}
-      <div className="flex flex-col gap-4 rounded-lg bg-surface-container-high p-5 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="font-sans text-sm font-semibold text-foreground">
-            Booking workflow
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Creating this booking will persist the schedule and then redirect to its detail page.
-          </p>
+    <div className="flex flex-col gap-8" data-e2e-ready={isHydrated ? "true" : undefined}>
+      <form action={action} className="flex flex-col gap-8">
+        {formSections}
+        <div className="flex flex-col gap-4 rounded-lg bg-surface-container-high p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-sans text-sm font-semibold text-foreground">
+              Booking workflow
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Creating this booking will persist the schedule and then redirect to its detail page.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button type="reset" variant="outline">
+              Reset
+            </Button>
+            <AdminSubmitButton idleLabel={booking ? "Save Booking" : "Create Booking"} />
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <Button type="reset" variant="outline">
-            Reset
-          </Button>
-          <BookingSubmitButton idleLabel="Create Booking" />
-        </div>
-      </div>
-    </form>
+      </form>
+      {booking && deleteAction ? (
+        <AdminConfirmDelete
+          title="Delete this booking"
+          description="Deleting this booking removes it from the schedule and public showtimes."
+          action={deleteAction}
+          itemId={booking.id}
+        />
+      ) : null}
+    </div>
   );
 }

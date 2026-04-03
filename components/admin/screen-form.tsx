@@ -9,6 +9,7 @@ import { createAdminNoticeHref } from "@/lib/admin/notice";
 import { getAmplifyClient } from "@/lib/amplify/client";
 import { Button } from "@/components/ui/button";
 import { AdminSectionCard } from "@/components/admin/section-card";
+import { useHydratedFlag } from "@/components/admin/use-hydrated-flag";
 import {
   AdminField,
   AdminFieldGrid,
@@ -45,9 +46,11 @@ export function AdminScreenForm({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const isEditing = Boolean(screen);
+  const isHydrated = useHydratedFlag();
 
   return (
     <form
+      data-e2e-ready={isHydrated ? "true" : undefined}
       className="flex flex-col gap-8"
       onSubmit={(event) => {
         event.preventDefault();

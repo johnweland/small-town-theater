@@ -2,6 +2,8 @@ import {
   adminEvents,
   adminRecentActivity,
 } from "./mock-data";
+import type { ImportCandidate } from "./types";
+import type { BookingDay } from "@/lib/data";
 import { theaters as siteTheaters } from "@/lib/data/theaters";
 import { screens as siteScreens } from "@/lib/data/screens";
 import {
@@ -24,6 +26,8 @@ import {
   getTmdbTrailerYouTubeId,
   searchTmdbMovies,
 } from "@/lib/data/tmdb";
+import { isE2ETestMode } from "@/lib/e2e/config";
+import { tmdbMovieFixtures } from "@/lib/data/tmdb-fixtures";
 import type { Schema } from "@/amplify/data/resource";
 
 type AdminMovieStatus = "now-playing" | "coming-soon" | "draft" | "archived";
@@ -53,6 +57,15 @@ type AmplifyBookingRecord = NonNullable<
   Awaited<ReturnType<typeof getBookingFromAmplify>>["data"]
 >;
 type AmplifyEventRecord = Schema["Event"]["type"];
+const bookingDays = new Set<BookingDay>([
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+]);
 
 function toAdminMovieStatus(
   status: AmplifyMovieRecord["status"]
@@ -192,7 +205,7 @@ function toEventImage(image?: string | null) {
 function toAdminMovie(
   movie: AmplifyMovieRecord,
   bookings: AmplifyBookingRecord[] = []
-) {
+): import("./types").AdminMovie {
   return {
     id: movie.id,
     slug: movie.slug,
@@ -210,8 +223,12 @@ function toAdminMovie(
     overview: movie.synopsis ?? "Synopsis unavailable.",
     poster: movie.poster ?? "/next.svg",
     backdrop: movie.backdrop ?? "/next.svg",
-    castHighlights:
-      movie.cast?.filter((credit): credit is string => Boolean(credit)) ?? [],
+    castHighlights: (
+      movie.cast?.filter(
+        (credit): credit is string =>
+          typeof credit === "string" && credit.trim().length > 0
+      ) ?? []
+    ) as string[],
     trailerLabel: movie.trailerYouTubeId
       ? "Trailer available"
       : "Trailer not available yet",
@@ -231,6 +248,7 @@ function toAdminMovieDetail(
     runtime: movie.runtime ?? "Runtime TBD",
     genre: movie.genre ?? "Genre unavailable",
     status: getDerivedAdminMovieStatus(movie, bookings),
+    libraryStatus: movie.status,
     director: movie.director ?? "Director unavailable",
     cast: movie.cast?.filter((credit): credit is string => Boolean(credit)) ?? [],
     synopsis: movie.synopsis ?? "Synopsis unavailable.",
@@ -316,7 +334,7 @@ function toAdminScreen(screen: AmplifyScreenRecord) {
 function toAdminBooking(
   booking: AmplifyBookingRecord,
   movieSlugById: Record<string, string>
-) {
+): import("./types").AdminBooking {
   return {
     id: booking.id,
     slug: booking.slug,
@@ -329,21 +347,43 @@ function toAdminBooking(
     ticketPrice: booking.ticketPrice ?? "",
     badge: booking.badge ?? null,
     showtimes:
-      booking.showtimes
-        ?.filter((showtime): showtime is NonNullable<typeof showtime> => Boolean(showtime))
+      (
+        (booking.showtimes ?? []) as Array<
+          | {
+              day: string;
+              times: Array<string | null> | null;
+            }
+          | null
+        >
+      )
+        .filter((showtime): showtime is NonNullable<typeof showtime> => showtime != null)
+        .filter(
+          (showtime): showtime is { day: BookingDay; times: Array<string | null> | null } =>
+            bookingDays.has(showtime.day as BookingDay)
+        )
         .map((showtime) => ({
           day: showtime.day,
-          times: showtime.times.filter((time): time is string => Boolean(time)),
-        })) ?? [],
+          times: (showtime.times ?? []).filter(
+            (time): time is string => typeof time === "string" && time.length > 0
+          ),
+        })),
     exceptions:
-      booking.exceptions
-        ?.filter(
-          (exception): exception is NonNullable<typeof exception> => Boolean(exception)
+      (
+        (booking.exceptions ?? []) as Array<
+          | {
+              date: string;
+              label: string;
+            }
+          | null
+        >
+      )
+        .filter(
+          (exception): exception is NonNullable<typeof exception> => exception != null
         )
         .map((exception) => ({
           date: exception.date,
           label: exception.label,
-        })) ?? [],
+        })),
     note: booking.note ?? "",
   };
 }
@@ -543,9 +583,19 @@ export async function getAdminMovieDetail(movieId: string) {
       status: booking.status,
       badge: booking.badge,
       times:
-        booking.showtimes
-          ?.filter((showtime): showtime is NonNullable<typeof showtime> => Boolean(showtime))
-          .flatMap((showtime) => showtime.times.filter((time): time is string => Boolean(time))) ?? [],
+        ((booking.showtimes ?? []) as Array<
+          | {
+              day: BookingDay;
+              times: Array<string | null> | null;
+            }
+          | null
+        >)
+          .filter((showtime): showtime is NonNullable<typeof showtime> => showtime != null)
+          .flatMap((showtime) =>
+            (showtime.times ?? []).filter(
+              (time): time is string => typeof time === "string" && time.length > 0
+            )
+          ),
       price: booking.ticketPrice,
     }));
 
@@ -674,58 +724,180 @@ export async function getImportCandidates() {
   return [];
 }
 
+export async function getTmdbImportCandidate(tmdbId: number) {
+  if (isE2ETestMode()) {
+    const fixture = Object.values(tmdbMovieFixtures).find(
+      (item) => item.details.id === tmdbId
+    );
+
+    if (!fixture) {
+      return null;
+    }
+
+    return {
+      id: `tmdb-${fixture.details.id}`,
+      title: fixture.details.title,
+      year: new Date(fixture.details.release_date).getUTCFullYear(),
+      poster: fixture.details.poster_path
+        ? `https://image.tmdb.org/t/p/original${fixture.details.poster_path}`
+        : "/next.svg",
+      backdrop: fixture.details.backdrop_path
+        ? `https://image.tmdb.org/t/p/original${fixture.details.backdrop_path}`
+        : "/next.svg",
+      overview: fixture.details.overview,
+      genres: fixture.details.genres.slice(0, 2).map((genre) => genre.name),
+      castHighlights: fixture.credits.cast.slice(0, 5).map((member) => member.name),
+      trailerLabel: fixture.videos.length ? "Trailer available" : "Trailer not available yet",
+      trailerYouTubeId: fixture.videos[0]?.key,
+      tmdbId: fixture.details.id,
+      tagline: fixture.details.tagline,
+      rating: "NR",
+      runtime: `${Math.floor(fixture.details.runtime / 60)}h ${fixture.details.runtime % 60}m`.trim(),
+      status:
+        new Date(fixture.details.release_date).getTime() > Date.now()
+          ? "coming-soon"
+          : "now-playing",
+      director:
+        fixture.credits.crew.find((member) => member.job === "Director")?.name ??
+        "Director unavailable",
+      releaseDate: fixture.details.release_date,
+      audienceScore: `${fixture.details.vote_average.toFixed(1)} / 10`,
+      originalLanguage: "English",
+      productionCompanies: fixture.details.production_companies.map(
+        (company) => company.name
+      ),
+    } satisfies ImportCandidate;
+  }
+
+  const [details, credits, trailerYouTubeId] = await Promise.all([
+    getTmdbMovieDetails(tmdbId),
+    getTmdbCredits(tmdbId),
+    getTmdbTrailerYouTubeId(tmdbId),
+  ]);
+
+  if (!details && !credits && !trailerYouTubeId) {
+    return null;
+  }
+
+  const releaseDate = details?.releaseDate;
+
+  return {
+    id: `tmdb-${tmdbId}`,
+    title: details?.title ?? "Title unavailable",
+    year: releaseDate ? new Date(releaseDate).getUTCFullYear() : new Date().getUTCFullYear(),
+    poster: details?.poster ?? "/next.svg",
+    backdrop: details?.backdrop ?? "/next.svg",
+    overview: details?.synopsis ?? "Overview unavailable.",
+    genres:
+      details?.genre
+        ?.split("/")
+        .map((genre) => genre.trim())
+        .filter(Boolean) ?? ["Genre unavailable"],
+    castHighlights:
+      credits?.cast?.length ? credits.cast : ["Cast unavailable"],
+    trailerLabel: trailerYouTubeId ? "Trailer available" : "Trailer not available yet",
+    trailerYouTubeId,
+    tmdbId,
+    tagline: details?.tagline ?? "Imported from TMDB movie details.",
+    rating: "NR",
+    runtime: details?.runtime ?? "Runtime TBD",
+    status: (isFutureReleaseDate(releaseDate ?? null) ? "coming-soon" : null) as
+      | "coming-soon"
+      | null,
+    director: credits?.director ?? "Director unavailable",
+    releaseDate,
+    audienceScore: details?.audienceScore,
+    originalLanguage: details?.originalLanguage,
+    productionCompanies: details?.productionCompanies ?? [],
+  } satisfies ImportCandidate;
+}
+
 export async function searchTmdbImportCandidates(query: string) {
+  if (isE2ETestMode()) {
+    const normalizedQuery = query.trim().toLowerCase();
+    const fixtures = Object.values(tmdbMovieFixtures)
+      .filter((fixture) =>
+        fixture.details.title.toLowerCase().includes(normalizedQuery)
+      )
+      .slice(0, 6);
+
+    return fixtures.map((fixture) => ({
+      id: `tmdb-${fixture.details.id}`,
+      title: fixture.details.title,
+      year: new Date(fixture.details.release_date).getUTCFullYear(),
+      poster: fixture.details.poster_path
+        ? `https://image.tmdb.org/t/p/original${fixture.details.poster_path}`
+        : "/next.svg",
+      backdrop: fixture.details.backdrop_path
+        ? `https://image.tmdb.org/t/p/original${fixture.details.backdrop_path}`
+        : "/next.svg",
+      overview: fixture.details.overview,
+      genres: fixture.details.genres.slice(0, 2).map((genre) => genre.name),
+      castHighlights: fixture.credits.cast.slice(0, 5).map((member) => member.name),
+      trailerLabel: fixture.videos.length ? "Trailer available" : "Trailer not available yet",
+      trailerYouTubeId: fixture.videos[0]?.key,
+      tmdbId: fixture.details.id,
+      tagline: fixture.details.tagline,
+      rating: "NR",
+      runtime: `${Math.floor(fixture.details.runtime / 60)}h ${fixture.details.runtime % 60}m`.trim(),
+      status:
+        new Date(fixture.details.release_date).getTime() > Date.now()
+          ? "coming-soon"
+          : "now-playing",
+      director:
+        fixture.credits.crew.find((member) => member.job === "Director")?.name ??
+        "Director unavailable",
+      releaseDate: fixture.details.release_date,
+      audienceScore: `${fixture.details.vote_average.toFixed(1)} / 10`,
+      originalLanguage: "English",
+      productionCompanies: fixture.details.production_companies.map(
+        (company) => company.name
+      ),
+    })) satisfies ImportCandidate[];
+  }
+
   const results = (await searchTmdbMovies(query)).slice(0, 6);
 
   return Promise.all(
     results.map(async (result) => {
-      const [details, credits, trailerYouTubeId] = await Promise.all([
-        getTmdbMovieDetails(result.id),
-        getTmdbCredits(result.id),
-        getTmdbTrailerYouTubeId(result.id),
-      ]);
+      const candidate = await getTmdbImportCandidate(result.id);
 
       return {
         id: `tmdb-${result.id}`,
-        title: details?.title ?? result.title,
+        title: candidate?.title ?? result.title,
         year: getTmdbSearchResultYear(result) ?? new Date().getUTCFullYear(),
         poster:
-          details?.poster ??
+          candidate?.poster ??
           (result.poster_path
             ? `https://image.tmdb.org/t/p/original${result.poster_path}`
             : "/next.svg"),
         backdrop:
-          details?.backdrop ??
+          candidate?.backdrop ??
           (result.backdrop_path
             ? `https://image.tmdb.org/t/p/original${result.backdrop_path}`
             : "/next.svg"),
         overview:
-          details?.synopsis ??
+          candidate?.overview ??
           result.overview ??
           "Overview unavailable.",
-        genres:
-          details?.genre
-            ?.split("/")
-            .map((genre) => genre.trim())
-            .filter(Boolean) ?? ["Genre unavailable"],
+        genres: candidate?.genres ?? ["Genre unavailable"],
         castHighlights:
-          credits?.cast?.length ? credits.cast : ["Cast unavailable"],
-        trailerLabel: trailerYouTubeId
-          ? "Trailer available"
-          : "Trailer not available yet",
-        trailerYouTubeId,
+          candidate?.castHighlights?.length ? candidate.castHighlights : ["Cast unavailable"],
+        trailerLabel: candidate?.trailerLabel ?? "Trailer not available yet",
+        trailerYouTubeId: candidate?.trailerYouTubeId,
         tmdbId: result.id,
-        tagline: details?.tagline ?? "Imported from TMDB movie details.",
-        rating: "NR",
-        runtime: details?.runtime ?? "Runtime TBD",
+        tagline: candidate?.tagline ?? "Imported from TMDB movie details.",
+        rating: candidate?.rating ?? "NR",
+        runtime: candidate?.runtime ?? "Runtime TBD",
         status: (isFutureReleaseDate(toAmplifyDate(result.release_date) ?? null)
           ? "coming-soon"
           : null) as "coming-soon" | null,
-        director: credits?.director ?? "Director unavailable",
-        releaseDate: toAmplifyDate(result.release_date),
-        audienceScore: details?.audienceScore ?? `${result.vote_average.toFixed(1)} / 10`,
-        originalLanguage: details?.originalLanguage,
-        productionCompanies: details?.productionCompanies ?? [],
+        director: candidate?.director ?? "Director unavailable",
+        releaseDate: candidate?.releaseDate ?? toAmplifyDate(result.release_date),
+        audienceScore:
+          candidate?.audienceScore ?? `${result.vote_average.toFixed(1)} / 10`,
+        originalLanguage: candidate?.originalLanguage,
+        productionCompanies: candidate?.productionCompanies ?? [],
       };
     })
   );

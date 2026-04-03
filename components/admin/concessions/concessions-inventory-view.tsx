@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AdminEmptyState } from "@/components/admin/empty-state";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { AdminSectionCard } from "@/components/admin/section-card";
+import { useHydratedFlag } from "@/components/admin/use-hydrated-flag";
 import { ConcessionsFilters, type ConcessionsFilterState } from "./concessions-filters";
 import { ConcessionsItemDialog } from "./concessions-item-dialog";
 import { ConcessionsTable } from "./concessions-table";
@@ -71,6 +72,7 @@ export function ConcessionsInventoryView({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const isHydrated = useHydratedFlag();
   const [filters, setFilters] = useState<ConcessionsFilterState>({
     search: "",
     itemType: "all",
@@ -88,6 +90,7 @@ export function ConcessionsInventoryView({
     saveItem,
     duplicateItem,
     toggleItemActive,
+    deleteItem,
     refreshData,
   } = useConcessionsCatalog({
     initialData,
@@ -180,7 +183,7 @@ export function ConcessionsInventoryView({
   }, [items, lowStockAlerts.length]);
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8" data-e2e-ready={isHydrated ? "true" : undefined}>
       <AdminPageHeader
         eyebrow="Concessions"
         title="Concessions inventory"
@@ -372,6 +375,11 @@ export function ConcessionsInventoryView({
         onSave={async (item, mode) => {
           await saveItem(item, mode);
           setDialogOpen(false);
+        }}
+        onDelete={async (item) => {
+          await deleteItem(item);
+          setDialogOpen(false);
+          setSelectedItemId(null);
         }}
       />
     </div>

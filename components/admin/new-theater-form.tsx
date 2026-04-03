@@ -10,6 +10,7 @@ import { getAmplifyClient } from "@/lib/amplify/client";
 import { AdminImageUploadField } from "@/components/admin/admin-image-upload-field";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { AdminSectionCard } from "@/components/admin/section-card";
+import { useHydratedFlag } from "@/components/admin/use-hydrated-flag";
 import {
   AdminField,
   AdminFieldGrid,
@@ -28,6 +29,7 @@ export function NewTheaterForm() {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [heroImage, setHeroImage] = useState("");
+  const isHydrated = useHydratedFlag();
 
   return (
     <div className="flex flex-col gap-8">
@@ -43,6 +45,7 @@ export function NewTheaterForm() {
       />
 
       <form
+        data-e2e-ready={isHydrated ? "true" : undefined}
         className="flex flex-col gap-8"
         onSubmit={(event) => {
           event.preventDefault();

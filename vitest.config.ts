@@ -10,5 +10,8 @@ export default defineConfig({
   test: {
     include: ["tests/unit/**/*.test.ts"],
     environment: "node",
+    coverage: {
+      reporter: ["text", "html", "json-summary"],
+    },
   },
 });
