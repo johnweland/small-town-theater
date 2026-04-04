@@ -23,7 +23,7 @@ export async function generateMetadata({
     };
   }
 
-  const description = movie.tagline?.trim() || movie.synopsis;
+  const description = movie.synopsis || movie.tagline?.trim();
 
   return {
     title: movie.title,
@@ -190,7 +190,7 @@ export default async function MoviePage({
         </div>
       </section>
 
-      {(showtimes.length > 0 || movie.status === "coming-soon") ? (
+      {showtimes.length > 0 || movie.status === "coming-soon" ? (
         <MovieShowtimesPanel movie={movie} showtimes={showtimes} />
       ) : null}
     </div>

@@ -23,13 +23,16 @@ export function MovieShowtimesPanel({
   movie: Movie;
   showtimes: MovieShowtime[];
 }) {
-  const filters = useMemo(() => buildUpcomingDateFilters(showtimes), [showtimes]);
+  const filters = useMemo(
+    () => buildUpcomingDateFilters(showtimes),
+    [showtimes],
+  );
   const [selectedFilter, setSelectedFilter] = useState(() =>
-    getDefaultUpcomingFilterKey(showtimes)
+    getDefaultUpcomingFilterKey(showtimes),
   );
   const filteredShowtimes = useMemo(
     () => filterUpcomingItems(showtimes, selectedFilter),
-    [selectedFilter, showtimes]
+    [selectedFilter, showtimes],
   );
   return (
     <section className="mx-auto mt-32 max-w-7xl space-y-16 px-6 pb-20 lg:px-8">
@@ -64,7 +67,8 @@ export function MovieShowtimesPanel({
                 More dates to be announced
               </h3>
               <p className="mt-3 max-w-2xl font-sans text-sm leading-7 text-[#d4c5ab]">
-                {movie.title} is marked as coming soon. Public playtimes may expand as additional engagements are locked in.
+                {movie.title} is marked as coming soon. Public playtimes may
+                expand as additional engagements are locked in.
               </p>
             </section>
           ) : null}
@@ -89,11 +93,7 @@ export function MovieShowtimesPanel({
   );
 }
 
-function ShowtimeCard({
-  showtime,
-}: {
-  showtime: VisibleMovieShowtime;
-}) {
+function ShowtimeCard({ showtime }: { showtime: VisibleMovieShowtime }) {
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-4">
@@ -107,7 +107,8 @@ function ShowtimeCard({
             </h3>
           </Link>
           <p className="mt-2 font-sans text-xs uppercase tracking-[0.2em] text-[#9c8f78]">
-            {showtime.screenName} • {showtime.runStartsOn} to {showtime.runEndsOn}
+            {showtime.screenName} • {showtime.runStartsOn} to{" "}
+            {showtime.runEndsOn}
           </p>
         </div>
       </div>
@@ -134,7 +135,7 @@ function ShowtimeCard({
               </p>
             </div>
             <button className="mt-6 w-full bg-[#ffbf00] py-4 font-sans text-sm font-bold uppercase tracking-[0.15em] text-[#402d00] transition-colors hover:bg-[#fbbc00]">
-              Buy Tickets — {showtime.price}
+              {showtime.price} - Box Office
             </button>
           </div>
         ))}
