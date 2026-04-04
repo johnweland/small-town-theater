@@ -28,6 +28,10 @@ function toAmplifyDate(value: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
 }
 
+function preserveExistingDate(nextValue: string | null, existingValue?: string | null) {
+  return nextValue ?? existingValue ?? null;
+}
+
 function revalidateMoviePaths(movieId?: string) {
   revalidatePath("/admin");
   revalidatePath("/admin/movies");
@@ -107,7 +111,10 @@ export async function updateMovieAction(formData: FormData) {
     cinematography: cinematography || null,
     backdrop: backdrop || null,
     poster: poster || null,
-    releaseDate: toAmplifyDate(releaseDate),
+    releaseDate: preserveExistingDate(
+      toAmplifyDate(releaseDate),
+      existingMovie.data.releaseDate
+    ),
     audienceScore: audienceScore || null,
     originalLanguage: originalLanguage || null,
     productionCompanies: productionCompanies.length ? productionCompanies : null,
@@ -251,7 +258,10 @@ export async function syncMovieFromTmdbAction(formData: FormData) {
     score: candidate.audienceScore ? `TMDB ${candidate.audienceScore}` : null,
     backdrop: candidate.backdrop || null,
     poster: candidate.poster || null,
-    releaseDate: toAmplifyDate(candidate.releaseDate ?? "") ?? null,
+    releaseDate: preserveExistingDate(
+      toAmplifyDate(candidate.releaseDate ?? ""),
+      existingMovie.data.releaseDate
+    ),
     audienceScore: candidate.audienceScore ?? null,
     originalLanguage: candidate.originalLanguage ?? null,
     productionCompanies:

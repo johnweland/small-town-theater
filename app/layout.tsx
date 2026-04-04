@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Newsreader, Work_Sans } from "next/font/google";
 
 import { AppToaster } from "@/components/ui/sonner";
+import { APP_NAME } from "@/lib/config";
 
 import "./globals.css";
 
@@ -16,9 +17,11 @@ const workSans = Work_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Small Town Theater",
-  description:
-    "Jackson Theater and Sherburn Theater — two screens, one community.",
+  title: {
+    default: APP_NAME,
+    template: `%s | ${APP_NAME}`,
+  },
+  description: `${APP_NAME} brings together local screens, shared programming, and community moviegoing.`,
 };
 
 export default function RootLayout({

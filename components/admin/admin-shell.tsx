@@ -22,6 +22,7 @@ import { SignOutButton } from "@/components/auth/sign-out-button";
 import { AdminNotice } from "@/components/admin/admin-notice";
 import { ResolvedAvatarImage } from "@/components/shared/avatar-image";
 import { getUserInitials } from "@/lib/auth/profile";
+import { APP_NAME } from "@/lib/config";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -61,7 +62,7 @@ export function AdminShell({
         <div className="px-8 py-8">
           <p className="font-serif text-2xl italic text-primary">Marquee Admin</p>
           <p className="mt-2 font-sans text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
-            Small Town Theater
+            {APP_NAME}
           </p>
         </div>
         <nav className="flex flex-1 flex-col px-4 pb-6">
@@ -117,15 +118,10 @@ export function AdminShell({
         <header className="sticky top-0 z-30 border-b border-border/10 bg-background/90 backdrop-blur">
           <div className="flex flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="font-serif text-2xl italic text-primary">
-                  The Modern Marquee
-                </p>
-                <p className="font-sans text-[10px] uppercase tracking-[0.24em] text-muted-foreground md:hidden">
-                  Admin Navigation Below
-                </p>
+              <div className="flex-1 font-sans text-[10px] uppercase tracking-[0.24em] text-muted-foreground md:hidden">
+                Admin Navigation Below
               </div>
-              <div className="flex items-center gap-3">
+              <div className="ml-auto flex items-center gap-3">
                 <Button variant="outline" size="icon-sm" type="button">
                   <Bell />
                 </Button>

@@ -1,5 +1,22 @@
+import type { Metadata } from "next";
 import { getComingSoonMovies, getTheatersWithBookings } from "@/lib/data";
 import { ShowtimeFilters } from "@/components/site/showtime-filters";
+import { APP_NAME } from "@/lib/config";
+
+export const metadata: Metadata = {
+  title: "Showtimes",
+  description: `See current showtimes, upcoming programs, and theater schedules across every ${APP_NAME} location.`,
+  openGraph: {
+    title: `${APP_NAME} Showtimes`,
+    description: `See current showtimes, upcoming programs, and theater schedules across every ${APP_NAME} location.`,
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${APP_NAME} Showtimes`,
+    description: `See current showtimes, upcoming programs, and theater schedules across every ${APP_NAME} location.`,
+  },
+};
 
 export default async function ShowtimesPage() {
   const [theaters, comingSoonMovies] = await Promise.all([

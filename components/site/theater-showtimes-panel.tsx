@@ -14,6 +14,7 @@ import {
   getUnscheduledComingSoonMovies,
   type DatedBookingTimeSlot,
 } from "@/lib/site/upcoming-schedule";
+import { APP_NAME } from "@/lib/config";
 
 type VisibleTheaterBooking = Omit<TheaterWithShowtimes["currentBookings"][number], "times"> & {
   times: DatedBookingTimeSlot[];
@@ -87,7 +88,7 @@ export function TheaterShowtimesPanel({
 
               <ComingSoonList
                 title="Across the Network"
-                description="These coming-soon titles are headed to Small Town Theater but do not yet have concrete public showtimes."
+                description={`These coming-soon titles are headed to ${APP_NAME} but do not yet have concrete public showtimes.`}
                 movies={unscheduledComingSoonMovies}
               />
             </>

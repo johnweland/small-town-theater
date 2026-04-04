@@ -241,7 +241,7 @@ export const data = defineData({
   authorizationModes: {
     defaultAuthorizationMode: 'userPool',
     apiKeyAuthorizationMode: {
-      description: 'Public read access for the Small Town Theater website',
+      description: `Public read access for the ${process.env.NEXT_PUBLIC_APP_NAME || "Community Theater"} website`,
       expiresInDays: 30,
     },
   },

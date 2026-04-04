@@ -28,11 +28,14 @@ export function ShowtimeFilters({
 }) {
   const allBookings = useMemo(
     () => theaters.flatMap((theater) => theater.bookings),
-    [theaters]
+    [theaters],
   );
-  const filters = useMemo(() => buildUpcomingDateFilters(allBookings), [allBookings]);
+  const filters = useMemo(
+    () => buildUpcomingDateFilters(allBookings),
+    [allBookings],
+  );
   const [selectedFilter, setSelectedFilter] = useState(() =>
-    getDefaultUpcomingFilterKey(allBookings)
+    getDefaultUpcomingFilterKey(allBookings),
   );
   const [selectedTheaterId, setSelectedTheaterId] = useState<string>("all");
 
@@ -49,24 +52,26 @@ export function ShowtimeFilters({
           bookings: filterUpcomingItems(theater.bookings, selectedFilter),
         }))
         .filter((theater) => theater.bookings.length > 0),
-    [selectedFilter, visibleTheaters]
+    [selectedFilter, visibleTheaters],
   );
 
   const unscheduledComingSoonMovies = useMemo(
     () => getUnscheduledComingSoonMovies(comingSoonMovies, allBookings),
-    [allBookings, comingSoonMovies]
+    [allBookings, comingSoonMovies],
   );
 
   return (
     <div>
-      <div className="mb-12 flex flex-col gap-8 border-b border-[#504532]/15 pb-8 lg:flex-row lg:items-end lg:justify-between">
-        <UpcomingDateFilters
-          filters={filters}
-          selectedKey={selectedFilter}
-          onSelect={setSelectedFilter}
-        />
+      <div className="mb-12 grid gap-6 border-b border-[#504532]/15 pb-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+        <div className="min-w-0">
+          <UpcomingDateFilters
+            filters={filters}
+            selectedKey={selectedFilter}
+            onSelect={setSelectedFilter}
+          />
+        </div>
 
-        <div className="flex flex-wrap gap-1 bg-[#1c1b1b] p-1">
+        <div className="flex flex-wrap gap-1 self-start bg-[#1c1b1b] p-1 lg:justify-self-end">
           <button
             onClick={() => setSelectedTheaterId("all")}
             className={`px-5 py-2 font-sans text-xs font-semibold uppercase tracking-[0.2em] transition-colors ${
@@ -109,12 +114,14 @@ export function ShowtimeFilters({
 
                 <div className="grid gap-px">
                   {theater.bookings.map((booking) => (
-                    <BookingCardView key={booking.bookingId} booking={booking} />
+                    <BookingCardView
+                      key={booking.bookingId}
+                      booking={booking}
+                    />
                   ))}
                 </div>
               </section>
             ))}
-
           </>
         ) : (
           <>
@@ -131,7 +138,10 @@ export function ShowtimeFilters({
 
                 <div className="grid gap-px">
                   {theater.bookings.map((booking) => (
-                    <BookingCardView key={booking.bookingId} booking={booking} />
+                    <BookingCardView
+                      key={booking.bookingId}
+                      booking={booking}
+                    />
                   ))}
                 </div>
               </section>
@@ -235,7 +245,7 @@ function SlotButton({ slot }: { slot: DatedBookingTimeSlot }) {
         {slot.time}
       </span>
       <span className="block pt-1 font-sans text-[10px] uppercase tracking-[0.2em] text-[#ffbf00] opacity-0 transition-opacity group-hover/time:opacity-100">
-        Buy Tickets
+        Tickets at the Box Office
       </span>
     </button>
   );

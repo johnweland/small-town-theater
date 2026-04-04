@@ -1,7 +1,24 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
 import { getEvents, getTheaters } from "@/lib/data";
+import { APP_NAME } from "@/lib/config";
+
+export const metadata: Metadata = {
+  title: "About",
+  description: `Learn the story behind ${APP_NAME}, our preservation mission, and the theaters and events that keep local moviegoing alive.`,
+  openGraph: {
+    title: `About ${APP_NAME}`,
+    description: `Learn the story behind ${APP_NAME}, our preservation mission, and the theaters and events that keep local moviegoing alive.`,
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `About ${APP_NAME}`,
+    description: `Learn the story behind ${APP_NAME}, our preservation mission, and the theaters and events that keep local moviegoing alive.`,
+  },
+};
 
 export default async function AboutPage() {
   const [theaters, events] = await Promise.all([getTheaters(), getEvents()]);
@@ -23,7 +40,7 @@ export default async function AboutPage() {
             </div>
             <div className="absolute -bottom-8 right-0 hidden bg-[#a0030e] px-6 py-5 lg:block">
               <p className="font-serif text-xl italic text-[#ffa99f]">
-                Est. 1924
+                Est. 1926
               </p>
             </div>
           </div>
@@ -35,9 +52,9 @@ export default async function AboutPage() {
             </h1>
             <p className="mt-6 max-w-md font-sans text-lg leading-8 text-[#d4c5ab]">
               In an era of endless scrolling, we choose the collective
-              experience. Small Town Theater is more than a theater network; it
-              is a movement to preserve the magic of the silver screen in the
-              heart of our neighborhoods.
+              experience. {APP_NAME} is more than a theater network; it is a
+              movement to preserve the magic of the silver screen in the heart
+              of our neighborhoods.
             </p>
           </div>
         </div>
@@ -47,7 +64,7 @@ export default async function AboutPage() {
         <div className="grid gap-8 lg:grid-cols-12">
           <div className="lg:col-span-4 lg:self-center">
             <p className="font-sans text-xs font-semibold uppercase tracking-[0.2em] text-[#ffbf00]">
-                Our Heritage
+              Our Heritage
             </p>
             <h2 className="mt-4 font-serif text-4xl italic text-[#e5e2e1]">
               A Century of Stories
@@ -67,10 +84,11 @@ export default async function AboutPage() {
                   The Preservation Era
                 </h3>
                 <p className="mt-4 font-sans text-sm leading-7 text-[#d4c5ab]">
-                  In 2012, when the Jackson Theater faced demolition, a group of
-                  local residents launched a grassroots campaign that changed
-                  everything. We didn&apos;t just save a building; we saved a
-                  way of life.
+                  Small-town theaters are gathering spaces where communities
+                  come together, traditions are shared, and new memories are
+                  made. Keeping them alive means preserving not just
+                  entertainment, but a sense of connection and hometown
+                  identity.
                 </p>
               </div>
               <div className="relative mt-8 h-24 overflow-hidden bg-[#201f1f]">
@@ -84,12 +102,12 @@ export default async function AboutPage() {
               </div>
             </article>
 
-            <article className="flex aspect-[4/5] flex-col justify-end bg-[#ffbf00] p-8 lg:aspect-auto">
+            {/*<article className="flex aspect-[4/5] flex-col justify-end bg-[#ffbf00] p-8 lg:aspect-auto">
               <p className="font-serif text-6xl text-[#402d00]">98%</p>
               <p className="mt-4 font-sans text-lg font-semibold uppercase tracking-tight text-[#6d5000]">
                 Community Funded Restorations
               </p>
-            </article>
+            </article>*/}
           </div>
         </div>
       </section>
@@ -102,9 +120,9 @@ export default async function AboutPage() {
                 More Than Just Movies
               </h2>
               <p className="mt-4 font-sans leading-7 text-[#d4c5ab]">
-                We host weekly events designed to bring neighbors together. From
-                local filmmaker showcases to midnight cult classics, there is
-                always a seat for you.
+                We love hosting events designed to bring neighbors together.
+                From local filmmaker showcases to midnight cult classics, there
+                is always a seat for you.
               </p>
             </div>
             <Link

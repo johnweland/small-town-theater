@@ -15,6 +15,7 @@ import {
   AdminTheaterDeleteCard,
   AdminTheaterEditor,
 } from "@/components/admin/theater-detail-actions";
+import { APP_NAME } from "@/lib/config";
 
 export default async function TheaterDetailPage({
   params,
@@ -86,7 +87,7 @@ export default async function TheaterDetailPage({
           >
             <p className="text-sm leading-7 text-muted-foreground">
               This theater can display shared membership messaging on the public site, but
-              the membership program itself belongs to the broader Small Town Theater
+              the membership program itself belongs to the broader {APP_NAME}
               organization. Model and edit it separately so the same benefits apply across
               every venue.
             </p>

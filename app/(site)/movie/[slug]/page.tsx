@@ -1,10 +1,52 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { getMovieDetail, getMovieShowtimes } from "@/lib/data";
 import { MovieShowtimesPanel } from "@/components/site/movie-showtimes-panel";
 import { TrailerPlayer } from "@/components/site/trailer-player";
+import { APP_NAME } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const movie = await getMovieDetail(slug);
+
+  if (!movie) {
+    return {
+      title: "Movie Not Found",
+      description: `The requested movie could not be found at ${APP_NAME}.`,
+    };
+  }
+
+  const description = movie.synopsis || movie.tagline?.trim();
+
+  return {
+    title: movie.title,
+    description,
+    openGraph: {
+      title: movie.title,
+      description,
+      type: "website",
+      images: [
+        {
+          url: movie.backdrop || movie.poster,
+          alt: movie.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: movie.title,
+      description,
+      images: [movie.backdrop || movie.poster],
+    },
+  };
+}
 
 export default async function MoviePage({
   params,
@@ -148,7 +190,7 @@ export default async function MoviePage({
         </div>
       </section>
 
-      {(showtimes.length > 0 || movie.status === "coming-soon") ? (
+      {showtimes.length > 0 || movie.status === "coming-soon" ? (
         <MovieShowtimesPanel movie={movie} showtimes={showtimes} />
       ) : null}
     </div>
