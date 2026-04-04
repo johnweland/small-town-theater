@@ -70,8 +70,8 @@ export function AdminMovieImportFlow({
 
       try {
         const response = await fetch(
-          `/api/admin/tmdb-search?query=${encodeURIComponent(deferredQuery)}`,
-          { signal: controller.signal }
+          `/api/tmdb/search?query=${encodeURIComponent(deferredQuery)}`,
+          { cache: "no-store", signal: controller.signal }
         );
         if (!response.ok) {
           throw new Error("Search failed");

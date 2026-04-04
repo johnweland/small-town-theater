@@ -17,13 +17,15 @@ Start building from [`app/(site)/page.tsx`](app/(site)/page.tsx) and the shared 
 
 ## TMDB setup
 
-To let movie pages fetch trailer IDs from TMDB automatically, add a read access token in `.env.local`:
+To let the app fetch TMDB data in local and deployed environments, add the server-only bearer token to your environment:
 
 ```bash
-TMDB_API_READ_ACCESS_TOKEN=your_tmdb_bearer_token
+TMDB_BEARER_TOKEN=your_tmdb_bearer_token
 ```
 
-Without that token, the app falls back to local fixture data and trailer playback stays unavailable for movies that do not already have a trailer ID.
+Do not use a `NEXT_PUBLIC_` prefix for the TMDB token. TMDB calls run on the server, and the token must not be exposed to the browser.
+
+Without that token, TMDB-powered search and trailer enrichment fall back to local fixture behavior or return empty results, depending on the route.
 
 ## Scripts
 

@@ -157,7 +157,7 @@ describe("mapTmdbSearchResultToMovie", () => {
     );
 
     vi.stubGlobal("fetch", fetchMock);
-    vi.stubEnv("TMDB_API_READ_ACCESS_TOKEN", "test-token");
+    vi.stubEnv("TMDB_BEARER_TOKEN", "test-token");
 
     await expect(getTmdbTrailerYouTubeId(1226863)).resolves.toBe(
       "official-trailer-key"
@@ -403,6 +403,7 @@ describe("mapTmdbSearchResultToMovie", () => {
       poster: "https://image.tmdb.org/t/p/original/poster.jpg",
       backdrop: "https://image.tmdb.org/t/p/original/backdrop.jpg",
       releaseDate: "Apr 1, 2026",
+      releaseDateIso: "2026-04-01",
       audienceScore: "8.1 / 10",
       originalLanguage: "English",
       productionCompanies: ["Nintendo Pictures", "Illumination"],
@@ -601,7 +602,7 @@ describe("mapTmdbSearchResultToMovie", () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
     if (token) {
-      vi.stubEnv("TMDB_API_READ_ACCESS_TOKEN", token);
+      vi.stubEnv("TMDB_BEARER_TOKEN", token);
     }
 
     await expect(searchTmdbMovies(query)).resolves.toEqual([]);
@@ -612,7 +613,7 @@ describe("mapTmdbSearchResultToMovie", () => {
     ["returns an empty list when the search response is not ok", vi.fn().mockResolvedValue(createResponse({}, false))],
     ["returns an empty list when the search request throws", vi.fn().mockRejectedValue(new Error("network"))],
   ])("%s", async (_, fetchMock) => {
-    vi.stubEnv("TMDB_API_READ_ACCESS_TOKEN", "test-token");
+    vi.stubEnv("TMDB_BEARER_TOKEN", "test-token");
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(searchTmdbMovies("mario")).resolves.toEqual([]);
