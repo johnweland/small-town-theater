@@ -1,9 +1,9 @@
 {
   "auth": {
-    "user_pool_id": "us-east-2_JlNnKg7WA",
+    "user_pool_id": "us-east-2_xiWzTTLwT",
     "aws_region": "us-east-2",
-    "user_pool_client_id": "5protadhuk4ieprnv4pqi3nulf",
-    "identity_pool_id": "us-east-2:d39e7291-708e-42e1-8230-c3349b971495",
+    "user_pool_client_id": "5kdvq6b89thv78dkiug8cbcshk",
+    "identity_pool_id": "us-east-2:a2ef6782-04c5-4e0f-aa16-cf0a70f25b67",
     "mfa_methods": [
       "TOTP"
     ],
@@ -39,9 +39,9 @@
     "unauthenticated_identities_enabled": true
   },
   "data": {
-    "url": "https://lbf4fb2w7ze7bj4sbsarhamubq.appsync-api.us-east-2.amazonaws.com/graphql",
+    "url": "https://rskebvmdsfewplonbpy7aylzyq.appsync-api.us-east-2.amazonaws.com/graphql",
     "aws_region": "us-east-2",
-    "api_key": "da2-tkdoqa7wprd4nej3ng2nakb2lu",
+    "api_key": "da2-kcaklxashrcbxouwxmfvl3zod4",
     "default_authorization_type": "AMAZON_COGNITO_USER_POOLS",
     "authorization_types": [
       "API_KEY",
@@ -1729,11 +1729,11 @@
   },
   "storage": {
     "aws_region": "us-east-2",
-    "bucket_name": "amplify-smalltowntheaterw-theatermediabucketf0b1a2-h46uokee1tbd",
+    "bucket_name": "amplify-communitytheater--theatermediabucketf0b1a2-xijhsdrz90oh",
     "buckets": [
       {
         "name": "theaterMedia",
-        "bucket_name": "amplify-smalltowntheaterw-theatermediabucketf0b1a2-h46uokee1tbd",
+        "bucket_name": "amplify-communitytheater--theatermediabucketf0b1a2-xijhsdrz90oh",
         "aws_region": "us-east-2",
         "paths": {
           "posters/*": {

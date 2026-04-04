@@ -157,6 +157,10 @@ function formatReleaseDate(releaseDate: string) {
   }).format(parsed);
 }
 
+function toIsoReleaseDate(releaseDate: string) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(releaseDate) ? releaseDate : undefined;
+}
+
 function formatOriginalLanguage(languageCode: string) {
   if (!languageCode) {
     return undefined;
@@ -364,7 +368,7 @@ export async function getTmdbMovieDetails(
       | "audienceScore"
       | "originalLanguage"
       | "productionCompanies"
-    >
+    > & { releaseDateIso?: string }
   | undefined
 > {
   const token = getTmdbReadAccessToken();
@@ -397,6 +401,7 @@ export async function getTmdbMovieDetails(
       poster: toImageUrl(payload.poster_path),
       backdrop: toImageUrl(payload.backdrop_path),
       releaseDate: formatReleaseDate(payload.release_date),
+      releaseDateIso: toIsoReleaseDate(payload.release_date),
       audienceScore: `${payload.vote_average.toFixed(1)} / 10`,
       originalLanguage: formatOriginalLanguage(payload.original_language),
       productionCompanies: payload.production_companies.map(

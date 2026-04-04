@@ -38,6 +38,10 @@ function getErrorMessage(error: unknown) {
   return "We could not finish staff setup. Please ask for a new invite link.";
 }
 
+function markBootstrapComplete() {
+  document.cookie = "staff-bootstrap-complete=1; Path=/; Max-Age=31536000; SameSite=Lax";
+}
+
 export function StaffSignUpForm(props: StaffSignUpFormProps) {
   ensureAmplifyConfigured();
 
@@ -90,6 +94,7 @@ export function StaffSignUpForm(props: StaffSignUpFormProps) {
         return;
       }
 
+      markBootstrapComplete();
       router.replace(`/admin/sign-in?email=${encodeURIComponent(email)}&created=1`);
     } catch (submitError) {
       setError(getErrorMessage(submitError));

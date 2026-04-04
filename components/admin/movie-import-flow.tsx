@@ -17,10 +17,10 @@ import { AdminStatusBadge } from "@/components/admin/status-badge";
 
 function toAmplifyDate(value?: string) {
   if (!value) {
-    return null;
+    return undefined;
   }
 
-  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : undefined;
 }
 
 export function AdminMovieImportFlow({
@@ -332,6 +332,8 @@ export function AdminMovieImportFlow({
                         return;
                       }
 
+                      const releaseDate = toAmplifyDate(selected.releaseDate);
+
                       const response = await client.models.Movie.create(
                         {
                           slug: `${selected.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")}-${selected.tmdbId ?? selected.year}`,
@@ -361,7 +363,7 @@ export function AdminMovieImportFlow({
                           cinematography: null,
                           backdrop: selected.backdrop,
                           poster: selected.poster,
-                          releaseDate: toAmplifyDate(selected.releaseDate),
+                          ...(releaseDate ? { releaseDate } : {}),
                           audienceScore: selected.audienceScore ?? null,
                           originalLanguage: selected.originalLanguage ?? null,
                           productionCompanies: selected.productionCompanies ?? [],

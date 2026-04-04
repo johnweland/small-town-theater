@@ -25,11 +25,7 @@ function getStringList(formData: FormData, key: string) {
 }
 
 function toAmplifyDate(value: string) {
-  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
-}
-
-function preserveExistingDate(nextValue: string | null, existingValue?: string | null) {
-  return nextValue ?? existingValue ?? null;
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : undefined;
 }
 
 function revalidateMoviePaths(movieId?: string) {
@@ -94,6 +90,9 @@ export async function updateMovieAction(formData: FormData) {
     throw new Error("The movie could not be found.");
   }
 
+  const nextReleaseDate =
+    toAmplifyDate(releaseDate) ?? existingMovie.data.releaseDate ?? undefined;
+
   const result = await updateMovieInAmplify({
     id,
     slug,
@@ -111,10 +110,7 @@ export async function updateMovieAction(formData: FormData) {
     cinematography: cinematography || null,
     backdrop: backdrop || null,
     poster: poster || null,
-    releaseDate: preserveExistingDate(
-      toAmplifyDate(releaseDate),
-      existingMovie.data.releaseDate
-    ),
+    ...(nextReleaseDate ? { releaseDate: nextReleaseDate } : {}),
     audienceScore: audienceScore || null,
     originalLanguage: originalLanguage || null,
     productionCompanies: productionCompanies.length ? productionCompanies : null,
@@ -245,6 +241,11 @@ export async function syncMovieFromTmdbAction(formData: FormData) {
     throw new Error("Unable to refresh this movie from TMDB right now.");
   }
 
+  const nextReleaseDate =
+    toAmplifyDate(candidate.releaseDate ?? "") ??
+    existingMovie.data.releaseDate ??
+    undefined;
+
   const result = await updateMovieInAmplify({
     id,
     title: candidate.title || existingMovie.data.title,
@@ -258,10 +259,7 @@ export async function syncMovieFromTmdbAction(formData: FormData) {
     score: candidate.audienceScore ? `TMDB ${candidate.audienceScore}` : null,
     backdrop: candidate.backdrop || null,
     poster: candidate.poster || null,
-    releaseDate: preserveExistingDate(
-      toAmplifyDate(candidate.releaseDate ?? ""),
-      existingMovie.data.releaseDate
-    ),
+    ...(nextReleaseDate ? { releaseDate: nextReleaseDate } : {}),
     audienceScore: candidate.audienceScore ?? null,
     originalLanguage: candidate.originalLanguage ?? null,
     productionCompanies:

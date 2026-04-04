@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { SignInForm } from "@/components/auth/sign-in-form";
@@ -12,7 +13,9 @@ export default async function AdminSignInPage({
     getStaffSession(),
     hasStaffUsers(),
   ]);
+  const cookieStore = await cookies();
   const { email = "", created } = await searchParams;
+  const bootstrapCompleted = cookieStore.get("staff-bootstrap-complete")?.value === "1";
 
   if (session.isAuthenticated && session.isAdmin) {
     redirect("/admin");
@@ -22,7 +25,7 @@ export default async function AdminSignInPage({
     <SignInForm
       initialEmail={email}
       created={created === "1"}
-      showBootstrapInvite={!staffUsersExist}
+      showBootstrapInvite={!staffUsersExist && !bootstrapCompleted}
     />
   );
 }

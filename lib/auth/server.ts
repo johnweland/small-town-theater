@@ -286,7 +286,7 @@ export async function hasStaffUsers(): Promise<boolean> {
   }
 
   if (!authConfig?.user_pool_id || !authConfig?.aws_region) {
-    return true;
+    return false;
   }
 
   try {
@@ -303,7 +303,9 @@ export async function hasStaffUsers(): Promise<boolean> {
 
     return (result.Users?.length ?? 0) > 0;
   } catch {
-    return true;
+    // If we cannot verify the directory state, keep the bootstrap path visible so
+    // first-run setup still works without a terminal detour.
+    return false;
   }
 }
 

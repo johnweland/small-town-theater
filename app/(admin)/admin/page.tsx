@@ -60,13 +60,13 @@ export default async function AdminDashboardPage() {
             description="The most common staff workflows are surfaced first so the panel feels useful on day one."
           >
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {[
-                { href: "/admin/theaters/new", label: "Add Theater" },
-                { href: "/admin/movies/new", label: "Import Movie" },
-                { href: "/admin/schedule/new", label: "Create Booking" },
-                { href: "/admin/events/new", label: "Plan Event" },
-              ].map((item) => (
-                <Button key={item.href} asChild variant="outline" className="h-16 justify-start">
+                {[
+                  { href: "/admin/theaters/new", label: "Add Theater" },
+                  { href: "/admin/movies/new", label: "Import Movie" },
+                  { href: "/admin/schedule/new", label: "Create Booking" },
+                  { href: "/admin/events/new", label: "Plan Event" },
+                ].map((item) => (
+                <Button key={item.href} asChild variant="outline" className="h-16 justify-center text-center">
                   <Link href={item.href}>{item.label}</Link>
                 </Button>
               ))}

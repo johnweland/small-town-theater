@@ -1,6 +1,5 @@
 import {
   adminEvents,
-  adminRecentActivity,
 } from "./mock-data";
 import type { ImportCandidate } from "./types";
 import type { BookingDay } from "@/lib/data";
@@ -200,6 +199,43 @@ function toAdminDateTimeLabel(value: string) {
 
 function toEventImage(image?: string | null) {
   return image?.trim() || "/next.svg";
+}
+
+function getActivityTimestamp(value?: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  const timestamp = new Date(value);
+
+  return Number.isNaN(timestamp.getTime()) ? null : timestamp;
+}
+
+function formatRelativeActivityTime(date: Date, now = new Date()) {
+  const diffMs = date.getTime() - now.getTime();
+  const absDiffMs = Math.abs(diffMs);
+  const minuteMs = 60 * 1000;
+  const hourMs = 60 * minuteMs;
+  const dayMs = 24 * hourMs;
+  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+
+  if (absDiffMs < hourMs) {
+    return rtf.format(Math.round(diffMs / minuteMs), "minute");
+  }
+
+  if (absDiffMs < dayMs) {
+    return rtf.format(Math.round(diffMs / hourMs), "hour");
+  }
+
+  if (absDiffMs < 7 * dayMs) {
+    return rtf.format(Math.round(diffMs / dayMs), "day");
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
 }
 
 function toAdminMovie(
@@ -717,7 +753,163 @@ export async function getAdminEvent(eventId: string) {
 }
 
 export async function getAdminRecentActivity() {
-  return adminRecentActivity;
+  const [theatersResult, moviesResult, bookingsResult] = await Promise.all([
+    listTheatersFromAmplify(),
+    listMoviesFromAmplify(),
+    listBookingsFromAmplify(),
+  ]);
+
+  if (theatersResult.errors?.length) {
+    throw new Error(
+      `Unable to load theaters for activity: ${theatersResult.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  if (moviesResult.errors?.length) {
+    throw new Error(
+      `Unable to load movies for activity: ${moviesResult.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  if (bookingsResult.errors?.length) {
+    throw new Error(
+      `Unable to load bookings for activity: ${bookingsResult.errors
+        .map((error) => error.message)
+        .join("; ")}`
+    );
+  }
+
+  let events: AmplifyEventRecord[] = [];
+
+  try {
+    const eventsResult = await listEventsFromAmplify();
+
+    if (eventsResult.errors?.length) {
+      throw new Error(
+        `Unable to load events for activity: ${eventsResult.errors
+          .map((error) => error.message)
+          .join("; ")}`
+      );
+    }
+
+    events = eventsResult.data;
+  } catch (error) {
+    if (!isMissingEventModelError(error)) {
+      throw error;
+    }
+  }
+
+  const theaterById = Object.fromEntries(
+    theatersResult.data.map((theater) => [theater.id, theater])
+  );
+  const movieById = Object.fromEntries(
+    moviesResult.data.map((movie) => [movie.id, movie])
+  );
+
+  const bookingActivity = bookingsResult.data
+    .map((booking) => {
+      const timestamp =
+        getActivityTimestamp(booking.updatedAt) ??
+        getActivityTimestamp(booking.createdAt) ??
+        getActivityTimestamp(booking.publishedAt);
+
+      if (!timestamp) {
+        return null;
+      }
+
+      const movieTitle = movieById[booking.movieId]?.title ?? "Untitled movie";
+      const theaterName = theaterById[booking.theaterId]?.name ?? "Unknown theater";
+
+      return {
+        id: `booking-${booking.id}`,
+        title: booking.status === "published" ? "Booking published" : "Booking updated",
+        detail: `${movieTitle} at ${theaterName} runs ${booking.runStartsOn} through ${booking.runEndsOn}.`,
+        occurredAt: formatRelativeActivityTime(timestamp),
+        occurredAtDate: timestamp,
+        kind: "booking" as const,
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => item != null);
+
+  const movieActivity = moviesResult.data
+    .map((movie) => {
+      const timestamp =
+        getActivityTimestamp(movie.updatedAt) ?? getActivityTimestamp(movie.createdAt);
+
+      if (!timestamp) {
+        return null;
+      }
+
+      return {
+        id: `movie-${movie.id}`,
+        title: "Movie updated",
+        detail: `${movie.title} is currently marked ${movie.status}.`,
+        occurredAt: formatRelativeActivityTime(timestamp),
+        occurredAtDate: timestamp,
+        kind: "movie" as const,
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => item != null);
+
+  const theaterActivity = theatersResult.data
+    .map((theater) => {
+      const timestamp =
+        getActivityTimestamp(theater.updatedAt) ?? getActivityTimestamp(theater.createdAt);
+
+      if (!timestamp) {
+        return null;
+      }
+
+      return {
+        id: `theater-${theater.id}`,
+        title: "Theater updated",
+        detail: `${theater.name} in ${theater.city}, ${theater.state} is ${theater.status}.`,
+        occurredAt: formatRelativeActivityTime(timestamp),
+        occurredAtDate: timestamp,
+        kind: "theater" as const,
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => item != null);
+
+  const eventActivity = events
+    .map((event) => {
+      const timestamp =
+        getActivityTimestamp(event.updatedAt) ?? getActivityTimestamp(event.createdAt);
+
+      if (!timestamp) {
+        return null;
+      }
+
+      return {
+        id: `event-${event.id}`,
+        title: event.status === "published" ? "Event published" : "Event updated",
+        detail: `${event.title} starts ${toAdminDateTimeLabel(event.startsAt)}.`,
+        occurredAt: formatRelativeActivityTime(timestamp),
+        occurredAtDate: timestamp,
+        kind: "event" as const,
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => item != null);
+
+  return [
+    ...bookingActivity,
+    ...movieActivity,
+    ...theaterActivity,
+    ...eventActivity,
+  ]
+    .sort((left, right) => right.occurredAtDate.getTime() - left.occurredAtDate.getTime())
+    .slice(0, 6)
+    .map((item) => ({
+      id: item.id,
+      title: item.title,
+      detail: item.detail,
+      occurredAt: item.occurredAt,
+      kind: item.kind,
+    }));
 }
 
 export async function getImportCandidates() {
@@ -779,7 +971,7 @@ export async function getTmdbImportCandidate(tmdbId: number) {
     return null;
   }
 
-  const releaseDate = details?.releaseDate;
+  const releaseDate = details?.releaseDateIso ?? details?.releaseDate;
 
   return {
     id: `tmdb-${tmdbId}`,
@@ -806,6 +998,7 @@ export async function getTmdbImportCandidate(tmdbId: number) {
       | null,
     director: credits?.director ?? "Director unavailable",
     releaseDate,
+    releaseDateIso: details?.releaseDateIso,
     audienceScore: details?.audienceScore,
     originalLanguage: details?.originalLanguage,
     productionCompanies: details?.productionCompanies ?? [],
@@ -893,7 +1086,9 @@ export async function searchTmdbImportCandidates(query: string) {
           ? "coming-soon"
           : null) as "coming-soon" | null,
         director: candidate?.director ?? "Director unavailable",
-        releaseDate: candidate?.releaseDate ?? toAmplifyDate(result.release_date),
+        releaseDate:
+          candidate?.releaseDateIso ?? candidate?.releaseDate ?? toAmplifyDate(result.release_date),
+        releaseDateIso: candidate?.releaseDateIso ?? toAmplifyDate(result.release_date),
         audienceScore:
           candidate?.audienceScore ?? `${result.vote_average.toFixed(1)} / 10`,
         originalLanguage: candidate?.originalLanguage,

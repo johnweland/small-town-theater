@@ -9,7 +9,11 @@ import {
   updateMovieAction,
 } from "@/app/(admin)/admin/movies/actions";
 import { AdminConfirmDelete } from "@/components/admin/admin-form";
-import { AdminMovieForm } from "@/components/admin/movie-form";
+import {
+  AdminMovieArtworkSection,
+  AdminMoviePrimarySections,
+  AdminMovieWorkflowFooter,
+} from "@/components/admin/movie-form";
 import { Button } from "@/components/ui/button";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { AdminSectionCard } from "@/components/admin/section-card";
@@ -30,6 +34,33 @@ export default async function MovieDetailPage({
   const bookings = (await getAdminBookings()).filter(
     (booking) => booking.movieSlug === adminMovie.slug
   );
+  const formMovie = {
+    id: movie.id,
+    slug: movie.slug,
+    title: movie.title,
+    tagline: movie.tagline,
+    rating: movie.rating,
+    runtime: movie.runtime,
+    genre: movie.genre,
+    status: movie.libraryStatus,
+    director: movie.director,
+    cast: movie.cast.filter(
+      (credit): credit is string => typeof credit === "string" && credit.length > 0
+    ),
+    synopsis: movie.synopsis,
+    production: movie.production,
+    score: movie.score,
+    cinematography: movie.cinematography,
+    backdrop: movie.backdrop,
+    poster: movie.poster,
+    releaseDate: movie.releaseDate,
+    audienceScore: movie.audienceScore,
+    originalLanguage: movie.originalLanguage,
+    productionCompanies: movie.productionCompanies.filter(
+      (company): company is string => typeof company === "string" && company.length > 0
+    ),
+    trailerYouTubeId: movie.trailerYouTubeId,
+  };
 
   return (
     <div className="flex flex-col gap-8">
@@ -55,76 +86,87 @@ export default async function MovieDetailPage({
         }
       />
 
-      <div className="grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
-        <AdminSectionCard title="Media & Metadata" description={movie.tagline}>
-          <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
-            <div className="relative aspect-[2/3] overflow-hidden rounded-lg">
-              <Image
-                src={movie.poster}
-                alt={`${movie.title} poster`}
-                fill
-                sizes="220px"
-                className="object-cover"
-              />
-            </div>
-            <div className="flex flex-col gap-5">
-              <div className="relative aspect-[16/9] overflow-hidden rounded-lg">
+      <form
+        action={updateMovieAction}
+        className="grid items-start gap-8 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]"
+      >
+        <div className="flex min-w-0 flex-col gap-8 self-start">
+          <AdminSectionCard
+            title="Media & Metadata"
+            description={movie.tagline}
+            className="self-start"
+          >
+            <div className="grid gap-4 lg:grid-cols-[120px_minmax(0,1fr)]">
+              <div className="relative aspect-[2/3] overflow-hidden rounded-lg">
                 <Image
-                  src={movie.backdrop}
-                  alt={movie.title}
+                  src={movie.poster}
+                  alt={`${movie.title} poster`}
                   fill
-                  sizes="(max-width: 1280px) 100vw, 40vw"
+                  sizes="120px"
                   className="object-cover"
                 />
               </div>
-              <p className="text-sm leading-6 text-muted-foreground">{movie.synopsis}</p>
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                <div className="rounded-lg bg-surface-container-high p-4">
-                  <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-primary">
-                    Rating
-                  </p>
-                  <p className="mt-2 text-sm text-muted-foreground">{movie.rating}</p>
+              <div className="flex min-w-0 flex-col gap-3">
+                <div className="relative aspect-[4.2/1] overflow-hidden rounded-lg">
+                  <Image
+                    src={movie.backdrop}
+                    alt={movie.title}
+                    fill
+                    sizes="(max-width: 1280px) 100vw, 48vw"
+                    className="object-cover"
+                  />
                 </div>
-                <div className="rounded-lg bg-surface-container-high p-4">
-                  <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-primary">
-                    Audience Score
-                  </p>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {movie.audienceScore ?? movie.score}
-                  </p>
+                <p className="text-sm leading-6 text-muted-foreground">{movie.synopsis}</p>
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  <div className="rounded-lg bg-surface-container-high p-4">
+                    <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-primary">
+                      Rating
+                    </p>
+                    <p className="mt-2 text-sm text-muted-foreground">{movie.rating}</p>
+                  </div>
+                  <div className="rounded-lg bg-surface-container-high p-4">
+                    <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-primary">
+                      Audience Score
+                    </p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {movie.audienceScore ?? movie.score}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-surface-container-high p-4">
+                    <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-primary">
+                      Language
+                    </p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {movie.originalLanguage ?? "English"}
+                    </p>
+                  </div>
                 </div>
-                <div className="rounded-lg bg-surface-container-high p-4">
-                  <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-primary">
-                    Language
-                  </p>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {movie.originalLanguage ?? "English"}
-                  </p>
-                </div>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-lg bg-surface-container-high p-4">
-                  <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-primary">
-                    Studios
-                  </p>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {(movie.productionCompanies ?? [movie.production]).join(", ")}
-                  </p>
-                </div>
-                <div className="rounded-lg bg-surface-container-high p-4">
-                  <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-primary">
-                    Internal Library Status
-                  </p>
-                  <div className="mt-2">
-                    <AdminStatusBadge status={adminMovie.status} />
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-lg bg-surface-container-high p-4">
+                    <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-primary">
+                      Studios
+                    </p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {(movie.productionCompanies ?? [movie.production]).join(", ")}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-surface-container-high p-4">
+                    <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-primary">
+                      Internal Library Status
+                    </p>
+                    <div className="mt-2">
+                      <AdminStatusBadge status={adminMovie.status} />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </AdminSectionCard>
+          </AdminSectionCard>
 
-        <div className="flex flex-col gap-8">
+          <AdminMoviePrimarySections movie={formMovie} />
+        </div>
+
+        <div className="flex min-w-0 flex-col gap-8 self-start">
           <AdminSectionCard title="Trailer" description="Pulled from the richer movie detail source used by the site.">
             <TrailerPlayer
               title={movie.title}
@@ -197,40 +239,14 @@ export default async function MovieDetailPage({
               )}
             </div>
           </AdminSectionCard>
-        </div>
-      </div>
 
-      <AdminMovieForm
-        action={updateMovieAction}
-        movie={{
-          id: movie.id,
-          slug: movie.slug,
-          title: movie.title,
-          tagline: movie.tagline,
-          rating: movie.rating,
-          runtime: movie.runtime,
-          genre: movie.genre,
-          status: movie.libraryStatus,
-          director: movie.director,
-          cast: movie.cast.filter(
-            (credit): credit is string => typeof credit === "string" && credit.length > 0
-          ),
-          synopsis: movie.synopsis,
-          production: movie.production,
-          score: movie.score,
-          cinematography: movie.cinematography,
-          backdrop: movie.backdrop,
-          poster: movie.poster,
-          releaseDate: movie.releaseDate,
-          audienceScore: movie.audienceScore,
-          originalLanguage: movie.originalLanguage,
-          productionCompanies: movie.productionCompanies.filter(
-            (company): company is string =>
-              typeof company === "string" && company.length > 0
-          ),
-          trailerYouTubeId: movie.trailerYouTubeId,
-        }}
-      />
+          <AdminMovieArtworkSection movie={formMovie} />
+        </div>
+
+        <div className="xl:col-span-2">
+          <AdminMovieWorkflowFooter />
+        </div>
+      </form>
 
       {bookings.length > 0 ? (
         <AdminSectionCard

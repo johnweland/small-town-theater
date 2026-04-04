@@ -21,6 +21,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { BootstrapInviteForm } from "@/components/auth/bootstrap-invite-form";
 
 type FormMode =
   | "signIn"
@@ -103,6 +104,10 @@ function getChallengeState(signInStep: MfaChallengeState["signInStep"]): MfaChal
   }
 }
 
+function markBootstrapComplete() {
+  document.cookie = "staff-bootstrap-complete=1; Path=/; Max-Age=31536000; SameSite=Lax";
+}
+
 export function SignInForm({
   initialEmail,
   created,
@@ -128,6 +133,7 @@ export function SignInForm({
   ) {
     switch (nextStep.signInStep) {
       case "DONE":
+        markBootstrapComplete();
         router.replace("/admin");
         router.refresh();
         return;
@@ -332,258 +338,256 @@ export function SignInForm({
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-6 py-12">
-      <Card className="w-full max-w-md border-border/50 bg-card/95">
-        <CardHeader className="space-y-3 text-center">
-          <p className="font-sans text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
-            Marquee Admin
-          </p>
-          <CardTitle className="font-serif text-4xl italic text-primary">
-            Theater staff sign in
-          </CardTitle>
-          <CardDescription>
-            Staff access is limited to invited theater accounts.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-6">
-          {formMode === "signIn" ? (
-            <form className="flex flex-col gap-4" onSubmit={handleSignInSubmit}>
-              <label className="flex flex-col gap-2">
-                <span className="text-sm font-medium">Email</span>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  required
-                />
-              </label>
-              <label className="flex flex-col gap-2">
-                <span className="text-sm font-medium">Password</span>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                />
-              </label>
-              {created ? (
-                <p className="text-sm text-emerald-700">
-                  Your staff account is ready. Sign in with the password you just
-                  created.
-                </p>
-              ) : null}
-              {message ? <p className="text-sm text-primary">{message}</p> : null}
-              {error ? <p className="text-sm text-destructive">{error}</p> : null}
-              <Button className="w-full" type="submit" disabled={isPending}>
-                {isPending ? "Signing in..." : "Sign in"}
-              </Button>
-              <Button
-                type="button"
-                variant="link"
-                className="h-auto justify-start px-0"
-                onClick={() => {
-                  setError(null);
-                  setMessage(null);
-                  setFormMode("forgotPasswordRequest");
-                }}
-              >
-                Forgot your password?
-              </Button>
-            </form>
-          ) : null}
-
-          {formMode === "forgotPasswordRequest" ? (
-            <form
-              className="flex flex-col gap-4"
-              onSubmit={handleForgotPasswordRequestSubmit}
-            >
-              <div>
-                <p className="text-sm font-medium text-foreground">
-                  Reset password
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Enter your staff email and we&apos;ll send a reset code.
-                </p>
-              </div>
-              <label className="flex flex-col gap-2">
-                <span className="text-sm font-medium">Email</span>
-                <Input
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  required
-                />
-              </label>
-              {message ? <p className="text-sm text-primary">{message}</p> : null}
-              {error ? <p className="text-sm text-destructive">{error}</p> : null}
-              <Button className="w-full" type="submit" disabled={isPending}>
-                {isPending ? "Sending code..." : "Send reset code"}
-              </Button>
-              <Button
-                type="button"
-                variant="link"
-                className="h-auto justify-start px-0"
-                onClick={resetToSignIn}
-              >
-                Back to sign in
-              </Button>
-            </form>
-          ) : null}
-
-          {formMode === "forgotPasswordConfirm" ? (
-            <form
-              className="flex flex-col gap-4"
-              onSubmit={handleForgotPasswordConfirmSubmit}
-            >
-              <div>
-                <p className="text-sm font-medium text-foreground">
-                  Finish password reset
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Enter the reset code and choose a new password for {email}.
-                </p>
-              </div>
-              <label className="flex flex-col gap-2">
-                <span className="text-sm font-medium">Reset code</span>
-                <Input name="confirmationCode" inputMode="numeric" required />
-              </label>
-              <label className="flex flex-col gap-2">
-                <span className="text-sm font-medium">New password</span>
-                <Input
-                  name="newPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  minLength={8}
-                  required
-                />
-              </label>
-              <label className="flex flex-col gap-2">
-                <span className="text-sm font-medium">Confirm new password</span>
-                <Input
-                  name="confirmPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  minLength={8}
-                  required
-                />
-              </label>
-              {message ? <p className="text-sm text-primary">{message}</p> : null}
-              {error ? <p className="text-sm text-destructive">{error}</p> : null}
-              <Button className="w-full" type="submit" disabled={isPending}>
-                {isPending ? "Updating password..." : "Reset password"}
-              </Button>
-              <Button
-                type="button"
-                variant="link"
-                className="h-auto justify-start px-0"
-                onClick={() => {
-                  setError(null);
-                  setMessage(null);
-                  setFormMode("forgotPasswordRequest");
-                }}
-              >
-                Resend or change email
-              </Button>
-            </form>
-          ) : null}
-
-          {formMode === "mfaChallenge" && mfaChallenge ? (
-            <form className="flex flex-col gap-4" onSubmit={handleMfaChallengeSubmit}>
-              <div>
-                <p className="text-sm font-medium text-foreground">
-                  Verify your sign-in
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {mfaChallenge.helperText}
-                </p>
-              </div>
-              <label className="flex flex-col gap-2">
-                <span className="text-sm font-medium">{mfaChallenge.inputLabel}</span>
-                <Input
-                  name="challengeResponse"
-                  type={
-                    mfaChallenge.signInStep === "CONFIRM_SIGN_IN_WITH_PASSWORD"
-                      ? "password"
-                      : "text"
-                  }
-                  autoComplete={
-                    mfaChallenge.signInStep === "CONFIRM_SIGN_IN_WITH_PASSWORD"
-                      ? "current-password"
-                      : "one-time-code"
-                  }
-                  inputMode={
-                    mfaChallenge.signInStep === "CONFIRM_SIGN_IN_WITH_PASSWORD"
-                      ? undefined
-                      : "numeric"
-                  }
-                  required
-                />
-              </label>
-              {error ? <p className="text-sm text-destructive">{error}</p> : null}
-              <Button className="w-full" type="submit" disabled={isPending}>
-                {isPending ? "Verifying..." : "Continue"}
-              </Button>
-            </form>
-          ) : null}
-
-          {formMode === "mfaSelection" && mfaSelection ? (
-            <form className="flex flex-col gap-4" onSubmit={handleMfaSelectionSubmit}>
-              <div>
-                <p className="text-sm font-medium text-foreground">
-                  Choose a verification method
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {mfaSelection.helperText}
-                </p>
-              </div>
-              <label className="flex flex-col gap-2">
-                <span className="text-sm font-medium">Method</span>
-                <select
-                  name="method"
-                  className="flex h-11 w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:border-primary/40 focus-visible:ring-2 focus-visible:ring-primary/20"
-                  required
-                  defaultValue={mfaSelection.allowedTypes[0] ?? ""}
-                >
-                  {mfaSelection.allowedTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type === "TOTP" ? "Authenticator app" : type}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              {error ? <p className="text-sm text-destructive">{error}</p> : null}
-              <Button className="w-full" type="submit" disabled={isPending}>
-                {isPending ? "Continuing..." : "Continue"}
-              </Button>
-            </form>
-          ) : null}
-
-          <div className="text-center text-sm text-muted-foreground">
-            <p>
-              Need access? Ask an administrator for a temporary staff setup link.{" "}
-              <Link className="text-primary underline-offset-4 hover:underline" href="/">
-                Return to the public site
-              </Link>
+      <div className="flex w-full max-w-lg flex-col gap-6">
+        <Card className="w-full border-border/50 bg-card/95">
+          <CardHeader className="space-y-3 text-center">
+            <p className="font-sans text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+              Marquee Admin
             </p>
-            {showBootstrapInvite ? (
-              <p className="mt-2">
-                First staff account?{" "}
-                <Link
-                  className="text-primary underline-offset-4 hover:underline"
-                  href="/admin/bootstrap"
+            <CardTitle className="font-serif text-4xl italic text-primary">
+              Theater staff sign in
+            </CardTitle>
+            <CardDescription>
+              Staff access is limited to invited theater accounts.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-6">
+            {formMode === "signIn" ? (
+              <form className="flex flex-col gap-4" onSubmit={handleSignInSubmit}>
+                <label className="flex flex-col gap-2">
+                  <span className="text-sm font-medium">Email</span>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    required
+                  />
+                </label>
+                <label className="flex flex-col gap-2">
+                  <span className="text-sm font-medium">Password</span>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                  />
+                </label>
+                {created ? (
+                  <p className="text-sm text-emerald-700">
+                    Your staff account is ready. Sign in with the password you just
+                    created.
+                  </p>
+                ) : null}
+                {message ? <p className="text-sm text-primary">{message}</p> : null}
+                {error ? <p className="text-sm text-destructive">{error}</p> : null}
+                <Button className="w-full" type="submit" disabled={isPending}>
+                  {isPending ? "Signing in..." : "Sign in"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="h-auto justify-start px-0"
+                  onClick={() => {
+                    setError(null);
+                    setMessage(null);
+                    setFormMode("forgotPasswordRequest");
+                  }}
                 >
-                  Create a bootstrap invite
+                  Forgot your password?
+                </Button>
+              </form>
+            ) : null}
+
+            {formMode === "forgotPasswordRequest" ? (
+              <form
+                className="flex flex-col gap-4"
+                onSubmit={handleForgotPasswordRequestSubmit}
+              >
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    Reset password
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Enter your staff email and we&apos;ll send a reset code.
+                  </p>
+                </div>
+                <label className="flex flex-col gap-2">
+                  <span className="text-sm font-medium">Email</span>
+                  <Input
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    required
+                  />
+                </label>
+                {message ? <p className="text-sm text-primary">{message}</p> : null}
+                {error ? <p className="text-sm text-destructive">{error}</p> : null}
+                <Button className="w-full" type="submit" disabled={isPending}>
+                  {isPending ? "Sending code..." : "Send reset code"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="h-auto justify-start px-0"
+                  onClick={resetToSignIn}
+                >
+                  Back to sign in
+                </Button>
+              </form>
+            ) : null}
+
+            {formMode === "forgotPasswordConfirm" ? (
+              <form
+                className="flex flex-col gap-4"
+                onSubmit={handleForgotPasswordConfirmSubmit}
+              >
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    Finish password reset
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Enter the reset code and choose a new password for {email}.
+                  </p>
+                </div>
+                <label className="flex flex-col gap-2">
+                  <span className="text-sm font-medium">Reset code</span>
+                  <Input name="confirmationCode" inputMode="numeric" required />
+                </label>
+                <label className="flex flex-col gap-2">
+                  <span className="text-sm font-medium">New password</span>
+                  <Input
+                    name="newPassword"
+                    type="password"
+                    autoComplete="new-password"
+                    minLength={8}
+                    required
+                  />
+                </label>
+                <label className="flex flex-col gap-2">
+                  <span className="text-sm font-medium">Confirm new password</span>
+                  <Input
+                    name="confirmPassword"
+                    type="password"
+                    autoComplete="new-password"
+                    minLength={8}
+                    required
+                  />
+                </label>
+                {message ? <p className="text-sm text-primary">{message}</p> : null}
+                {error ? <p className="text-sm text-destructive">{error}</p> : null}
+                <Button className="w-full" type="submit" disabled={isPending}>
+                  {isPending ? "Updating password..." : "Reset password"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="h-auto justify-start px-0"
+                  onClick={() => {
+                    setError(null);
+                    setMessage(null);
+                    setFormMode("forgotPasswordRequest");
+                  }}
+                >
+                  Resend or change email
+                </Button>
+              </form>
+            ) : null}
+
+            {formMode === "mfaChallenge" && mfaChallenge ? (
+              <form className="flex flex-col gap-4" onSubmit={handleMfaChallengeSubmit}>
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    Verify your sign-in
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {mfaChallenge.helperText}
+                  </p>
+                </div>
+                <label className="flex flex-col gap-2">
+                  <span className="text-sm font-medium">{mfaChallenge.inputLabel}</span>
+                  <Input
+                    name="challengeResponse"
+                    type={
+                      mfaChallenge.signInStep === "CONFIRM_SIGN_IN_WITH_PASSWORD"
+                        ? "password"
+                        : "text"
+                    }
+                    autoComplete={
+                      mfaChallenge.signInStep === "CONFIRM_SIGN_IN_WITH_PASSWORD"
+                        ? "current-password"
+                        : "one-time-code"
+                    }
+                    inputMode={
+                      mfaChallenge.signInStep === "CONFIRM_SIGN_IN_WITH_PASSWORD"
+                        ? undefined
+                        : "numeric"
+                    }
+                    required
+                  />
+                </label>
+                {error ? <p className="text-sm text-destructive">{error}</p> : null}
+                <Button className="w-full" type="submit" disabled={isPending}>
+                  {isPending ? "Verifying..." : "Continue"}
+                </Button>
+              </form>
+            ) : null}
+
+            {formMode === "mfaSelection" && mfaSelection ? (
+              <form className="flex flex-col gap-4" onSubmit={handleMfaSelectionSubmit}>
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    Choose a verification method
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {mfaSelection.helperText}
+                  </p>
+                </div>
+                <label className="flex flex-col gap-2">
+                  <span className="text-sm font-medium">Method</span>
+                  <select
+                    name="method"
+                    className="flex h-11 w-full rounded-md border border-border/40 bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:border-primary/40 focus-visible:ring-2 focus-visible:ring-primary/20"
+                    required
+                    defaultValue={mfaSelection.allowedTypes[0] ?? ""}
+                  >
+                    {mfaSelection.allowedTypes.map((type) => (
+                      <option key={type} value={type}>
+                        {type === "TOTP" ? "Authenticator app" : type}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {error ? <p className="text-sm text-destructive">{error}</p> : null}
+                <Button className="w-full" type="submit" disabled={isPending}>
+                  {isPending ? "Continuing..." : "Continue"}
+                </Button>
+              </form>
+            ) : null}
+
+            <div className="text-center text-sm text-muted-foreground">
+              <p>
+                Need access? Ask an administrator for a temporary staff setup link.{" "}
+                <Link className="text-primary underline-offset-4 hover:underline" href="/">
+                  Return to the public site
                 </Link>
               </p>
-            ) : null}
-          </div>
-        </CardContent>
-      </Card>
+              {showBootstrapInvite ? (
+                <p className="mt-2">
+                  No staff accounts exist yet. Use the bootstrap form below to create
+                  the first invite.
+                </p>
+              ) : null}
+            </div>
+          </CardContent>
+        </Card>
+        {showBootstrapInvite ? <BootstrapInviteForm /> : null}
+      </div>
     </main>
   );
 }

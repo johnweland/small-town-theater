@@ -85,6 +85,7 @@ export interface ImportCandidate {
   status?: "now-playing" | "coming-soon" | "draft" | "archived" | null;
   director?: string;
   releaseDate?: string;
+  releaseDateIso?: string;
   audienceScore?: string;
   originalLanguage?: string;
   productionCompanies?: string[];
