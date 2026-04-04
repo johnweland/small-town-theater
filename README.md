@@ -25,6 +25,8 @@ TMDB_BEARER_TOKEN=your_tmdb_bearer_token
 
 Do not use a `NEXT_PUBLIC_` prefix for the TMDB token. TMDB calls run on the server, and the token must not be exposed to the browser.
 
+For Amplify Hosting, make sure the build writes this server env into `.env.production` before `npm run build`. The repo's [amplify.yml](/Users/jweland/code/github.com/johnweland/jackson-community-projects/community-theater/amplify.yml) handles that for `TMDB_BEARER_TOKEN`.
+
 Without that token, TMDB-powered search and trailer enrichment fall back to local fixture behavior or return empty results, depending on the route.
 
 ## Scripts

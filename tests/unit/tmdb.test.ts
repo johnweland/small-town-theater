@@ -227,7 +227,7 @@ describe("mapTmdbSearchResultToMovie", () => {
   });
 
   it("returns undefined when TMDB has no matching YouTube trailers", async () => {
-    vi.stubEnv("TMDB_API_READ_ACCESS_TOKEN", "test-token");
+    vi.stubEnv("TMDB_BEARER_TOKEN", "test-token");
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
@@ -266,7 +266,7 @@ describe("mapTmdbSearchResultToMovie", () => {
     ["TMDB returns a non-ok trailer response", vi.fn().mockResolvedValue(createResponse({}, false))],
     ["fetch throws while loading trailers", vi.fn().mockRejectedValue(new Error("network"))],
   ])("%s", async (_, fetchMock) => {
-    vi.stubEnv("TMDB_API_READ_ACCESS_TOKEN", "test-token");
+    vi.stubEnv("TMDB_BEARER_TOKEN", "test-token");
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(getTmdbTrailerYouTubeId(1226863)).resolves.toBeUndefined();
@@ -292,7 +292,7 @@ describe("mapTmdbSearchResultToMovie", () => {
     );
 
     vi.stubGlobal("fetch", fetchMock);
-    vi.stubEnv("TMDB_API_READ_ACCESS_TOKEN", "test-token");
+    vi.stubEnv("TMDB_BEARER_TOKEN", "test-token");
 
     await expect(getTmdbCredits(1226863)).resolves.toEqual({
       director: "Aaron Horvath",
@@ -317,7 +317,7 @@ describe("mapTmdbSearchResultToMovie", () => {
   });
 
   it("returns cast with a fallback director label when no director is present", async () => {
-    vi.stubEnv("TMDB_API_READ_ACCESS_TOKEN", "test-token");
+    vi.stubEnv("TMDB_BEARER_TOKEN", "test-token");
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
@@ -352,7 +352,7 @@ describe("mapTmdbSearchResultToMovie", () => {
       vi.fn().mockRejectedValue(new Error("network")),
     ],
   ])("%s", async (_, fetchMock) => {
-    vi.stubEnv("TMDB_API_READ_ACCESS_TOKEN", "test-token");
+    vi.stubEnv("TMDB_BEARER_TOKEN", "test-token");
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(getTmdbCredits(1226863)).resolves.toBeUndefined();
@@ -392,7 +392,7 @@ describe("mapTmdbSearchResultToMovie", () => {
     );
 
     vi.stubGlobal("fetch", fetchMock);
-    vi.stubEnv("TMDB_API_READ_ACCESS_TOKEN", "test-token");
+    vi.stubEnv("TMDB_BEARER_TOKEN", "test-token");
 
     await expect(getTmdbMovieDetails(1226863)).resolves.toEqual({
       title: "The Super Mario Galaxy Movie",
@@ -421,7 +421,7 @@ describe("mapTmdbSearchResultToMovie", () => {
   });
 
   it("applies detail fallbacks for empty tagline, missing media, invalid dates, and unknown language codes", async () => {
-    vi.stubEnv("TMDB_API_READ_ACCESS_TOKEN", "test-token");
+    vi.stubEnv("TMDB_BEARER_TOKEN", "test-token");
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
@@ -467,7 +467,7 @@ describe("mapTmdbSearchResultToMovie", () => {
   });
 
   it("formats short and exact-hour runtimes and leaves empty language codes undefined", async () => {
-    vi.stubEnv("TMDB_API_READ_ACCESS_TOKEN", "test-token");
+    vi.stubEnv("TMDB_BEARER_TOKEN", "test-token");
     vi.stubGlobal(
       "fetch",
       vi.fn()
@@ -520,7 +520,7 @@ describe("mapTmdbSearchResultToMovie", () => {
   });
 
   it("falls back to the uppercased language code when Intl.DisplayNames returns nothing", async () => {
-    vi.stubEnv("TMDB_API_READ_ACCESS_TOKEN", "test-token");
+    vi.stubEnv("TMDB_BEARER_TOKEN", "test-token");
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
@@ -559,7 +559,7 @@ describe("mapTmdbSearchResultToMovie", () => {
     ["returns undefined when fetching details throws", vi.fn().mockRejectedValue(new Error("network"))],
   ])("%s", async (_, fetchMock) => {
     if (fetchMock) {
-      vi.stubEnv("TMDB_API_READ_ACCESS_TOKEN", "test-token");
+      vi.stubEnv("TMDB_BEARER_TOKEN", "test-token");
       vi.stubGlobal("fetch", fetchMock);
     } else {
       vi.stubGlobal("fetch", vi.fn());
@@ -579,7 +579,7 @@ describe("mapTmdbSearchResultToMovie", () => {
     );
 
     vi.stubGlobal("fetch", fetchMock);
-    vi.stubEnv("TMDB_API_READ_ACCESS_TOKEN", "test-token");
+    vi.stubEnv("TMDB_BEARER_TOKEN", "test-token");
 
     await expect(searchTmdbMovies("mario")).resolves.toEqual([searchResult]);
 

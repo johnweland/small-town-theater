@@ -262,11 +262,7 @@ export function getTmdbSearchResultYear(result: TmdbSearchMovieResult) {
 }
 
 function getTmdbReadAccessToken() {
-  return (
-    process.env.TMDB_BEARER_TOKEN ??
-    process.env.TMDB_API_READ_ACCESS_TOKEN ??
-    null
-  );
+  return process.env.TMDB_BEARER_TOKEN ?? null;
 }
 
 function selectTrailer(results: TmdbVideoResult[]) {

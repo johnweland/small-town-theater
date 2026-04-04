@@ -1,0 +1,19 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci
+    build:
+      commands:
+        - echo "TMDB_BEARER_TOKEN=$TMDB_BEARER_TOKEN" >> .env.production
+        - echo "TMDB_API_READ_ACCESS_TOKEN=$TMDB_API_READ_ACCESS_TOKEN" >> .env.production
+        - npm run build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+      - .next/cache/**/*
