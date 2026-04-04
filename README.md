@@ -1,4 +1,6 @@
-This is a [Next.js](https://nextjs.org) starter for the Small Town Theater site.
+This is a [Next.js](https://nextjs.org) starter for the Community Theater site.
+
+Set `NEXT_PUBLIC_APP_NAME` to white-label the application name across the UI and metadata.
 
 ## Quick start
 

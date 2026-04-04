@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { MembershipProgram, Movie, Theater, TheaterWithShowtimes } from "@/lib/data";
 import { TheaterShowtimesPanel } from "@/components/site/theater-showtimes-panel";
 import { ConcessionItemImage } from "@/components/shared/concession-item-image";
+import { APP_NAME } from "@/lib/config";
 
 export function TheaterView({
   theater,
@@ -154,7 +155,7 @@ export function TheaterView({
               <p className="mt-3 font-sans text-sm italic leading-6 text-[#e5e2e1]">
                 {membership?.benefits[2] ??
                   membership?.blurb ??
-                  "Membership perks apply across every Small Town Theater location."}
+                  `Membership perks apply across every ${APP_NAME} location.`}
               </p>
             </div>
           </article>

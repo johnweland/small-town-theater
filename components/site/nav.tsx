@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { getTheaters } from "@/lib/data";
+import { APP_NAME } from "@/lib/config";
 
 export async function SiteNav() {
   const theaters = await getTheaters();
@@ -14,7 +15,7 @@ export async function SiteNav() {
             href="/"
             className="font-serif text-xl font-normal tracking-tight text-[#ffe2ab] shrink-0"
           >
-            Small Town Theater
+            {APP_NAME}
           </Link>
 
           {/* Primary links */}
@@ -25,7 +26,7 @@ export async function SiteNav() {
                 href={`/theaters/${theater.slug}`}
                 className="hover:text-[#ffe2ab] transition-colors"
               >
-                {theater.city}
+                {`${theater.city} Theater`}
               </Link>
             ))}
             <Link

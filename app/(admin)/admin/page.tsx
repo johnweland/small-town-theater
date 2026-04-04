@@ -15,6 +15,7 @@ import { AdminPageHeader } from "@/components/admin/page-header";
 import { AdminSectionCard } from "@/components/admin/section-card";
 import { AdminStatCard } from "@/components/admin/stat-card";
 import { AdminStatusBadge } from "@/components/admin/status-badge";
+import { APP_NAME } from "@/lib/config";
 
 export default async function AdminDashboardPage() {
   const [theaters, screens, movies, bookings, events, activity] = await Promise.all([
@@ -31,7 +32,7 @@ export default async function AdminDashboardPage() {
       <AdminPageHeader
         eyebrow="Management Console"
         title="Community cinema operations"
-        description="A warm, implementation-ready front end for programming, scheduling, and venue management across the Small Town Theater network."
+        description={`A warm, implementation-ready front end for programming, scheduling, and venue management across the ${APP_NAME} network.`}
         action={
           <div className="flex gap-3">
             <Button asChild variant="outline">

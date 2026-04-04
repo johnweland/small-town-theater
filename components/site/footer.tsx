@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { getTheaters } from "@/lib/data";
+import { APP_NAME } from "@/lib/config";
 
 export async function SiteFooter() {
   const theaters = await getTheaters();
@@ -12,7 +13,7 @@ export async function SiteFooter() {
           {/* Brand */}
           <div>
             <p className="font-serif text-lg text-[#ffe2ab]">
-              Small Town Theater
+              {APP_NAME}
             </p>
             <p className="mt-1 text-xs font-sans text-[#d4c5ab]">
               {theaters.map((theater) => theater.name).join(" · ")}
@@ -46,7 +47,7 @@ export async function SiteFooter() {
         </div>
 
         <p className="mt-8 border-t border-[#504532]/40 pt-6 text-xs font-sans text-[#9c8f78]">
-          © {new Date().getFullYear()} Small Town Theater. All Rights Reserved.
+          © {new Date().getFullYear()} {APP_NAME}. All Rights Reserved.
         </p>
       </div>
     </footer>

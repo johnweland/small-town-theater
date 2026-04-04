@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 
 import { deleteStaffUser, getStaffSession, listStaffUsers, updateStaffOwnerStatus } from "@/lib/auth/server";
 import { createStaffInviteUrl } from "@/lib/auth/staff-invite";
+import { APP_NAME } from "@/lib/config";
 
 export type StaffInviteActionState = {
   email?: string;
@@ -92,10 +93,10 @@ export async function createStaffInviteFromSettingsAction(
     secret: process.env.STAFF_SIGNUP_SECRET,
   });
 
-  const subject = encodeURIComponent("Your Small Town Theater staff invite");
+  const subject = encodeURIComponent(`Your ${APP_NAME} staff invite`);
   const body = encodeURIComponent(
     [
-      "You have been invited to create a staff account for Small Town Theater.",
+      `You have been invited to create a staff account for ${APP_NAME}.`,
       "",
       "Use this secure signup link to finish setup:",
       inviteUrl,
