@@ -21,45 +21,49 @@ export function getBaseUrl() {
 }
 
 export async function getMovies(): Promise<SitemapMovie[]> {
-  const result = await listPublicMoviesFromAmplify();
+  try {
+    const result = await listPublicMoviesFromAmplify();
 
-  if (result.errors?.length) {
-    throw new Error(
-      `Unable to load sitemap movies: ${result.errors
-        .map((error) => error.message)
-        .join("; ")}`
-    );
+    if (result.errors?.length) {
+      console.warn("Unable to load sitemap movies:", result.errors);
+      return [];
+    }
+
+    return result.data
+      .filter(
+        (movie) =>
+          Boolean(movie.slug) &&
+          (movie.status === "nowPlaying" || movie.status === "comingSoon")
+      )
+      .map((movie) => ({
+        slug: movie.slug,
+        status: movie.status,
+        updatedAt: movie.updatedAt,
+      }));
+  } catch {
+    console.warn("Sitemap: failed to fetch movies, returning empty list");
+    return [];
   }
-
-  return result.data
-    .filter(
-      (movie) =>
-        Boolean(movie.slug) &&
-        (movie.status === "nowPlaying" || movie.status === "comingSoon")
-    )
-    .map((movie) => ({
-      slug: movie.slug,
-      status: movie.status,
-      updatedAt: movie.updatedAt,
-    }));
 }
 
 export async function getTheaters(): Promise<SitemapTheater[]> {
-  const result = await listPublicTheatersFromAmplify();
+  try {
+    const result = await listPublicTheatersFromAmplify();
 
-  if (result.errors?.length) {
-    throw new Error(
-      `Unable to load sitemap theaters: ${result.errors
-        .map((error) => error.message)
-        .join("; ")}`
-    );
+    if (result.errors?.length) {
+      console.warn("Unable to load sitemap theaters:", result.errors);
+      return [];
+    }
+
+    return result.data
+      .filter((theater) => Boolean(theater.slug) && theater.status === "active")
+      .map((theater) => ({
+        slug: theater.slug,
+        status: theater.status,
+        updatedAt: theater.updatedAt,
+      }));
+  } catch {
+    console.warn("Sitemap: failed to fetch theaters, returning empty list");
+    return [];
   }
-
-  return result.data
-    .filter((theater) => Boolean(theater.slug) && theater.status === "active")
-    .map((theater) => ({
-      slug: theater.slug,
-      status: theater.status,
-      updatedAt: theater.updatedAt,
-    }));
 }
