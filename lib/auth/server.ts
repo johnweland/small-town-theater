@@ -16,14 +16,13 @@ import {
   type CookieStorage,
 } from "aws-amplify/adapter-core";
 import { fetchAuthSession, fetchUserAttributes } from "aws-amplify/auth/server";
-import { parseAmplifyConfig } from "aws-amplify/utils";
 
-import outputs from "@/amplify_outputs.json";
+import { amplifyAuthConfig, amplifyConfig } from "@/lib/amplify/runtime-config";
 import { resolveAvatarUrl } from "@/lib/auth/profile";
 import { isE2ETestMode } from "@/lib/e2e/config";
 
-const config = parseAmplifyConfig(outputs);
-const authConfig = outputs.auth;
+const config = amplifyConfig;
+const authConfig = amplifyAuthConfig;
 
 type CookieStore = Awaited<ReturnType<typeof cookies>>;
 

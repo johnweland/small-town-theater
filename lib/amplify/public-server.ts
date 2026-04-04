@@ -1,17 +1,15 @@
 import { generateClient } from "aws-amplify/data/server";
 import { getUrl } from "aws-amplify/storage/server";
 import { runWithAmplifyServerContext } from "aws-amplify/adapter-core";
-import { parseAmplifyConfig } from "aws-amplify/utils";
 
-import outputs from "@/amplify_outputs.json";
 import type { Schema } from "@/amplify/data/resource";
+import { amplifyConfig } from "@/lib/amplify/runtime-config";
 import { listMockRecords } from "@/lib/e2e/admin-mock-store";
 import { isE2ETestMode } from "@/lib/e2e/config";
 import { runWithGuestServerContext } from "@/lib/auth/server";
 import { getAmplifyStoragePathFromUrl } from "@/lib/amplify/storage";
 
-const config = parseAmplifyConfig(outputs);
-const client = generateClient<Schema>({ config });
+const client = generateClient<Schema>({ config: amplifyConfig });
 
 function getPublicEventModel() {
   const eventModel = (client.models as Record<string, unknown>).Event;
@@ -188,7 +186,7 @@ export async function listPublicTheatersFromAmplify() {
     };
   }
 
-  return runWithAmplifyServerContext(config, {}, (contextSpec) =>
+  return runWithAmplifyServerContext(amplifyConfig, {}, (contextSpec) =>
     client.models.Theater.list(contextSpec, {
       authMode: "apiKey",
       sortDirection: "ASC",
@@ -208,7 +206,7 @@ export async function listPublicScreensFromAmplify(theaterId: string) {
     };
   }
 
-  return runWithAmplifyServerContext(config, {}, (contextSpec) =>
+  return runWithAmplifyServerContext(amplifyConfig, {}, (contextSpec) =>
     client.models.Screen.listScreensByTheater(
       contextSpec,
       { theaterId },
@@ -228,7 +226,7 @@ export async function listPublicMoviesFromAmplify() {
     };
   }
 
-  return runWithAmplifyServerContext(config, {}, (contextSpec) =>
+  return runWithAmplifyServerContext(amplifyConfig, {}, (contextSpec) =>
     client.models.Movie.list(contextSpec, {
       authMode: "apiKey",
       sortDirection: "DESC",
@@ -245,7 +243,7 @@ export async function listPublicBookingsFromAmplify() {
     };
   }
 
-  return runWithAmplifyServerContext(config, {}, (contextSpec) =>
+  return runWithAmplifyServerContext(amplifyConfig, {}, (contextSpec) =>
     client.models.Booking.list(contextSpec, {
       authMode: "apiKey",
       sortDirection: "ASC",
@@ -264,7 +262,7 @@ export async function listPublicEventsFromAmplify() {
 
   const eventModel = getPublicEventModel();
 
-  return runWithAmplifyServerContext(config, {}, (contextSpec) =>
+  return runWithAmplifyServerContext(amplifyConfig, {}, (contextSpec) =>
     eventModel.list(contextSpec, {
       authMode: "apiKey",
       sortDirection: "ASC",
@@ -286,7 +284,7 @@ export async function listPublicVenueItemsFromAmplify() {
 
   const venueItemModel = getPublicVenueItemModel();
 
-  return runWithAmplifyServerContext(config, {}, (contextSpec) =>
+  return runWithAmplifyServerContext(amplifyConfig, {}, (contextSpec) =>
     venueItemModel.list(contextSpec, {
       authMode: "apiKey",
       sortDirection: "ASC",
@@ -310,7 +308,7 @@ export async function listPublicVenueItemAvailabilityFromAmplify() {
 
   const availabilityModel = getPublicVenueItemAvailabilityModel();
 
-  return runWithAmplifyServerContext(config, {}, (contextSpec) =>
+  return runWithAmplifyServerContext(amplifyConfig, {}, (contextSpec) =>
     availabilityModel.list(contextSpec, {
       authMode: "apiKey",
       sortDirection: "ASC",

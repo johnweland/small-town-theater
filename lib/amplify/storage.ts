@@ -1,6 +1,6 @@
-import outputs from "@/amplify_outputs.json";
+import { amplifyStorageConfig } from "@/lib/amplify/runtime-config";
 
-const storage = outputs.storage;
+const storage = amplifyStorageConfig;
 
 if (!storage) {
   throw new Error("Amplify storage outputs are unavailable.");

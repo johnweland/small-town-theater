@@ -1,9 +1,8 @@
 import { generateClient } from "aws-amplify/data/server";
 import { getUrl, remove } from "aws-amplify/storage/server";
-import { parseAmplifyConfig } from "aws-amplify/utils";
 
-import outputs from "@/amplify_outputs.json";
 import type { Schema } from "@/amplify/data/resource";
+import { amplifyConfig } from "@/lib/amplify/runtime-config";
 import {
   createMockRecord,
   deleteMockRecord,
@@ -15,8 +14,7 @@ import { isE2ETestMode } from "@/lib/e2e/config";
 import { runWithAuthServerContext } from "@/lib/auth/server";
 import { getAmplifyStoragePathFromUrl } from "@/lib/amplify/storage";
 
-const config = parseAmplifyConfig(outputs);
-const client = generateClient<Schema>({ config });
+const client = generateClient<Schema>({ config: amplifyConfig });
 
 function getEventModel() {
   const eventModel = (client.models as Record<string, unknown>).Event;

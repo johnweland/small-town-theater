@@ -3,8 +3,8 @@
 import { Amplify } from "aws-amplify";
 import { generateClient } from "aws-amplify/data";
 
-import outputs from "@/amplify_outputs.json";
 import type { Schema } from "@/amplify/data/resource";
+import { amplifyOutputs } from "@/lib/amplify/runtime-config";
 import { createE2EAmplifyClient } from "@/lib/e2e/admin-mock-client";
 import { isE2ETestMode } from "@/lib/e2e/config";
 
@@ -13,7 +13,7 @@ let client: ReturnType<typeof generateClient<Schema>> | undefined;
 
 export function ensureAmplifyConfigured() {
   if (!configured) {
-    Amplify.configure(outputs, { ssr: true });
+    Amplify.configure(amplifyOutputs, { ssr: true });
     configured = true;
   }
 }

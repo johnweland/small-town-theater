@@ -1,9 +1,17 @@
 import type { NextConfig } from "next";
-import outputs from "./amplify_outputs.json";
 
-const storageHostname = outputs.storage
-  ? `${outputs.storage.bucket_name}.s3.${outputs.storage.aws_region}.amazonaws.com`
-  : null;
+function getStorageHostname() {
+  const bucketName = process.env.NEXT_PUBLIC_STORAGE_BUCKET_NAME?.trim();
+  const region = process.env.NEXT_PUBLIC_AWS_REGION?.trim();
+
+  if (!bucketName || !region) {
+    return null;
+  }
+
+  return `${bucketName}.s3.${region}.amazonaws.com`;
+}
+
+const storageHostname = getStorageHostname();
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["10.1.1.35"],
