@@ -1,8 +1,24 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
 import { getEvents, getTheaters } from "@/lib/data";
 import { APP_NAME } from "@/lib/config";
+
+export const metadata: Metadata = {
+  title: "About",
+  description: `Learn the story behind ${APP_NAME}, our preservation mission, and the theaters and events that keep local moviegoing alive.`,
+  openGraph: {
+    title: `About ${APP_NAME}`,
+    description: `Learn the story behind ${APP_NAME}, our preservation mission, and the theaters and events that keep local moviegoing alive.`,
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `About ${APP_NAME}`,
+    description: `Learn the story behind ${APP_NAME}, our preservation mission, and the theaters and events that keep local moviegoing alive.`,
+  },
+};
 
 export default async function AboutPage() {
   const [theaters, events] = await Promise.all([getTheaters(), getEvents()]);

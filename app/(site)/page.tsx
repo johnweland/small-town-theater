@@ -1,5 +1,22 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getNowPlayingMovies, getComingSoonMovies, getTheaters } from "@/lib/data";
+import { APP_NAME } from "@/lib/config";
+
+export const metadata: Metadata = {
+  title: "Home",
+  description: `Discover now playing films, coming soon titles, and historic movie houses across ${APP_NAME}.`,
+  openGraph: {
+    title: APP_NAME,
+    description: `Discover now playing films, coming soon titles, and historic movie houses across ${APP_NAME}.`,
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: APP_NAME,
+    description: `Discover now playing films, coming soon titles, and historic movie houses across ${APP_NAME}.`,
+  },
+};
 
 export default async function HomePage() {
   const [nowPlaying, comingSoon, theaters] = await Promise.all([

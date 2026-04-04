@@ -1,7 +1,24 @@
 /* eslint-disable @next/next/no-img-element */
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { getEvents } from "@/lib/data";
+import { APP_NAME } from "@/lib/config";
+
+export const metadata: Metadata = {
+  title: "Events",
+  description: `Browse special screenings, filmmaker conversations, neighborhood fundraisers, and community events hosted by ${APP_NAME}.`,
+  openGraph: {
+    title: `Events at ${APP_NAME}`,
+    description: `Browse special screenings, filmmaker conversations, neighborhood fundraisers, and community events hosted by ${APP_NAME}.`,
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Events at ${APP_NAME}`,
+    description: `Browse special screenings, filmmaker conversations, neighborhood fundraisers, and community events hosted by ${APP_NAME}.`,
+  },
+};
 
 export default async function EventsPage() {
   const events = await getEvents();
