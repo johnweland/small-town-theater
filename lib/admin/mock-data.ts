@@ -73,7 +73,7 @@ export const adminMovies: AdminMovie[] = [
     runtimeMinutes: 141,
     rating: theMartian.rating,
     genres: ["Science Fiction", "Drama", "Adventure"],
-    status: "draft",
+    status: "not-listed",
     tagline: theMartian.tagline,
     overview: theMartian.synopsis,
     poster: theMartian.poster,

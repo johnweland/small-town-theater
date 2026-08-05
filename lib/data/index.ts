@@ -255,7 +255,7 @@ async function getPublicTheaterByRouteKey(routeKey: string): Promise<Theater | n
 
 function toMovieStatus(
   status: PublicAmplifyMovie["status"]
-): Movie["status"] | "draft" | "archived" {
+): Movie["status"] {
   switch (status) {
     case "nowPlaying":
       return "now-playing";
@@ -272,20 +272,8 @@ function getTodayIsoDate() {
   return new Date().toISOString().split("T")[0];
 }
 
-function isFutureMovieReleaseDate(releaseDate?: string) {
-  if (!releaseDate) {
-    return false;
-  }
-
-  return releaseDate > getTodayIsoDate();
-}
-
 function isComingSoonMovie(movie: Movie) {
-  return (
-    movie.status === "coming-soon" ||
-    !movie.releaseDate ||
-    isFutureMovieReleaseDate(movie.releaseDate)
-  );
+  return movie.status === "coming-soon";
 }
 
 function isActivePublishedBooking(booking: Booking, todayIso = getTodayIsoDate()) {
@@ -336,10 +324,7 @@ function toSiteMovie(movie: PublicAmplifyMovie): Movie {
     rating: movie.rating ?? fallback?.rating ?? "NR",
     runtime: movie.runtime ?? fallback?.runtime ?? "Runtime TBD",
     genre: movie.genre ?? fallback?.genre ?? "Genre unavailable",
-    status:
-      mappedStatus === "draft" || mappedStatus === "archived"
-        ? fallback?.status ?? "coming-soon"
-        : mappedStatus,
+    status: mappedStatus,
     director: movie.director ?? fallback?.director ?? "Director unavailable",
     cast:
       movie.cast?.filter((credit): credit is string => Boolean(credit)) ??
@@ -683,8 +668,22 @@ export async function getHomepageFeaturedMovies(): Promise<Movie[]> {
 }
 
 export async function getComingSoonMovies(): Promise<Movie[]> {
-  const publicMovies = await getPublicMoviesFromAmplify();
-  return publicMovies.filter(isComingSoonMovie);
+  const [publicMovies, publicBookings] = await Promise.all([
+    getPublicMoviesFromAmplify(),
+    getPublicBookingsFromAmplify(),
+  ]);
+  const scheduledMovieSlugs = new Set(
+    publicBookings
+      .filter(
+        (booking) =>
+          booking.status === "published" && booking.runEndsOn >= getTodayIsoDate()
+      )
+      .map((booking) => booking.movieSlug)
+  );
+
+  return publicMovies.filter(
+    (movie) => isComingSoonMovie(movie) && !scheduledMovieSlugs.has(movie.slug)
+  );
 }
 
 export async function getMovieDetail(slug: string): Promise<Movie | null> {

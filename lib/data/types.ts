@@ -17,7 +17,7 @@ export interface Movie {
   rating: string;
   runtime: string;
   genre: string;
-  status: "now-playing" | "coming-soon";
+  status: "now-playing" | "coming-soon" | "draft" | "archived";
   director: string;
   cast: string[];
   synopsis: string;

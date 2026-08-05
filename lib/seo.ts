@@ -1,4 +1,5 @@
 import {
+  listPublicBookingsFromAmplify,
   listPublicMoviesFromAmplify,
   listPublicTheatersFromAmplify,
 } from "@/lib/amplify/public-server";
@@ -22,18 +23,34 @@ export function getBaseUrl() {
 
 export async function getMovies(): Promise<SitemapMovie[]> {
   try {
-    const result = await listPublicMoviesFromAmplify();
+    const [moviesResult, bookingsResult] = await Promise.all([
+      listPublicMoviesFromAmplify(),
+      listPublicBookingsFromAmplify(),
+    ]);
 
-    if (result.errors?.length) {
-      console.warn("Unable to load sitemap movies:", result.errors);
+    if (moviesResult.errors?.length || bookingsResult.errors?.length) {
+      console.warn("Unable to load sitemap movies:", [
+        ...(moviesResult.errors ?? []),
+        ...(bookingsResult.errors ?? []),
+      ]);
       return [];
     }
 
-    return result.data
+    const todayIso = new Date().toISOString().split("T")[0];
+    const listedMovieIds = new Set(
+      bookingsResult.data
+        .filter(
+          (booking) =>
+            booking.status === "published" && booking.runEndsOn >= todayIso
+        )
+        .map((booking) => booking.movieId)
+    );
+
+    return moviesResult.data
       .filter(
         (movie) =>
           Boolean(movie.slug) &&
-          (movie.status === "nowPlaying" || movie.status === "comingSoon")
+          (movie.status === "comingSoon" || listedMovieIds.has(movie.id))
       )
       .map((movie) => ({
         slug: movie.slug,

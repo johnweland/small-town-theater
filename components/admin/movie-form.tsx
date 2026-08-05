@@ -106,12 +106,17 @@ export function AdminMoviePrimarySections({
           <AdminField label="Slug">
             <AdminInput name="slug" defaultValue={movie.slug} required />
           </AdminField>
-          <AdminField label="Status">
+          <AdminField
+            label="Site Listing"
+            description="Published bookings are shown as Scheduled or Now Playing automatically."
+          >
             <AdminSelect name="status" defaultValue={movie.status} required>
-              <option value="draft">Draft</option>
+              <option value="draft">Not Listed</option>
               <option value="comingSoon">Coming Soon</option>
-              <option value="nowPlaying">Now Playing</option>
               <option value="archived">Archived</option>
+              {movie.status === "nowPlaying" ? (
+                <option value="nowPlaying">Not Listed (legacy)</option>
+              ) : null}
             </AdminSelect>
           </AdminField>
           <AdminField label="Release Date">

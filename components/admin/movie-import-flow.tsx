@@ -40,6 +40,7 @@ export function AdminMovieImportFlow({
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [siteListing, setSiteListing] = useState<"draft" | "comingSoon">("draft");
 
   useEffect(() => {
     setResults(candidates);
@@ -281,6 +282,30 @@ export function AdminMovieImportFlow({
               </div>
             </div>
 
+            <div className="rounded-lg bg-surface-container-high p-5">
+              <label
+                htmlFor="site-listing"
+                className="font-sans text-[10px] uppercase tracking-[0.22em] text-primary"
+              >
+                Site Listing
+              </label>
+              <select
+                id="site-listing"
+                value={siteListing}
+                onChange={(event) =>
+                  setSiteListing(event.target.value as "draft" | "comingSoon")
+                }
+                className="mt-3 h-11 w-full rounded-md border border-border/40 bg-surface-container-highest px-3 text-sm"
+              >
+                <option value="draft">Not Listed</option>
+                <option value="comingSoon">Coming Soon</option>
+              </select>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Scheduled and Now Playing are set automatically when this movie has a
+                published booking.
+              </p>
+            </div>
+
             <div className="grid gap-5 md:grid-cols-2">
               <div className="rounded-lg bg-surface-container-high p-4">
                 <p className="font-sans text-[10px] uppercase tracking-[0.22em] text-primary">
@@ -342,14 +367,7 @@ export function AdminMovieImportFlow({
                           rating: selected.rating ?? "NR",
                           runtime: selected.runtime ?? null,
                           genre: selected.genres.join(" / "),
-                          status:
-                            selected.status === "coming-soon"
-                              ? "comingSoon"
-                              : selected.status === "archived"
-                                ? "archived"
-                                : selected.status === "draft"
-                                  ? "draft"
-                                  : "nowPlaying",
+                          status: siteListing,
                           director: selected.director ?? null,
                           cast: selected.castHighlights,
                           synopsis: selected.overview,

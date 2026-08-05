@@ -29,7 +29,12 @@ import { isE2ETestMode } from "@/lib/e2e/config";
 import { tmdbMovieFixtures } from "@/lib/data/tmdb-fixtures";
 import type { Schema } from "@/amplify/data/resource";
 
-type AdminMovieStatus = "now-playing" | "coming-soon" | "draft" | "archived";
+type AdminMovieStatus =
+  | "now-playing"
+  | "scheduled"
+  | "coming-soon"
+  | "not-listed"
+  | "archived";
 
 export type {
   AdminActivityItem,
@@ -66,21 +71,6 @@ const bookingDays = new Set<BookingDay>([
   "Sunday",
 ]);
 
-function toAdminMovieStatus(
-  status: AmplifyMovieRecord["status"]
-): AdminMovieStatus {
-  switch (status) {
-    case "nowPlaying":
-      return "now-playing";
-    case "comingSoon":
-      return "coming-soon";
-    case "draft":
-      return "draft";
-    case "archived":
-      return "archived";
-  }
-}
-
 function getOptionalTheaterSortOrder(theater: unknown) {
   const value = (theater as { sortOrder?: unknown }).sortOrder;
   return typeof value === "number" ? value : null;
@@ -107,10 +97,10 @@ function isFutureReleaseDate(releaseDate?: string | null) {
   return parsedReleaseDate.getTime() > todayUtc;
 }
 
-function hasActiveBooking(
+function getPublishedBookingState(
   movieId: string,
   bookings: AmplifyBookingRecord[]
-) {
+): "active" | "scheduled" | null {
   const today = new Date();
   const todayUtc = Date.UTC(
     today.getUTCFullYear(),
@@ -118,39 +108,55 @@ function hasActiveBooking(
     today.getUTCDate()
   );
 
-  return bookings.some((booking) => {
+  let hasScheduledBooking = false;
+
+  for (const booking of bookings) {
     if (booking.movieId !== movieId || booking.status !== "published") {
-      return false;
+      continue;
     }
 
     const runStartsOn = new Date(`${booking.runStartsOn}T00:00:00Z`);
     const runEndsOn = new Date(`${booking.runEndsOn}T00:00:00Z`);
 
     if (Number.isNaN(runStartsOn.getTime()) || Number.isNaN(runEndsOn.getTime())) {
-      return false;
+      continue;
     }
 
-    return runStartsOn.getTime() <= todayUtc && runEndsOn.getTime() >= todayUtc;
-  });
+    if (runStartsOn.getTime() <= todayUtc && runEndsOn.getTime() >= todayUtc) {
+      return "active";
+    }
+
+    if (runStartsOn.getTime() > todayUtc) {
+      hasScheduledBooking = true;
+    }
+  }
+
+  return hasScheduledBooking ? "scheduled" : null;
 }
 
 function getDerivedAdminMovieStatus(
   movie: AmplifyMovieRecord,
   bookings: AmplifyBookingRecord[]
-): AdminMovieStatus | null {
-  if (hasActiveBooking(movie.id, bookings)) {
+): AdminMovieStatus {
+  const bookingState = getPublishedBookingState(movie.id, bookings);
+
+  if (bookingState === "active") {
     return "now-playing";
   }
 
-  if (isFutureReleaseDate(movie.releaseDate)) {
+  if (bookingState === "scheduled") {
+    return "scheduled";
+  }
+
+  if (movie.status === "comingSoon") {
     return "coming-soon";
   }
 
-  if (movie.status === "draft" || movie.status === "archived") {
-    return toAdminMovieStatus(movie.status);
+  if (movie.status === "archived") {
+    return "archived";
   }
 
-  return null;
+  return "not-listed";
 }
 
 function getMovieYear(movie: AmplifyMovieRecord) {

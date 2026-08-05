@@ -14,7 +14,9 @@ export type AdminStatus =
   | "published"
   | "archived"
   | "now-playing"
-  | "coming-soon";
+  | "coming-soon"
+  | "scheduled"
+  | "not-listed";
 
 export interface AdminTheater extends SharedTheater {
   heroImagePreview?: string;
@@ -32,7 +34,12 @@ export interface AdminMovie {
   runtimeMinutes: number;
   rating: string;
   genres: string[];
-  status: "now-playing" | "coming-soon" | "draft" | "archived" | null;
+  status:
+    | "now-playing"
+    | "scheduled"
+    | "coming-soon"
+    | "not-listed"
+    | "archived";
   tagline: string;
   overview: string;
   poster: string;

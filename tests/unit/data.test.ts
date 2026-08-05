@@ -81,21 +81,27 @@ describe("getComingSoonMovies", () => {
     vi.setSystemTime(new Date("2026-05-08T12:00:00Z"));
     listPublicBookingsFromAmplify.mockReset();
     listPublicMoviesFromAmplify.mockReset();
+    listPublicBookingsFromAmplify.mockResolvedValue({
+      data: [],
+      errors: undefined,
+    });
   });
 
-  it("includes undated movies, future releases, and titles marked coming soon", async () => {
+  it("only includes titles explicitly marked coming soon", async () => {
     listPublicMoviesFromAmplify.mockResolvedValue({
       data: [
         createMovieRecord({
           id: "undated",
           slug: "undated",
           title: "Undated",
+          status: "draft",
           releaseDate: null,
         }),
         createMovieRecord({
           id: "future-release",
           slug: "future-release",
           title: "Future Release",
+          status: "draft",
           releaseDate: "2026-06-01",
         }),
         createMovieRecord({
@@ -111,17 +117,45 @@ describe("getComingSoonMovies", () => {
           title: "Already Playing",
           releaseDate: "2026-01-01",
         }),
+        createMovieRecord({
+          id: "archived-future-release",
+          slug: "archived-future-release",
+          title: "Archived Future Release",
+          status: "archived",
+          releaseDate: "2026-07-01",
+        }),
       ],
       errors: undefined,
     });
 
     const movies = await getComingSoonMovies();
 
-    expect(movies.map((movie) => movie.slug)).toEqual([
-      "undated",
-      "future-release",
-      "flagged-coming-soon",
-    ]);
+    expect(movies.map((movie) => movie.slug)).toEqual(["flagged-coming-soon"]);
+  });
+
+  it("lets a published schedule take precedence over the coming-soon tag", async () => {
+    listPublicMoviesFromAmplify.mockResolvedValue({
+      data: [
+        createMovieRecord({
+          id: "movie-scheduled",
+          slug: "scheduled-movie",
+          status: "comingSoon",
+        }),
+      ],
+      errors: undefined,
+    });
+    listPublicBookingsFromAmplify.mockResolvedValue({
+      data: [
+        createBookingRecord({
+          movieId: "movie-scheduled",
+          runStartsOn: "2026-05-20",
+          runEndsOn: "2026-05-27",
+        }),
+      ],
+      errors: undefined,
+    });
+
+    await expect(getComingSoonMovies()).resolves.toEqual([]);
   });
 });
 

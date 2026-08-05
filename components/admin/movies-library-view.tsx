@@ -37,7 +37,7 @@ export function AdminMoviesLibraryView({
     <div className="flex flex-col gap-8">
       <AdminSectionCard
         title="Library Filters"
-        description="Search the catalog and pivot quickly between active films, queued imports, and archive titles."
+        description="Search the catalog by its effective state. Scheduled and Now Playing come from published bookings; Coming Soon is an explicit site listing."
       >
         <div className="flex flex-col gap-4 lg:flex-row">
           <Input
@@ -52,8 +52,9 @@ export function AdminMoviesLibraryView({
           >
             <option value="all">All statuses</option>
             <option value="now-playing">Now playing</option>
+            <option value="scheduled">Scheduled</option>
             <option value="coming-soon">Coming soon</option>
-            <option value="draft">Draft</option>
+            <option value="not-listed">Not listed</option>
             <option value="archived">Archived</option>
           </select>
         </div>

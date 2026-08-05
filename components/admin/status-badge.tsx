@@ -17,7 +17,7 @@ export function AdminStatusBadge({
   const palette =
     normalized === "active" || normalized === "published" || normalized === "now-playing"
       ? "border-primary/30 bg-primary/10 text-primary"
-      : normalized === "coming-soon" || normalized === "seasonal"
+      : normalized === "coming-soon" || normalized === "scheduled" || normalized === "seasonal"
         ? "border-tertiary/30 bg-tertiary/10 text-tertiary"
         : normalized === "draft"
           ? "border-secondary/30 bg-secondary/10 text-secondary"
@@ -28,7 +28,7 @@ export function AdminStatusBadge({
       variant="outline"
       className={cn("border px-3 py-1 text-[10px]", palette, className)}
     >
-      {status.replace("-", " ")}
+      {status.replaceAll("-", " ")}
     </Badge>
   );
 }
